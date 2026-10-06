@@ -1,5 +1,68 @@
 # Errors
 
+## [ERR-20261006-CLOUDFLARE-PROXY-FETCH] Protected Wrangler deploy hit gateway proxy fetch failure
+
+**Logged**: 2026-10-06T00:38:00-04:00
+**Priority**: medium
+**Status**: pending
+**Area**: infra
+
+### Summary
+Wrangler received the protected Secret Store context through the gateway but its Cloudflare API fetch failed at the proxy layer before upload.
+
+### Error
+```
+A fetch request failed, likely due to a connectivity issue.
+ERROR fetch failed
+```
+
+### Context
+- The production build completed successfully in the gateway execution.
+- The credential remained protected and was not printed or copied into the command.
+- Cloudflare production was unchanged.
+
+### Suggested Fix
+Retry once for a transient gateway proxy failure; if it persists, repair protected egress instead of falling back to plaintext credentials.
+
+### Metadata
+- Reproducible: unknown
+- Related Files: package.json, wrangler.toml
+
+---
+
+## [ERR-20261006-CLOUDFLARE-TOKEN-CONTEXT] Wrangler lost protected credential context
+
+**Logged**: 2026-10-06T00:37:00-04:00
+**Priority**: medium
+**Status**: resolved
+**Area**: infra
+
+### Summary
+The repository deployment command ran in a fresh non-interactive shell without the existing protected Cloudflare credential context.
+
+### Error
+```
+In a non-interactive environment, it's necessary to set a CLOUDFLARE_API_TOKEN environment variable for wrangler to work.
+```
+
+### Context
+- Build completed successfully.
+- Wrangler stopped before uploading, so production was unchanged.
+- The token must remain in the protected Secret Store and must not be copied into commands, logs, or repository files.
+
+### Suggested Fix
+Resolve the existing Cloudflare SecretRef and perform the deploy through a gateway command with protected injection.
+
+### Metadata
+- Reproducible: yes
+- Related Files: package.json, wrangler.toml
+
+### Resolution
+- **Resolved**: 2026-10-06T00:38:00-04:00
+- **Notes**: Located the existing Secret Store entry and routed deployment through gateway-protected injection. A separate proxy connectivity issue remains tracked independently.
+
+---
+
 ## [ERR-20261006-TOOLTIP-HOVER-CLICK-RACE] Hover and click competed for tooltip state
 
 **Logged**: 2026-10-06T00:40:00-04:00
