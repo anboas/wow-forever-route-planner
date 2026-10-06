@@ -342,3 +342,37 @@ The tooltip heading is visually transformed to uppercase by CSS, so its accessib
 Escape was handled simultaneously by a nested reward tooltip and its pinned quest tray, closing both layers at once. The tray now detects an open tooltip and leaves the first Escape to that inner layer; a second Escape closes the tray. The browser test covers the two-stage dismissal.
 
 Chromium can clear a focused `type=search` field when Escape dismisses an overlapping tooltip, expanding the dynamic `.loot-row` locator back to all rows. The activation assertion now keeps an item-name filter in the locator so it targets the intended record even if native search-field behavior clears the query.
+
+---
+
+## [ERR-20261006-ROUTE-COLLAPSE-CONTRACT] Browser verifier assumed expanded route stops
+
+**Logged**: 2026-10-06T18:00:00-04:00
+**Priority**: medium
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The browser verifier timed out focusing a route quest after route stops intentionally changed to collapsed-by-default.
+
+### Error
+```
+locator.focus: Timeout 30000ms exceeded waiting for .quest-row-trigger
+```
+
+### Context
+- The UI correctly omitted quest rows until a stop was expanded.
+- The old test encoded the superseded always-expanded interaction contract.
+
+### Suggested Fix
+Assert the compact collapsed state first, activate the named expand control, then exercise quest focus and tooltip behavior.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T18:00:00-04:00
+- **Notes**: Updated the browser gate to verify collapsed-by-default behavior and explicitly expand the first stop before quest interaction. Mobile dock controls include their visible glyphs in accessible names, so scoped role selectors match the action label without requiring an icon-free exact name.
+
+---

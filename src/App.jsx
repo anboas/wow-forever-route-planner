@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, 
 import { createPortal } from "react-dom";
 import snapshot from "./data/wow-forever.json";
 import dungeonMaps from "./data/dungeon-maps.json";
-import { formatCharacter, progressPercent, XP_TO_NEXT } from "./xp.js";
-import { buildOptimizedRoute, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
+import { clampCharacter, formatCharacter, progressPercent, XP_TO_NEXT } from "./xp.js";
+import { buildOptimizerCandidates, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
 import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySourceUrl, itemKey, itemPowerScore, itemSummary, lootVisibleForFaction, questSourceUrl, recommendedForProfile, reportIssueUrl, runsForConfidence, specFitScore, specProfile } from "./gear.js";
 
@@ -13,6 +13,9 @@ const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"
   dungeonId,
   bridgeXp: 0,
   bonusXp: 0,
+  runs: 1,
+  combatXpPerRun: 0,
+  restedPercent: 0,
 }));
 
 const DEFAULT_STATE = {
@@ -22,6 +25,7 @@ const DEFAULT_STATE = {
   characterClass: "warrior",
   spec: "arms",
   assumePrerequisites: true,
+  questStates: {},
   route: DEFAULT_ROUTE,
   wishlist: [],
   equipped: {},
@@ -49,6 +53,7 @@ function encodePlan(state) {
     characterClass: state.characterClass,
     spec: state.spec,
     assumePrerequisites: state.assumePrerequisites,
+    questStates: state.questStates,
     route: state.route,
     wishlist: state.wishlist,
     lootPreferences: state.lootPreferences,
@@ -62,7 +67,8 @@ function loadState() {
     const saved = shared || JSON.parse(localStorage.getItem("forever-route-planner:v1"));
     if (saved && Array.isArray(saved.route)) {
       const characterClass = saved.characterClass || DEFAULT_STATE.characterClass;
-      return { ...DEFAULT_STATE, ...saved, characterClass, spec: saved.spec || defaultSpec(characterClass) };
+      const route = saved.route.map((entry) => ({ runs: 1, combatXpPerRun: 0, restedPercent: 0, ...entry }));
+      return { ...DEFAULT_STATE, ...saved, route, questStates: saved.questStates || {}, characterClass, spec: saved.spec || defaultSpec(characterClass) };
     }
   } catch {
     // Ignore damaged local state and return the useful starter route.
@@ -398,6 +404,7 @@ const GATE_COPY = {
   "xp-unverified": "XP unverified",
   unverified: "Partial data",
   "already-done": "Already counted",
+  skipped: "Skipped",
 };
 
 function Rune({ index }) {
@@ -419,7 +426,7 @@ function ProgressBar({ character, label }) {
   );
 }
 
-function QuestRow({ entry, dungeon, onPin }) {
+function QuestRow({ entry, dungeon, questState, onQuestState, onPin }) {
   const { quest, gate } = entry;
   const chainCount = quest.chain?.length ?? 0;
   return (
@@ -439,17 +446,29 @@ function QuestRow({ entry, dungeon, onPin }) {
           </p>
         </div>
         <div className="quest-xp">{Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "XP ?"}<small>Pin ↗</small></div>
+        <select data-no-activate className="quest-state-select" aria-label={`State for ${quest.name}`} value={questState || "auto"} onClick={(event) => event.stopPropagation()} onChange={(event) => onQuestState(quest.id, event.target.value)}>
+          <option value="auto">Auto</option>
+          <option value="have">Already have</option>
+          <option value="complete">Complete</option>
+          <option value="skip">Skip</option>
+        </select>
       </TooltipTrigger>
     </li>
   );
 }
 
-function RouteStep({ step, index, total, lootGoalCount, onMove, onRemove, onBridge, onBonus, onPin }) {
+function RouteStep({ step, index, total, lootGoalCount, expanded, questStates, onToggle, onMove, onRemove, onField, onQuestState, onRepair, onPin }) {
   const ready = step.quests.filter((entry) => entry.gate.status === "ready").length;
-  const locked = step.quests.filter((entry) => !["ready", "unverified", "xp-unverified", "already-done"].includes(entry.gate.status)).length;
+  const locked = step.quests.filter((entry) => !["ready", "unverified", "xp-unverified", "already-done", "skipped"].includes(entry.gate.status)).length;
   const belowBand = step.before.level < step.dungeon.level[0];
+  const [actualLevel, setActualLevel] = useState(step.after.level);
+  const [actualXp, setActualXp] = useState(step.after.xp);
+  useEffect(() => {
+    setActualLevel(step.after.level);
+    setActualXp(step.after.xp);
+  }, [step.after.level, step.after.xp]);
   return (
-    <article className="route-step">
+    <article className={`route-step ${expanded ? "expanded" : "collapsed"}`}>
       <div className="route-rail"><Rune index={index + 1} /><span /></div>
       <div className="route-card">
         <header className="route-card-header">
@@ -459,6 +478,7 @@ function RouteStep({ step, index, total, lootGoalCount, onMove, onRemove, onBrid
             <p>{step.dungeon.location || "Location pending source verification"}</p>
           </div>
           <div className="route-actions" aria-label={`Move or remove ${step.dungeon.name}`}>
+            <button className="route-expand" onClick={onToggle} aria-expanded={expanded} aria-label={`${expanded ? "Collapse" : "Expand"} ${step.dungeon.name}`}>{expanded ? "−" : "+"}</button>
             <button onClick={() => onMove(index, -1)} disabled={index === 0} aria-label="Move earlier">↑</button>
             <button onClick={() => onMove(index, 1)} disabled={index === total - 1} aria-label="Move later">↓</button>
             <button className="danger" onClick={() => onRemove(index)} aria-label="Remove stop">×</button>
@@ -468,34 +488,46 @@ function RouteStep({ step, index, total, lootGoalCount, onMove, onRemove, onBrid
           <div><span>Arrive</span><strong>{formatCharacter(step.before)}</strong></div>
           <div><span>External XP</span><strong>{number(step.bridgeXp)}</strong></div>
           <div><span>Quest XP</span><strong>{number(step.questXp)}</strong></div>
+          <div><span>Dungeon XP</span><strong>{number(step.combatXp)}</strong></div>
           <div><span>Leave</span><strong>{formatCharacter(step.after)}</strong></div>
         </div>
-        {belowBand && <div className="callout warning">You arrive below the recommended dungeon band. Eligible quests are still calculated individually.</div>}
-        {step.bridgeShortfall > 0 && <div className="callout bridge-callout"><strong>{number(step.bridgeShortfall)} XP needed before this stop</strong><span>Reach level {step.completionLevel} to unlock every verified {step.dungeon.name} quest available to this faction and class.</span></div>}
         <div className="quest-summary">
-          <strong>{ready} ready</strong><span>{locked} blocked</span><span>{step.quests.length} faction-valid</span><span>{Math.round(step.completionRate * 100)}% complete</span>{lootGoalCount > 0 && <span className="wishlist-hit">★ {lootGoalCount} loot goal{lootGoalCount === 1 ? "" : "s"}</span>}
+          <strong>{ready} ready</strong><span>{locked} blocked</span><span>{step.runs} run{step.runs === 1 ? "" : "s"}</span><span>{step.travelMinutes} min travel{step.travelIsEstimate ? " est." : ""}</span>{lootGoalCount > 0 && <span className="wishlist-hit">★ {lootGoalCount} loot goal{lootGoalCount === 1 ? "" : "s"}</span>}
         </div>
-        <ul className="quest-list">{step.quests.map((entry) => <QuestRow key={`${entry.quest.id}-${entry.quest.name}`} entry={entry} dungeon={step.dungeon} onPin={onPin} />)}</ul>
-        <label className="bonus-input bridge-input">
-          <span>Planned XP before dungeon <small>Optimizer fills the exact quest-completeness gap.</small></span>
-          <input type="number" min="0" step="100" value={step.bridgeXp} onChange={(event) => onBridge(index, event.target.value)} />
-        </label>
-        <label className="bonus-input">
-          <span>Manual combat / travel XP</span>
-          <input type="number" min="0" step="100" value={step.bonusXp} onChange={(event) => onBonus(index, event.target.value)} />
-        </label>
+        {expanded && <div className="route-card-details">
+          {belowBand && <div className="callout warning">You arrive below the recommended dungeon band. Eligible quests are still calculated individually.</div>}
+          {step.bridgeShortfall > 0 && <div className="callout bridge-callout"><strong>{number(step.bridgeShortfall)} XP needed before this stop</strong><span>Reach level {step.completionLevel} to unlock every verified {step.dungeon.name} quest available to this faction and class.</span></div>}
+          <ul className="quest-list">{step.quests.map((entry) => <QuestRow key={`${entry.quest.id}-${entry.quest.name}`} entry={entry} dungeon={step.dungeon} questState={questStates[String(entry.quest.id)]} onQuestState={onQuestState} onPin={onPin} />)}</ul>
+          <div className="run-model-grid">
+            <label><span>World XP before</span><input type="number" min="0" step="100" value={step.bridgeXp} onChange={(event) => onField(index, "bridgeXp", event.target.value)} /></label>
+            <label><span>XP per clear</span><input type="number" min="0" step="100" value={step.combatXpPerRun} onChange={(event) => onField(index, "combatXpPerRun", event.target.value)} /></label>
+            <label><span>Clears</span><input type="number" min="1" max="20" value={step.runs} onChange={(event) => onField(index, "runs", event.target.value)} /></label>
+            <label><span>Rested bonus</span><select value={step.restedPercent} onChange={(event) => onField(index, "restedPercent", event.target.value)}><option value="0">None</option><option value="50">50%</option><option value="100">100%</option></select></label>
+            <label><span>Travel minutes</span><input type="number" min="0" step="1" value={step.travelMinutes} onChange={(event) => onField(index, "travelMinutes", event.target.value)} /></label>
+            <label className="hearth-toggle"><input type="checkbox" checked={step.useHearth} onChange={(event) => onField(index, "useHearth", event.target.checked)} /><span>Use hearth estimate</span></label>
+          </div>
+          <p className="model-note">Combat XP is your observed XP per full clear × clears, with an optional rested bonus. Travel is an editable planning estimate.</p>
+          <div className="actual-result">
+            <div><strong>Update from actual result</strong><span>Replace this projection and rebuild every remaining stop.</span></div>
+            <label><span>Ending level</span><input type="number" min="1" max="60" value={actualLevel} onChange={(event) => setActualLevel(event.target.value)} /></label>
+            <label><span>Ending XP</span><input type="number" min="0" value={actualXp} onChange={(event) => setActualXp(event.target.value)} /></label>
+            <button onClick={() => onRepair(index, actualLevel, actualXp)}>Repair remaining route</button>
+          </div>
+        </div>}
       </div>
     </article>
   );
 }
 
-function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
+function Planner({ state, setState, dungeons, dungeonsById, onPin, onNavigate }) {
   const simulation = useMemo(() => simulateRoute({ dungeonsById, ...state }), [dungeonsById, state]);
   const [addId, setAddId] = useState(dungeons[0].id);
   const [optimization, setOptimization] = useState(null);
+  const [optimizerCandidates, setOptimizerCandidates] = useState(null);
+  const [expandedSteps, setExpandedSteps] = useState(() => new Set());
   const [presetName, setPresetName] = useState("");
   const lootGoals = useMemo(() => state.wishlist.reduce((counts, item) => ({ ...counts, [item.dungeonId]: (counts[item.dungeonId] || 0) + 1 }), {}), [state.wishlist]);
-  const totalXp = simulation.steps.reduce((sum, step) => sum + step.questXp + step.bonusXp, 0);
+  const totalXp = simulation.steps.reduce((sum, step) => sum + step.questXp + step.combatXp + step.bonusXp, 0);
   const externalXp = simulation.steps.reduce((sum, step) => sum + step.bridgeXp + step.bonusXp, 0);
   const readyQuests = simulation.steps.reduce((sum, step) => sum + step.quests.filter((entry) => entry.gate.status === "ready").length, 0);
 
@@ -517,28 +549,53 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
     });
   }
 
-  function optimizeCurrent() {
-    const result = optimizeRouteOrder({ dungeonsById, ...state, lootGoals });
-    patch({ route: result.route });
-    setOptimization(`Route reordered for full verified-quest completion with ${number(result.totalBridgeXp)} planned external XP and ${result.wishlistHits || 0} wishlist hits.`);
+  function compareRoutes(mode = "current") {
+    const candidates = buildOptimizerCandidates({ dungeonsById, ...state, lootGoals, count: 6 }, mode);
+    setOptimizerCandidates(candidates);
+    setOptimization(mode === "new" ? "Three new route strategies are ready. Compare the tradeoffs before applying one." : "Three reorder strategies are ready. Your route is unchanged until you choose one.");
   }
 
-  function buildBest() {
-    const result = buildOptimizedRoute({ dungeonsById, ...state, lootGoals, count: 6 });
+  function applyCandidate(candidate) {
+    const result = candidate.result;
     patch({ route: result.route });
-    setOptimization(`Built a six-stop faction-valid route with ${number(result.totalQuestXp)} verified quest XP, ${number(result.totalBridgeXp)} planned bridge XP, and ${result.wishlistHits || 0} wishlist hits.`);
+    setExpandedSteps(new Set());
+    setOptimizerCandidates(null);
+    setOptimization(`${candidate.label} applied: ${number(result.totalQuestXp)} quest XP, ${number(result.totalBridgeXp)} world XP between stops, ${result.totalTravelMinutes} travel minutes, and ${result.readyQuests} ready quests.`);
+  }
+
+  function updateQuestState(questId, value) {
+    setState((current) => {
+      const questStates = { ...current.questStates };
+      if (value === "auto") delete questStates[String(questId)];
+      else questStates[String(questId)] = value;
+      return { ...current, questStates };
+    });
+  }
+
+  function repairRemaining(index, level, xp) {
+    const actual = clampCharacter(level, xp);
+    const remaining = state.route.slice(index + 1);
+    const completedQuestStates = { ...state.questStates };
+    for (const step of simulation.steps.slice(0, index + 1)) {
+      for (const entry of step.quests) if (entry.gate.status === "ready") completedQuestStates[String(entry.quest.id)] = "complete";
+    }
+    const result = optimizeRouteOrder({ dungeonsById, ...state, level: actual.level, xp: actual.xp, questStates: completedQuestStates, route: remaining, lootGoals, strategy: "balanced" });
+    patch({ level: actual.level, xp: actual.xp, questStates: completedQuestStates, route: result.route });
+    setExpandedSteps(new Set());
+    setOptimizerCandidates(null);
+    setOptimization(`Actual result saved at stop ${index + 1}. ${remaining.length} remaining stop${remaining.length === 1 ? " was" : "s were"} repaired from level ${actual.level}.`);
   }
 
   function savePreset() {
     const name = presetName.trim() || `Level ${state.level} route ${state.savedRoutes.length + 1}`;
-    const preset = { id: uid(), name, level: state.level, xp: state.xp, faction: state.faction, characterClass: state.characterClass, spec: state.spec, assumePrerequisites: state.assumePrerequisites, route: state.route };
+    const preset = { id: uid(), name, level: state.level, xp: state.xp, faction: state.faction, characterClass: state.characterClass, spec: state.spec, assumePrerequisites: state.assumePrerequisites, questStates: state.questStates, route: state.route };
     patch({ savedRoutes: [...state.savedRoutes, preset] });
     setPresetName("");
     setOptimization(`Saved route preset “${name}”.`);
   }
 
   function loadPreset(preset) {
-    patch({ level: preset.level, xp: preset.xp, faction: preset.faction, characterClass: preset.characterClass, spec: preset.spec, assumePrerequisites: preset.assumePrerequisites, route: preset.route });
+    patch({ level: preset.level, xp: preset.xp, faction: preset.faction, characterClass: preset.characterClass, spec: preset.spec, assumePrerequisites: preset.assumePrerequisites, questStates: preset.questStates || {}, route: preset.route });
     setOptimization(`Loaded route preset “${preset.name}”.`);
   }
 
@@ -565,23 +622,33 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
         <ProgressBar character={simulation.start} label="Current progress" />
         <label className="toggle-row">
           <input type="checkbox" checked={state.assumePrerequisites} onChange={(event) => patch({ assumePrerequisites: event.target.checked })} />
-          <span><strong>Pre-quests completed</strong><small>Count chained dungeon quests as ready when level and faction match.</small></span>
+          <span><strong>Default pre-quests ready</strong><small>Individual quest states in each stop override this default.</small></span>
         </label>
         <div className="curve-note">
           <strong>XP model</strong>
-          <p>Verified quest XP on the Classic 1–60 level curve. Add combat XP manually per stop until a reliable Forever run dataset exists.</p>
+          <p>Verified quest XP on the Classic 1–60 curve. Enter observed XP per clear; travel remains an editable planning estimate.</p>
         </div>
       </aside>
 
       <section className="route-workspace">
         <header className="workspace-header">
           <div><div className="section-kicker">Dungeon route</div><h2>Quest XP projection</h2><p>Quests are gated at the level you arrive, then applied before the next stop.</p></div>
-          <div className="workspace-actions"><button onClick={optimizeCurrent} disabled={!state.route.length}>Optimize route</button><button onClick={buildBest}>Build best route</button><button className="secondary" onClick={shareRoute}>Share</button><button className="secondary" onClick={() => patch({ route: DEFAULT_ROUTE })}>Reset</button></div>
+          <div className="workspace-actions"><button onClick={() => compareRoutes("current")} disabled={!state.route.length}>Optimize route</button><button onClick={() => compareRoutes("new")}>Build best route</button><button className="secondary" onClick={shareRoute}>Share</button><button className="secondary" onClick={() => patch({ route: DEFAULT_ROUTE, questStates: {} })}>Reset</button></div>
         </header>
 
         <div className="preset-bar"><label><span>Named route preset</span><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Weekend dungeon circuit" /></label><button onClick={savePreset}>Save preset</button><div className="preset-list">{state.savedRoutes.map((preset) => <button className="secondary" key={preset.id} onClick={() => loadPreset(preset)}>{preset.name}</button>)}</div></div>
 
         {optimization && <div className="optimization-note"><strong>Optimizer</strong><span>{optimization}</span><button onClick={() => setOptimization(null)} aria-label="Dismiss optimizer note">×</button></div>}
+
+        {optimizerCandidates && <section className="optimizer-candidates" aria-label="Route optimizer candidates">
+          {optimizerCandidates.map((candidate) => <article key={candidate.id}>
+            <div className="optimizer-title"><span>{candidate.id === "fastest" ? "⚡" : candidate.id === "completion" ? "✓" : "◎"}</span><div><h3>{candidate.label}</h3><p>{candidate.description}</p></div></div>
+            <div className="optimizer-path">{candidate.result.route.map((entry) => dungeonsById.get(entry.dungeonId)?.name || entry.dungeonId).join(" → ")}</div>
+            <div className="optimizer-metrics"><span><strong>{number(candidate.result.totalBridgeXp)}</strong> world XP</span><span><strong>{candidate.result.readyQuests}</strong> ready quests</span><span><strong>{candidate.result.totalTravelMinutes}m</strong> travel</span><span><strong>{number(candidate.result.totalQuestXp)}</strong> quest XP</span></div>
+            <p className="optimizer-why">{candidate.id === "fastest" ? "Why: penalizes travel and pre-dungeon grinding most heavily." : candidate.id === "completion" ? "Why: rewards every ready verified quest before considering travel cost." : "Why: weighs XP, readiness, travel, and wishlist goals together."}</p>
+            <button onClick={() => applyCandidate(candidate)}>Apply {candidate.label}</button>
+          </article>)}
+        </section>}
 
         <div className="summary-grid">
           <div className="summary-card"><span>Projected finish</span><strong>{formatCharacter(simulation.finish)}</strong></div>
@@ -589,6 +656,7 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
           <div className="summary-card"><span>Planned external XP</span><strong>{number(externalXp)}</strong></div>
           <div className="summary-card"><span>Ready quests</span><strong>{readyQuests}</strong></div>
           <div className="summary-card"><span>Level gain</span><strong>+{Math.max(0, simulation.finish.level - simulation.start.level)}</strong></div>
+          <div className="summary-card"><span>Travel estimate</span><strong>{simulation.totalTravelMinutes} min</strong></div>
         </div>
         <ProgressBar character={simulation.finish} label="Projected finish" />
 
@@ -600,10 +668,14 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
               index={index}
               total={simulation.steps.length}
               lootGoalCount={lootGoals[step.dungeon.id] || 0}
+              expanded={expandedSteps.has(state.route[index].uid)}
+              questStates={state.questStates}
+              onToggle={() => setExpandedSteps((current) => { const next = new Set(current); const id = state.route[index].uid; if (next.has(id)) next.delete(id); else next.add(id); return next; })}
               onMove={move}
               onRemove={(target) => updateRoute((current) => current.filter((_, itemIndex) => itemIndex !== target))}
-              onBridge={(target, value) => updateRoute((current) => current.map((entry, itemIndex) => itemIndex === target ? { ...entry, bridgeXp: value } : entry))}
-              onBonus={(target, value) => updateRoute((current) => current.map((entry, itemIndex) => itemIndex === target ? { ...entry, bonusXp: value } : entry))}
+              onField={(target, field, value) => updateRoute((current) => current.map((entry, itemIndex) => itemIndex === target ? { ...entry, [field]: value } : entry))}
+              onQuestState={updateQuestState}
+              onRepair={repairRemaining}
               onPin={onPin}
             />
           )) : <div className="empty-state"><strong>No dungeon stops yet.</strong><p>Add one below to start projecting.</p></div>}
@@ -611,9 +683,15 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
 
         <div className="route-adder panel">
           <label><span>Add a dungeon</span><select value={addId} onChange={(event) => setAddId(event.target.value)}>{dungeons.map((dungeon) => <option value={dungeon.id} key={dungeon.id}>{dungeon.level[0]}–{dungeon.level[1]} · {dungeon.name}</option>)}</select></label>
-          <button onClick={() => updateRoute((current) => [...current, { uid: uid(), dungeonId: addId, bridgeXp: 0, bonusXp: 0 }])}>Add stop</button>
+          <button onClick={() => updateRoute((current) => [...current, { uid: uid(), dungeonId: addId, bridgeXp: 0, bonusXp: 0, runs: 1, combatXpPerRun: 0, restedPercent: 0 }])}>Add stop</button>
         </div>
       </section>
+      <nav className="mobile-command-dock" aria-label="Route quick actions">
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span>⌂</span>Route</button>
+        <button onClick={() => compareRoutes("current")} disabled={!state.route.length}><span>⚡</span>Optimize</button>
+        <button onClick={() => document.querySelector(".route-step")?.scrollIntoView({ behavior: "smooth", block: "start" })}><span>→</span>Next stop</button>
+        <button onClick={() => onNavigate("profile")}><span>★</span>My Gear</button>
+      </nav>
     </main>
   );
 }
@@ -906,7 +984,7 @@ export default function App() {
   }
 
   function addDungeonToRoute(dungeonId, openPlanner = false) {
-    setState((current) => ({ ...current, route: [...current.route, { uid: uid(), dungeonId, bridgeXp: 0, bonusXp: 0 }] }));
+    setState((current) => ({ ...current, route: [...current.route, { uid: uid(), dungeonId, bridgeXp: 0, bonusXp: 0, runs: 1, combatXpPerRun: 0, restedPercent: 0 }] }));
     if (openPlanner) setView("planner");
   }
 
@@ -935,7 +1013,7 @@ export default function App() {
         <div className="data-stamp"><span className="status-dot" />Beta snapshot · {new Date(snapshot.fetchedAt).toLocaleDateString()}</div>
       </header>
 
-      {view === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} />}
+      {view === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} onNavigate={setView} />}
       {view === "dungeons" && <Dungeons dungeons={dungeons} faction={state.faction} characterClass={state.characterClass} characterSpec={state.spec} onPin={setPinnedQuest} selected={selectedDungeon} setSelected={setSelectedDungeon} onAddRoute={(id) => addDungeonToRoute(id, false)} onPlanNext={(id) => addDungeonToRoute(id, true)} />}
       {view === "quests" && <Quests dungeons={dungeons} faction={state.faction} onPin={setPinnedQuest} />}
       {view === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}

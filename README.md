@@ -7,8 +7,10 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Complete current 34-dungeon catalog with 1,600+ indexed loot entries.
 - Verified Forever dungeon quest XP, pickup levels, faction gates, class gates, and prerequisite-chain warnings where source data exists.
 - Sequential route simulation against the Classic 1–60 XP curve.
-- One-click route optimization that reorders selected dungeons for quest completeness, plans the minimum bridge XP needed between stops, considers wishlist targets, or builds a six-stop suggested route.
-- Explicit bridge XP and dungeon-run XP inputs so the planner never invents unverified experience.
+- Three explainable route strategies: fastest leveling, maximum quest completion, and balanced XP/travel/loot planning. The planner compares candidates before changing the route.
+- Compact collapsed route stops, a sticky mobile command dock, and per-quest Auto, Already have, Complete, or Skip state.
+- Explicit world XP, observed XP-per-clear, repeat-run, rested-XP, travel-time, and hearth inputs so the planner never presents inferred Forever combat values as source facts.
+- Actual-result repair: enter the level and XP reached after a stop to mark its ready quests complete and rebuild the remaining route automatically.
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
 - Class, specialization, role, usable/recommended, source, slot, rarity, level, and wishlist filters with transparent rules-based fit icons.
 - Dungeon-to-boss loot browsing with explicit Boss, Quest reward, Mob, Trash, and Unknown source labels and remembered collapsible groups.

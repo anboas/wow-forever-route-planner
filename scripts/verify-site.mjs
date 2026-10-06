@@ -35,12 +35,26 @@ try {
   assert.match(await page.locator("body").innerText(), /Ruins of Lordaeron/);
   assert.match(await page.locator("body").innerText(), /Shadowfang Keep/);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "desktop overflow");
+  assert.equal(await page.locator(".route-card-details").count(), 0, "route stops are collapsed by default");
+  await page.locator(".route-expand").first().click();
+  assert.equal(await page.locator(".route-card-details").count(), 1, "a route stop expands on demand");
 
   await page.locator(".quest-row-trigger").first().focus();
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
   assert.match(await page.locator(".wow-tooltip").innerText(), /Experience:/);
   await page.keyboard.press("Escape");
   assert.equal(await page.locator(".wow-tooltip").count(), 0, "route quest tooltip closes with Escape");
+  const firstQuestState = page.locator(".quest-state-select").first();
+  await firstQuestState.selectOption("skip");
+  assert.match(await page.locator(".quest-row").first().innerText(), /skipped/i);
+  await firstQuestState.selectOption("auto");
+  await page.getByRole("spinbutton", { name: "XP per clear", exact: true }).fill("1000");
+  await page.getByRole("spinbutton", { name: "Clears", exact: true }).fill("2");
+  await page.getByRole("combobox", { name: "Rested bonus", exact: true }).selectOption("50");
+  assert.match(await page.locator(".route-step").first().innerText(), /3,000/);
+  await page.getByRole("spinbutton", { name: "XP per clear", exact: true }).fill("0");
+  await page.getByRole("spinbutton", { name: "Clears", exact: true }).fill("1");
+  await page.getByRole("combobox", { name: "Rested bonus", exact: true }).selectOption("0");
 
   await page.getByRole("spinbutton", { name: "Level", exact: true }).fill("14");
   await page.getByRole("spinbutton", { name: "Current XP", exact: true }).fill("12000");
@@ -49,8 +63,11 @@ try {
 
   await page.getByRole("button", { name: "Optimize route", exact: true }).click();
   await page.locator(".optimization-note").waitFor({ state: "visible" });
-  assert.match(await page.locator(".optimization-note").innerText(), /external XP/i);
-  assert.equal(await page.locator(".bridge-input").count(), 3);
+  assert.equal(await page.locator(".optimizer-candidates > article").count(), 3, "optimizer exposes three strategies");
+  assert.match(await page.locator(".optimizer-candidates").innerText(), /Fastest leveling[\s\S]*Maximum completion[\s\S]*Balanced/);
+  await page.getByRole("button", { name: "Apply Balanced", exact: true }).click();
+  assert.match(await page.locator(".optimization-note").innerText(), /travel minutes/i);
+  assert.equal(await page.locator(".route-card-details").count(), 0, "applying an optimizer result restores compact stops");
 
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
   assert.equal(await page.locator(".dungeon-card").count(), 34);
@@ -154,6 +171,19 @@ try {
   await page.getByRole("button", { name: "Route", exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile overflow");
   assert.equal(await page.locator(".route-step").count(), 3);
+  assert.equal(await page.locator(".mobile-command-dock").isVisible(), true, "mobile route dock remains visible");
+  await page.locator(".mobile-command-dock").getByRole("button", { name: /Optimize/ }).click();
+  assert.equal(await page.locator(".optimizer-candidates > article").count(), 3, "mobile optimizer keeps all strategies reachable");
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile optimizer overflow");
+  await page.getByRole("button", { name: "Apply Balanced", exact: true }).click();
+  await page.locator(".route-expand").first().click();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "expanded mobile stop overflow");
+  const firstStep = page.locator(".route-step").first();
+  await firstStep.getByRole("spinbutton", { name: "Ending level", exact: true }).fill("14");
+  await firstStep.getByRole("spinbutton", { name: "Ending XP", exact: true }).fill("1000");
+  await firstStep.getByRole("button", { name: "Repair remaining route", exact: true }).click();
+  assert.equal(await page.locator(".route-step").count(), 2, "actual result repair removes completed stops and rebuilds the remainder");
+  assert.match(await page.locator(".optimization-note").innerText(), /Actual result saved/);
   process.stdout.write("Browser verification passed at desktop and mobile widths.\n");
 } finally {
   await browser?.close();
