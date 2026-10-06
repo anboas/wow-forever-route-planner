@@ -7,10 +7,14 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Complete current 34-dungeon catalog with 1,600+ indexed loot entries.
 - Verified Forever dungeon quest XP, pickup levels, faction gates, class gates, and prerequisite-chain warnings where source data exists.
 - Sequential route simulation against the Classic 1–60 XP curve.
-- Manual combat/travel XP per stop so the planner never invents unverified per-run XP.
+- One-click route optimization that reorders selected dungeons for quest completeness, plans the minimum bridge XP needed between stops, or builds a six-stop suggested route.
+- Explicit bridge XP and dungeon-run XP inputs so the planner never invents unverified experience.
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
-- WoW/Wowhead-inspired item and quest cards on hover, keyboard focus, and touch, including complete stats, effects, objectives, reward items, gates, and source context.
-- Per-dungeon drill-downs expose every associated quest, drop, and boss/source record.
+- Class wearability filters and transparent rules-based best-fit class icons for every item.
+- Dungeon-to-boss loot browsing plus an all-items table with slot, source, class-fit, and level sorting.
+- WoW/Wowhead-inspired item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct Wowhead item/search links.
+- Faction-aware quest archives that omit opposing-faction quests entirely.
+- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, and 25 source-licensed Classic instance maps.
 - Persistent planner state in local storage.
 
 The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → Shadowfang Keep.
@@ -20,9 +24,11 @@ The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → S
 - [WOWF.IO](https://wowf.io/en/dungeons): detailed beta-client quest and loot compilation.
 - [wowtbc.gg](https://wowtbc.gg/warcraftforever/loot-tables/dungeons/): full dungeon and loot catalog cross-check.
 - [Warcraft Tavern](https://www.warcrafttavern.com/forever/guides/dungeons/): dungeon ranges, locations, and the quest-centered XP model.
+- [Wowhead Classic](https://www.wowhead.com/classic): stable public item deep links/search targets and Blizzard-style icon delivery.
+- [AtlasLootClassic Maps](https://github.com/Hoizame/AtlasLootClassic_Maps): GPL-2.0 Classic instance maps converted from BLP to checked-in PNG assets.
 - [Warcraft Wiki](https://warcraft.wiki.gg/wiki/Experience_to_level): Classic XP curve reference.
 
-Run `npm run sync:data` to rebuild the checked-in snapshot. Beta values can change; unverified quest XP is excluded from route totals.
+Run `npm run sync:all` to rebuild the checked-in data snapshot and map assets. `sync:data` preserves item IDs, icons, stats, source bosses, and quest metadata from the upstream sources; `sync:maps` deterministically rebuilds the licensed PNG map set. Beta values can change; unverified quest XP is excluded from route totals.
 
 ## Development
 
@@ -49,8 +55,8 @@ npm run pages:deploy
 npm run verify:prod-smoke
 ```
 
-Production: <https://wow-forever-route-planner.pages.dev/>
+Current public release: <https://anboas.github.io/wow-forever-route-planner/>
 
-GitHub Pages mirror: <https://anboas.github.io/wow-forever-route-planner/>
+Cloudflare Pages legacy host: <https://wow-forever-route-planner.pages.dev/>
 
 This is an unofficial fan-made planning tool and is not affiliated with Blizzard Entertainment.

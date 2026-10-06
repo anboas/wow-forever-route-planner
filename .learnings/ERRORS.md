@@ -1,5 +1,66 @@
 # Errors
 
+## [ERR-20261006-BLP-WASM-NODE-INIT] BLP decoder default WASM initializer failed in Node
+
+**Logged**: 2026-10-06T01:18:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: config
+
+### Summary
+`wow-blp-web` default initialization attempted to fetch its local WASM file through Node fetch, which does not support that file-URL path.
+
+### Error
+```
+TypeError: fetch failed
+cause: Error: not implemented... yet...
+```
+
+### Context
+- The map sync needs to convert AtlasLootClassic BLP assets into browser-readable PNGs.
+- The package includes the required WASM binary locally.
+
+### Suggested Fix
+Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_path` to the initializer.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/sync-maps.mjs, package.json
+
+### Resolution
+- **Resolved**: 2026-10-06T01:19:00-04:00
+- **Notes**: Explicit WASM-byte initialization successfully converted RagefireChasm.blp into a valid PNG payload.
+
+---
+
+## [ERR-20261006-WARCRAFT-WIKI-MAP-FETCH] Warcraft Wiki blocked automated map retrieval
+
+**Logged**: 2026-10-06T01:15:00-04:00
+**Priority**: low
+**Status**: pending
+**Area**: frontend
+
+### Summary
+The Warcraft Wiki page returned an anti-bot interstitial instead of readable dungeon map content.
+
+### Error
+```
+Web fetch failed (403): Just a second...
+```
+
+### Context
+- The requested dungeon-map feature needs source-backed imagery.
+- Existing WOWF.IO and wowtbc.gg data remain available.
+
+### Suggested Fix
+Use publicly exposed source metadata or checked-in licensed assets; label unavailable maps instead of inventing dungeon layouts.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/sync-data.mjs, src/App.jsx
+
+---
+
 ## [ERR-20261006-CLOUDFLARE-PROXY-FETCH] Protected Wrangler deploy hit gateway proxy fetch failure
 
 **Logged**: 2026-10-06T00:38:00-04:00
@@ -255,3 +316,29 @@ Use the repository-owned Playwright path on this host unless an OpenClaw browser
 - **Notes**: Continued with the verified Playwright Chromium path.
 
 ---
+# Browser verifier matched superseded optimizer copy
+
+**Date:** 2026-10-06
+**Status:** Resolved
+
+## Error
+
+The expanded UI browser gate expected the optimizer notice to contain `bridge XP`, but the shipped UI deliberately labels that quantity `planned external XP`.
+
+## Cause
+
+The test assertion was written against an earlier internal label after the user-facing copy had been clarified.
+
+## Fix
+
+Assert the final user-facing `external XP` term. Keep tests aligned to intentional product copy while preserving separate numeric planner tests for bridge-XP calculation.
+
+## Follow-up
+
+A whole-row `hasText: "Alliance"` assertion also matched legitimate quest/dungeon names containing the word. The faction exclusion check now targets the dedicated faction metadata cell, avoiding false positives from content names.
+
+The tooltip heading is visually transformed to uppercase by CSS, so its accessibility-text assertion is intentionally case-insensitive.
+
+Escape was handled simultaneously by a nested reward tooltip and its pinned quest tray, closing both layers at once. The tray now detects an open tooltip and leaves the first Escape to that inner layer; a second Escape closes the tray. The browser test covers the two-stage dismissal.
+
+Chromium can clear a focused `type=search` field when Escape dismisses an overlapping tooltip, expanding the dynamic `.loot-row` locator back to all rows. The activation assertion now keeps an item-name filter in the locator so it targets the intended record even if native search-field behavior clears the query.

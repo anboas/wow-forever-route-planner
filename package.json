@@ -12,11 +12,14 @@
     "preview": "vite preview --host 0.0.0.0",
     "serve": "node server.mjs",
     "sync:data": "node scripts/sync-data.mjs",
+    "sync:maps": "node scripts/sync-maps.mjs",
+    "sync:all": "npm run sync:data && npm run sync:maps",
     "verify:data": "node scripts/verify-data.mjs",
+    "verify:loot": "node scripts/verify-loot.mjs",
     "verify:planner": "node scripts/verify-planner.mjs",
     "verify:ui": "node scripts/verify-site.mjs",
     "verify:prod-smoke": "node scripts/prod-smoke.mjs",
-    "verify": "npm run verify:data && npm run verify:planner && npm run build && npm run verify:ui",
+    "verify": "npm run verify:data && npm run verify:loot && npm run verify:planner && npm run build && npm run verify:ui",
     "pages:dev": "npm run build:cloudflare && wrangler pages dev dist",
     "pages:deploy": "npm run build:cloudflare && wrangler pages deploy dist --project-name wow-forever-route-planner",
     "container:up": "docker compose up --build -d",
@@ -25,13 +28,14 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^6.0.2",
-    "vite": "^8.2.2",
-    "typescript": "^5.9.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.2",
+    "vite": "^8.2.2"
   },
   "devDependencies": {
     "playwright-core": "^1.61.0",
+    "wow-blp-web": "^0.7.2",
     "wrangler": "^4.127.1"
   }
 }

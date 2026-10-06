@@ -1,0 +1,152 @@
+{
+  "ragefire-chasm": {
+    "src": "dungeon-maps/ragefire-chasm.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RagefireChasm.blp",
+    "license": "GPL-2.0"
+  },
+  "wailing-caverns": {
+    "src": "dungeon-maps/wailing-caverns.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/WailingCaverns.blp",
+    "license": "GPL-2.0"
+  },
+  "deadmines": {
+    "src": "dungeon-maps/deadmines.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheDeadmines.blp",
+    "license": "GPL-2.0"
+  },
+  "shadowfang-keep": {
+    "src": "dungeon-maps/shadowfang-keep.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/ShadowfangKeep.blp",
+    "license": "GPL-2.0"
+  },
+  "stockade": {
+    "src": "dungeon-maps/stockade.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheStockade.blp",
+    "license": "GPL-2.0"
+  },
+  "blackfathom-deeps": {
+    "src": "dungeon-maps/blackfathom-deeps.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackfathomDeeps.blp",
+    "license": "GPL-2.0"
+  },
+  "scarlet-monastery-graveyard": {
+    "src": "dungeon-maps/scarlet-monastery-graveyard.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMGraveyard.blp",
+    "license": "GPL-2.0"
+  },
+  "gnomeregan": {
+    "src": "dungeon-maps/gnomeregan.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Gnomeregan.blp",
+    "license": "GPL-2.0"
+  },
+  "scarlet-monastery-library": {
+    "src": "dungeon-maps/scarlet-monastery-library.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMLibrary.blp",
+    "license": "GPL-2.0"
+  },
+  "razorfen-kraul": {
+    "src": "dungeon-maps/razorfen-kraul.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RazorfenKraul.blp",
+    "license": "GPL-2.0"
+  },
+  "scarlet-monastery-armory": {
+    "src": "dungeon-maps/scarlet-monastery-armory.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMArmory.blp",
+    "license": "GPL-2.0"
+  },
+  "scarlet-monastery-cathedral": {
+    "src": "dungeon-maps/scarlet-monastery-cathedral.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMCathedral.blp",
+    "license": "GPL-2.0"
+  },
+  "razorfen-downs": {
+    "src": "dungeon-maps/razorfen-downs.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RazorfenDowns.blp",
+    "license": "GPL-2.0"
+  },
+  "uldaman": {
+    "src": "dungeon-maps/uldaman.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Uldaman.blp",
+    "license": "GPL-2.0"
+  },
+  "zul-farrak": {
+    "src": "dungeon-maps/zul-farrak.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/ZulFarrak.blp",
+    "license": "GPL-2.0"
+  },
+  "maraudon": {
+    "src": "dungeon-maps/maraudon.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Maraudon.blp",
+    "license": "GPL-2.0"
+  },
+  "the-temple-of-atal-hakkar": {
+    "src": "dungeon-maps/the-temple-of-atal-hakkar.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheSunkenTemple.blp",
+    "license": "GPL-2.0"
+  },
+  "blackrock-depths": {
+    "src": "dungeon-maps/blackrock-depths.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockDepths.blp",
+    "license": "GPL-2.0"
+  },
+  "blackrock-spire-lower": {
+    "src": "dungeon-maps/blackrock-spire-lower.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockSpireLower.blp",
+    "license": "GPL-2.0"
+  },
+  "dire-maul-east": {
+    "src": "dungeon-maps/dire-maul-east.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulEast.blp",
+    "license": "GPL-2.0"
+  },
+  "dire-maul-west": {
+    "src": "dungeon-maps/dire-maul-west.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulWest.blp",
+    "license": "GPL-2.0"
+  },
+  "dire-maul-north": {
+    "src": "dungeon-maps/dire-maul-north.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulNorth.blp",
+    "license": "GPL-2.0"
+  },
+  "stratholme": {
+    "src": "dungeon-maps/stratholme.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Stratholme.blp",
+    "license": "GPL-2.0"
+  },
+  "blackrock-spire-upper": {
+    "src": "dungeon-maps/blackrock-spire-upper.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockSpireUpper.blp",
+    "license": "GPL-2.0"
+  },
+  "scholomance": {
+    "src": "dungeon-maps/scholomance.png",
+    "source": "AtlasLootClassic Maps",
+    "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Scholomance.blp",
+    "license": "GPL-2.0"
+  }
+}

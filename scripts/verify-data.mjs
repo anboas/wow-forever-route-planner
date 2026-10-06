@@ -1,11 +1,22 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { access } from "node:fs/promises";
 
 const snapshot = JSON.parse(await readFile(new URL("../src/data/wow-forever.json", import.meta.url), "utf8"));
 assert.equal(snapshot.schemaVersion, 2);
 assert.equal(snapshot.dungeons.length, 34, "expected the complete current 34-dungeon catalog");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0) >= 1600, "expected comprehensive loot coverage");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0) >= 150, "expected quest and reward-group coverage");
+const loot = snapshot.dungeons.flatMap((dungeon) => dungeon.loot);
+assert.equal(loot.filter((item) => item.icon).length, loot.length, "every loot record should carry an icon slug");
+
+const maps = JSON.parse(await readFile(new URL("../src/data/dungeon-maps.json", import.meta.url), "utf8"));
+assert.ok(Object.keys(maps).length >= 25, "expected the available Classic instance map set");
+for (const map of Object.values(maps)) {
+  assert.equal(map.license, "GPL-2.0");
+  assert.ok(map.sourceUrl.startsWith("https://github.com/Hoizame/AtlasLootClassic_Maps/"));
+  await access(new URL(`../public/${map.src}`, import.meta.url));
+}
 
 for (const dungeon of snapshot.dungeons) {
   assert.ok(dungeon.id && dungeon.name);

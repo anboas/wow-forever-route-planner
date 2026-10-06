@@ -100,6 +100,33 @@ function list(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function label(value) {
+  if (!value) return value;
+  return String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function statList(item) {
+  if (Array.isArray(item.stats)) return item.stats;
+  return Object.entries(item.primary_stats ?? {}).map(([stat, value]) => ({ label: label(stat), value }));
+}
+
+function weapon(item) {
+  if (item.weapon) return item.weapon;
+  const special = item.special_stats ?? {};
+  const match = String(special.weapon_damage ?? "").match(/([\d.]+)\s*-\s*([\d.]+)/);
+  if (!match && !special.weapon_speed && !special.weapon_dps) return undefined;
+  return clean({
+    min: match ? Number(match[1]) : undefined,
+    max: match ? Number(match[2]) : undefined,
+    speed: special.weapon_speed,
+    dps: special.weapon_dps,
+  });
+}
+
+function binding(value) {
+  return { bop: "pickup", boe: "equip", bou: "use", boa: "account" }[value] ?? value;
+}
+
 function slimItem(item, fallback = {}) {
   return clean({
     id: item.id,
@@ -107,21 +134,22 @@ function slimItem(item, fallback = {}) {
     quality: item.quality,
     rarity: item.rarity,
     itemLevel: item.itemLevel ?? item.ilvl,
-    requiredLevel: item.requiredLevel,
-    slot: item.slot,
-    type: item.type,
-    bind: item.bind,
-    armor: item.armor,
-    block: item.block,
-    weapon: item.weapon,
-    stats: list(item.stats),
+    slot: label(item.slot),
+    type: label(item.type),
+    bind: binding(item.bind),
+    icon: item.icon,
+    armor: item.armor ?? item.special_stats?.armor,
+    block: item.block ?? item.special_stats?.block,
+    weapon: weapon(item),
+    stats: statList(item),
     effects: item.effects ?? item.secondary_stats,
     boss: item.boss ?? item.bossName ?? item.source ?? fallback.boss,
     sourceType: item.source_type ?? fallback.sourceType,
-    dropChance: item.drop_chance,
+    dropChance: item.dropChance ?? item.drop_chance,
     discovered: item.discovered,
     hidden: item.hidden,
     uncertain: item.uncertain,
+    requiredLevel: item.requiredLevel ?? item.other_stats?.min_level,
   });
 }
 
