@@ -57,8 +57,8 @@ npm run pages:deploy
 npm run verify:prod-smoke
 ```
 
-Current public release: <https://anboas.github.io/wow-forever-route-planner/>
+Current public release: <https://wow-forever-route-planner.pages.dev/>
 
-Cloudflare Pages legacy host: <https://wow-forever-route-planner.pages.dev/>
+GitHub Pages mirror: <https://anboas.github.io/wow-forever-route-planner/>
 
 This is an unofficial fan-made planning tool and is not affiliated with Blizzard Entertainment.
