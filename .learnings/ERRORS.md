@@ -33,6 +33,38 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 
 ---
 
+## [ERR-20261006-PUBLIC-NETWORKIDLE] Public browser proof waited indefinitely for network idle
+
+**Logged**: 2026-10-06T18:20:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The public Cloudflare interaction probe stalled on `networkidle` because external item and class icon traffic can keep the page network active.
+
+### Error
+```
+Public browser probe produced no output while waiting for networkidle.
+```
+
+### Context
+- The canonical production smoke had already passed.
+- The application renders synchronously from its checked-in snapshot, while optional external icon requests continue independently.
+
+### Suggested Fix
+For public static-host proofs, navigate with `domcontentloaded` and wait for the first owned application surface instead of waiting for all third-party image traffic to quiesce.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T18:20:00-04:00
+- **Notes**: The final public proof uses `domcontentloaded` followed by an explicit `.route-step` readiness assertion.
+
+---
+
 ## [ERR-20261006-WARCRAFT-WIKI-MAP-FETCH] Warcraft Wiki blocked automated map retrieval
 
 **Logged**: 2026-10-06T01:15:00-04:00
