@@ -81,6 +81,15 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await page.locator(".quest-tray").count(), 0, "second Escape closes the pinned quest tray");
 
+  await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  assert.equal(await page.locator('.dungeon-loot-column [role="group"][aria-label="Filter loot by class"]').count(), 1, "dungeon loot exposes class filters");
+  assert.ok(await page.locator(".dungeon-loot-column .source-quest").count() > 0, "dungeon loot identifies quest rewards");
+  assert.ok(await page.locator(".dungeon-loot-column .source-boss").count() > 0, "dungeon loot identifies boss drops");
+  const warriorLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
+  await page.locator(".dungeon-loot-column").getByRole("button", { name: "Priest", exact: true }).click();
+  const priestLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
+  assert.notEqual(priestLootCount, warriorLootCount, "dungeon class filter changes the visible loot set");
+
   await page.getByRole("button", { name: "Loot", exact: true }).click();
   assert.ok(await page.locator(".loot-dungeon-group").count() > 10, "default loot view groups by dungeon");
   assert.ok(await page.locator(".boss-loot-group").count() > 10, "loot is grouped by boss/source");
@@ -111,6 +120,9 @@ try {
   const tooltipBox = await page.locator(".wow-tooltip").boundingBox();
   assert.ok(tooltipBox && tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 390 && tooltipBox.y + tooltipBox.height <= 844, "mobile tooltip stays in viewport");
   await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
   await page.getByRole("button", { name: "Route Planner", exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile overflow");
   assert.equal(await page.locator(".route-step").count(), 3);

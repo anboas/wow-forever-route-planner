@@ -49,6 +49,17 @@ function normalized(value) {
   return String(value || "").toLowerCase().replaceAll("_", " ").replaceAll("-", " ");
 }
 
+function sourceKey(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function sameItem(left, right) {
+  if (left?.id && right?.id) return String(left.id) === String(right.id);
+  const leftName = sourceKey(left?.name);
+  const rightName = sourceKey(right?.name);
+  return Boolean(leftName && rightName && leftName === rightName);
+}
+
 function weaponFamily(type) {
   const value = normalized(type);
   return Object.keys(WEAPON_CLASSES).find((family) => value.includes(family));
@@ -111,4 +122,24 @@ export function itemSourceUrl(item) {
     return `https://www.wowhead.com/classic/item=${item.id}`;
   }
   return `https://www.wowhead.com/classic/search?q=${encodeURIComponent(item.name)}`;
+}
+
+export function itemSourceMeta(item, dungeon) {
+  const sourceName = String(item.boss || "").trim();
+  const sourceParts = sourceName.split("/").map(sourceKey).filter(Boolean);
+  const sourceType = sourceKey(item.sourceType);
+  const quests = dungeon?.quests || [];
+  const bosses = dungeon?.bosses || [];
+  const quest = quests.find((entry) => sourceParts.includes(sourceKey(entry.name)))
+    || quests.find((entry) => [...(entry.rewards || []), ...(entry.rewardChoices || [])].some((reward) => sameItem(reward, item)));
+  const boss = bosses.find((entry) => sourceKey(entry.name) === sourceKey(sourceName));
+
+  if (sourceType.startsWith("quest") || quest) {
+    const faction = sourceType.includes("alliance") ? "Alliance" : sourceType.includes("horde") ? "Horde" : null;
+    return { kind: "quest", label: "Quest reward", name: quest?.name || sourceName || "Quest source pending", faction };
+  }
+  if (boss) return { kind: "boss", label: "Boss", name: boss.name };
+  if (/trash|plunder/.test(sourceKey(sourceName))) return { kind: "trash", label: "Trash drop", name: sourceName || "Dungeon trash" };
+  if (sourceName) return { kind: "drop", label: "Boss / mob", name: sourceName };
+  return { kind: "unknown", label: "Unknown source", name: "Source pending" };
 }

@@ -196,6 +196,26 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .mini-loot-name { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .mini-loot-icon { display: grid !important; flex: 0 0 auto; place-items: center; width: 30px; height: 30px; margin: 0 !important; border: 1px solid currentColor; background: #07090a; font: 700 13px/1 Georgia, serif !important; }
 .loot-detail-list { max-height: 360px; }
+.dungeon-loot-column { min-width: 0; }
+.dungeon-loot-controls { margin-bottom: 8px; border: 1px solid var(--line-soft); background: #0a0d10; }
+.detail-filter-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; border-bottom: 1px solid var(--line-soft); }
+.detail-filter-label strong { color: var(--ink); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.detail-filter-label span { margin: 0; font-size: 9px; }
+.class-filter-strip.compact { display: flex; overflow-x: auto; scrollbar-width: thin; }
+.class-filter-strip.compact button { flex: 1 0 58px; min-height: 58px; gap: 3px; padding: 5px 3px; }
+.class-filter-strip.compact img { width: 26px; height: 26px; }
+.class-filter-strip.compact span { font-size: 9px; }
+.class-filter-strip.compact small { font-size: 8px; }
+.source-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 10px; border-top: 1px solid var(--line-soft); }
+.source-legend span { margin: 0; }
+.source-badge { display: inline-flex; align-items: center; width: fit-content; min-height: 18px; margin: 0; padding: 2px 5px; border: 1px solid var(--line); color: var(--muted); font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .06em; line-height: 1; text-transform: uppercase; white-space: nowrap; }
+.source-quest { border-color: #8e7424; background: #221d0d; color: #ffd45e; }
+.source-boss { border-color: #804743; background: #241110; color: #f08c83; }
+.source-drop { border-color: #475b72; background: #101923; color: #9cbce2; }
+.source-trash, .source-unknown { border-color: #454b54; background: #14171c; color: #9ca3af; }
+.loot-source-line { display: flex !important; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
+.loot-source-line > span { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.loot-empty-state { margin: 0; padding: 22px; border: 1px solid var(--line-soft); color: var(--muted); font-size: 11px; text-align: center; }
 .boss-section { margin-top: 24px; }
 .boss-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1px; margin: 0; padding: 1px; background: var(--line-soft); list-style: none; }
 .boss-grid li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 58px; padding: 10px 12px; background: #0d1214; }
@@ -330,6 +350,7 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .boss-loot-group { min-width: 0; padding: 13px; background: #111318; }
 .boss-loot-group h3 { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 9px; color: var(--ink); font-size: 12px; }
 .boss-loot-group h3 span { color: var(--muted); font-size: 10px; }
+.boss-loot-group h3 .source-heading { display: flex; align-items: center; gap: 7px; min-width: 0; color: var(--ink); font-size: 12px; }
 .boss-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 4px; }
 .loot-card { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 8px; min-height: 54px; padding: 7px; border: 1px solid transparent; background: #090b0e; cursor: pointer; }
 .loot-card:hover { border-color: var(--line); background: var(--surface-2); }
