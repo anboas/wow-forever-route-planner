@@ -103,5 +103,6 @@ const candidates = buildOptimizerCandidates({
 assert.deepEqual(candidates.map(({ id }) => id), ["fastest", "completion", "balanced"]);
 assert.ok(candidates.every(({ result }) => result.route.length === 3));
 assert.ok(candidates.every(({ result }) => Number.isFinite(result.totalTravelMinutes)));
+assert.ok(candidates.every(({ result }) => Number.isFinite(result.guideHits)), "optimizer reports class/spec guide matches");
 
 process.stdout.write("Planner verification passed.\n");

@@ -1,0 +1,56 @@
+name: Refresh source-backed data
+
+on:
+  schedule:
+    - cron: "17 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: wow-forever-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y zip
+      - run: npm ci
+      - name: Rebuild checked source snapshots
+        run: npm run sync:all
+      - name: Validate source, planner, and production contracts
+        run: |
+          npm run verify:context
+          npm run verify:companion
+          npm run verify:data
+          npm run verify:loot
+          npm run verify:gear
+          npm run verify:planner
+          npm run build:cloudflare
+      - name: Publish health summary
+        run: node scripts/report-data-health.mjs >> "$GITHUB_STEP_SUMMARY"
+      - name: Detect substantive source changes
+        id: source-changes
+        run: node scripts/check-source-changes.mjs >> "$GITHUB_OUTPUT"
+      - name: Open review pull request when sources changed
+        if: steps.source-changes.outputs.meaningful == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/wowf-data-refresh
+          delete-branch: true
+          commit-message: "data: refresh source-backed WoW Forever snapshots"
+          title: "data: refresh source-backed WoW Forever snapshots"
+          body: |
+            Automated, review-first refresh of the WOWF.IO corpus, dungeon and loot catalogs, map assets, and companion-addon data.
+
+            The workflow completed strict context, companion, data, loot, gear, planner, and production-build checks before opening this pull request. Review the generated field-level diff before merging.

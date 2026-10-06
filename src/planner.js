@@ -41,7 +41,7 @@ export function evaluateQuest(quest, dungeon, character, options, completedIds) 
   if (!matchesFaction(quest.faction, options.faction)) return { status: "wrong-faction", minLevel, xp: 0 };
   if (!matchesClass(quest.classes, options.characterClass)) return { status: "wrong-class", minLevel, xp: 0 };
   if (character.level < minLevel) return { status: "level-locked", minLevel, xp: 0 };
-  if ((quest.chain?.length ?? 0) > 0 && !options.assumePrerequisites && questState !== "have") {
+  if (((quest.prerequisiteIds?.length ?? 0) > 0 || (quest.chain?.length ?? 0) > 0) && !options.assumePrerequisites && questState !== "have") {
     return { status: "needs-prerequisites", minLevel, xp: 0 };
   }
   if (!Number.isFinite(quest.xp)) return { status: "xp-unverified", minLevel, xp: 0 };
@@ -53,8 +53,18 @@ export function estimateTravelMinutes(previousDungeon, dungeon, routeEntry = {})
   if (!previousDungeon) return 0;
   if (routeEntry.useHearth) return 8;
   if (previousDungeon.location && previousDungeon.location === dungeon.location) return 4;
+  const previousPoint = previousDungeon.world?.atlasPoints?.[0];
+  const nextPoint = dungeon.world?.atlasPoints?.[0];
+  if (Array.isArray(previousPoint) && Array.isArray(nextPoint)) {
+    const distance = Math.hypot(previousPoint[0] - nextPoint[0], previousPoint[1] - nextPoint[1]);
+    return Math.max(4, Math.min(28, Math.round(4 + distance / 420)));
+  }
   const levelDistance = Math.abs((previousDungeon.level?.[0] || 1) - (dungeon.level?.[0] || 1));
   return levelDistance >= 15 ? 22 : levelDistance >= 7 ? 16 : 12;
+}
+
+function guideMatches(dungeon, characterClass, spec) {
+  return (dungeon.guideRecommendations || []).filter((entry) => entry.classId === characterClass && (entry.spec === spec || entry.spec === "overview")).length;
 }
 
 function combatExperience(routeEntry) {
@@ -127,7 +137,7 @@ export function simulateRoute({ dungeonsById, route, level, xp, faction, charact
   return { start: clampCharacter(level, xp), finish: character, steps, totalTravelMinutes: steps.reduce((sum, step) => sum + step.travelMinutes, 0) };
 }
 
-function completeRoute({ dungeonsById, route, level, xp, faction, characterClass, assumePrerequisites, questStates = {}, lootGoals = {} }) {
+function completeRoute({ dungeonsById, route, level, xp, faction, characterClass, spec, assumePrerequisites, questStates = {}, lootGoals = {} }) {
   let character = clampCharacter(level, xp);
   const completedIds = new Set(Object.entries(questStates).filter(([, state]) => state === "complete").map(([id]) => id));
   let totalBridgeXp = 0;
@@ -136,6 +146,7 @@ function completeRoute({ dungeonsById, route, level, xp, faction, characterClass
   let totalTravelMinutes = 0;
   let readyQuests = 0;
   let wishlistHits = 0;
+  let guideHits = 0;
   const planned = [];
   let previousDungeon = null;
 
@@ -159,10 +170,11 @@ function completeRoute({ dungeonsById, route, level, xp, faction, characterClass
     totalTravelMinutes += travelMinutes;
     readyQuests += quests.filter((entry) => entry.gate.status === "ready").length;
     wishlistHits += Number(lootGoals[dungeon.id]) || 0;
+    guideHits += guideMatches(dungeon, characterClass, spec);
     planned.push({ ...routeEntry, bridgeXp, runs: combat.runs, combatXpPerRun: combat.perRun, restedPercent: combat.restedPercent });
     previousDungeon = dungeon;
   }
-  return { route: planned, totalBridgeXp, totalQuestXp, totalCombatXp, totalTravelMinutes, readyQuests, wishlistHits, finish: character };
+  return { route: planned, totalBridgeXp, totalQuestXp, totalCombatXp, totalTravelMinutes, readyQuests, wishlistHits, guideHits, finish: character };
 }
 
 function permutations(values) {
@@ -187,6 +199,7 @@ function betterPlan(candidate, current, strategy = "balanced") {
     if (candidate.totalQuestXp !== current.totalQuestXp) return candidate.totalQuestXp > current.totalQuestXp;
   }
   if (candidate.totalBridgeXp !== current.totalBridgeXp) return candidate.totalBridgeXp < current.totalBridgeXp;
+  if (candidate.guideHits !== current.guideHits) return candidate.guideHits > current.guideHits;
   if (candidate.wishlistHits !== current.wishlistHits) return candidate.wishlistHits > current.wishlistHits;
   if (candidate.totalQuestXp !== current.totalQuestXp) return candidate.totalQuestXp > current.totalQuestXp;
   if (candidate.finish.level !== current.finish.level) return candidate.finish.level > current.finish.level;
@@ -205,7 +218,7 @@ export function optimizeRouteOrder(options) {
   return best;
 }
 
-export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characterClass, assumePrerequisites, questStates = {}, count = 6, candidates, lootGoals = {}, strategy = "balanced" }) {
+export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characterClass, spec, assumePrerequisites, questStates = {}, count = 6, candidates, lootGoals = {}, strategy = "balanced" }) {
   let character = clampCharacter(level, xp);
   const completedIds = new Set(Object.entries(questStates).filter(([, state]) => state === "complete").map(([id]) => id));
   const available = (candidates ? candidates.map((id) => dungeonsById.get(id)) : [...dungeonsById.values()])
@@ -218,6 +231,7 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
   let totalTravelMinutes = 0;
   let readyQuests = 0;
   let wishlistHits = 0;
+  let guideHits = 0;
   let previousDungeon = null;
 
   while (available.length && route.length < count) {
@@ -232,13 +246,14 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
       const ready = quests.filter((entry) => entry.gate.status === "ready").length;
       const distance = Math.abs(dungeon.level[0] - character.level);
       const lootHits = Number(lootGoals[dungeon.id]) || 0;
+      const guideHit = guideMatches(dungeon, characterClass, spec);
       const travelMinutes = estimateTravelMinutes(previousDungeon, dungeon);
       const score = strategy === "fastest"
-        ? ready * 900 + questXp * .25 - bridgeXp * .9 - travelMinutes * 120 - distance * 100
+        ? ready * 900 + questXp * .25 + guideHit * 300 - bridgeXp * .9 - travelMinutes * 120 - distance * 100
         : strategy === "completion"
-          ? ready * 4200 + questXp + lootHits * 600 - bridgeXp * .05 - travelMinutes * 10
-          : questXp + ready * 900 + lootHits * 2500 - bridgeXp * .22 - travelMinutes * 45 - distance * 180;
-      return { dungeon, bridgeXp, bridged, quests, questXp, lootHits, travelMinutes, score };
+          ? ready * 4200 + questXp + lootHits * 600 + guideHit * 1200 - bridgeXp * .05 - travelMinutes * 10
+          : questXp + ready * 900 + lootHits * 2500 + guideHit * 1800 - bridgeXp * .22 - travelMinutes * 45 - distance * 180;
+      return { dungeon, bridgeXp, bridged, quests, questXp, lootHits, guideHit, travelMinutes, score };
     }).sort((a, b) => b.score - a.score || a.bridgeXp - b.bridgeXp);
     const choice = ranked[0];
     const index = available.indexOf(choice.dungeon);
@@ -252,11 +267,12 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
     totalTravelMinutes += choice.travelMinutes;
     readyQuests += choice.quests.filter((entry) => entry.gate.status === "ready").length;
     wishlistHits += choice.lootHits;
+    guideHits += choice.guideHit;
     route.push({ uid: `optimized-${route.length}-${choice.dungeon.id}`, dungeonId: choice.dungeon.id, bridgeXp: choice.bridgeXp, bonusXp: 0, runs: 1, combatXpPerRun: 0, restedPercent: 0 });
     previousDungeon = choice.dungeon;
   }
 
-  return { route, totalBridgeXp, totalQuestXp, totalCombatXp, totalTravelMinutes, readyQuests, wishlistHits, finish: character };
+  return { route, totalBridgeXp, totalQuestXp, totalCombatXp, totalTravelMinutes, readyQuests, wishlistHits, guideHits, finish: character };
 }
 
 export function buildOptimizerCandidates(options, mode = "current") {

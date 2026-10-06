@@ -3,7 +3,9 @@ import { readFile } from "node:fs/promises";
 import { access } from "node:fs/promises";
 
 const snapshot = JSON.parse(await readFile(new URL("../src/data/wow-forever.json", import.meta.url), "utf8"));
-assert.equal(snapshot.schemaVersion, 2);
+assert.equal(snapshot.schemaVersion, 3);
+assert.ok(snapshot.context.inventory.totalEnglishPages >= 400, "expected full WOWF.IO corpus metadata");
+assert.ok(snapshot.context.dataHealth.quests >= 100, "expected normalized quest-chain coverage");
 assert.equal(snapshot.dungeons.length, 34, "expected the complete current 34-dungeon catalog");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0) >= 1600, "expected comprehensive loot coverage");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0) >= 150, "expected quest and reward-group coverage");
@@ -24,8 +26,13 @@ for (const dungeon of snapshot.dungeons) {
   assert.ok(dungeon.level[0] <= dungeon.level[1]);
   assert.ok(Array.isArray(dungeon.loot));
   assert.ok(Array.isArray(dungeon.quests));
+  assert.ok(Array.isArray(dungeon.guideRecommendations));
   assert.ok(dungeon.lootSourceUrl.startsWith("https://"));
 }
+
+assert.ok(snapshot.dungeons.some((dungeon) => dungeon.world?.atlasPoints?.length), "expected sourced world-position data for Forever locations");
+assert.ok(snapshot.dungeons.some((dungeon) => dungeon.quests.some((quest) => quest.dataStatus === "source-only")), "expected newly linked full-corpus quests");
+assert.ok(snapshot.dungeons.some((dungeon) => dungeon.guideRecommendations.length), "expected class/spec leveling-guide recommendations");
 
 const routeNames = ["Ragefire Chasm", "Ruins of Lordaeron", "Shadowfang Keep"];
 for (const name of routeNames) {

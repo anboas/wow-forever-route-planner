@@ -28,10 +28,10 @@
 * { box-sizing: border-box; }
 html { min-width: 320px; background: var(--canvas); }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--canvas); }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { color: inherit; }
 button, select, input { min-height: 44px; }
-button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
 .tooltip-trigger:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -2px; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2, h3 { font-family: Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: -.025em; }
@@ -439,9 +439,9 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .profile-metrics span { min-width: 90px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .profile-metrics strong { display: block; color: var(--gold-2); font-size: 18px; }
 .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.profile-panel > header, .wishlist-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
-.profile-panel header span, .wishlist-panel header span { color: var(--gold); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
-.profile-panel h2, .wishlist-panel h2 { margin: 3px 0 0; font-size: 19px; }
+.profile-panel > header, .wishlist-panel > header, .companion-panel > header, .integration-health > header { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.profile-panel header span, .wishlist-panel header span, .companion-panel header span, .integration-health header span { color: var(--gold); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.profile-panel h2, .wishlist-panel h2, .companion-panel h2, .integration-health h2 { margin: 3px 0 0; font-size: 19px; }
 .profile-panel header small { color: var(--muted); }
 .loadout-grid, .party-editor { display: grid; gap: 1px; padding: 1px; background: var(--line-soft); }
 .loadout-slot { display: grid; grid-template-columns: 80px minmax(0,1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 7px 10px; background: var(--surface); }
@@ -459,6 +459,22 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .wishlist-card small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 .wishlist-card-meta { display: flex; grid-column: 1 / -1; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 9px; }
 .profile-empty, .profile-panel .empty-copy { margin: 0; padding: 28px; color: var(--muted); text-align: center; }
+.companion-panel, .integration-health { margin-top: 10px; }
+.addon-download { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--gold-dark); border-radius: var(--radius-sm); background: #2d2715; color: var(--gold-2); font-size: 11px; font-weight: 800; text-decoration: none; }
+.companion-grid { display: grid; grid-template-columns: minmax(260px,.7fr) minmax(420px,1.3fr); gap: 14px; padding: 14px 16px 10px; }
+.companion-copy strong { color: var(--ink); font-size: 14px; }
+.companion-copy p { margin: 7px 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.companion-copy small { color: var(--success); font-size: 9px; line-height: 1.5; }
+code { padding: 2px 4px; border: 1px solid var(--line-soft); border-radius: 3px; background: #080c12; color: #b8c7e7; font: 500 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.companion-panel textarea { min-height: 118px; width: 100%; resize: vertical; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px; background: #080c12; color: #c9d4e8; font: 500 10px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.companion-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 0 16px 14px; }
+.companion-actions a { margin-left: auto; font-size: 10px; }
+.companion-actions span { flex-basis: 100%; padding-top: 2px; color: var(--success); font-size: 10px; }
+.integration-health > header strong { color: var(--gold-2); font-size: 12px; }
+.integration-health > div { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1px; background: var(--line-soft); }
+.integration-health > div span { padding: 13px 16px; background: #0b1017; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .05em; }
+.integration-health > div b { display: block; margin-bottom: 4px; color: var(--ink); font-size: 18px; }
+.integration-health > p { margin: 0; padding: 12px 16px; color: var(--muted); font-size: 10px; line-height: 1.55; }
 .provenance-panel { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 20px; margin-top: 10px; padding: 12px 15px; border: 1px solid var(--line); border-radius: var(--radius); background: #0b1016; color: var(--muted); font-size: 10px; }
 .provenance-panel > div:first-child { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; }
 .provenance-panel > div:first-child small { grid-column: 2; }
@@ -510,6 +526,7 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .dungeon-map-panel > div:last-child { border-top: 1px solid var(--line); border-left: 0; }
   .boss-loot-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
+  .companion-grid { grid-template-columns: 1fr; }
   .detail-title-row { align-items: start; flex-direction: column; }
   .detail-actions { justify-content: start; }
   .provenance-panel { grid-template-columns: 1fr; }
@@ -614,6 +631,9 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .party-member button { width: 100%; }
   .wishlist-grid { grid-template-columns: 1fr; }
   .wishlist-card-meta { align-items: start; flex-direction: column; }
+  .companion-panel > header, .integration-health > header { align-items: flex-start; flex-direction: column; }
+  .companion-actions a { width: 100%; margin-left: 0; }
+  .integration-health > div { grid-template-columns: 1fr 1fr; }
   .provenance-panel { align-items: start; }
   .site-footer { grid-template-columns: 1fr; }
   .source-links { justify-content: start; }

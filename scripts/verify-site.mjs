@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { chromium } from "playwright-core";
+import snapshot from "../src/data/wow-forever.json" with { type: "json" };
 
 const port = 4179;
 const baseUrl = `http://127.0.0.1:${port}`;
@@ -79,7 +80,8 @@ try {
   assert.ok(await page.locator(".encounter-order a").count() >= 4, "map panel exposes a sourced encounter index");
 
   await page.getByRole("button", { name: "Quests", exact: true }).click();
-  assert.equal(await page.locator(".quest-archive-row").count(), 124, "Horde view hides Alliance-only quests");
+  const expectedHordeQuests = snapshot.dungeons.flatMap((dungeon) => dungeon.quests).filter((quest) => !quest.faction || quest.faction === "both" || quest.faction === "horde").length;
+  assert.equal(await page.locator(".quest-archive-row").count(), expectedHordeQuests, "Horde view hides Alliance-only quests");
   assert.equal((await page.locator(".quest-archive-row > div:nth-child(2) small").allTextContents()).some((value) => value === "Alliance"), false);
   await page.getByRole("combobox").last().selectOption("rewards-only");
   assert.equal(await page.locator(".quest-archive-row").count(), 67);
@@ -143,6 +145,14 @@ try {
   assert.equal(await page.locator(".loadout-slot").count(), 1, "equipped comparison baseline persists");
   await page.getByRole("button", { name: "Add member", exact: true }).click();
   assert.equal(await page.locator(".party-member").count(), 1, "party roster supports additional members");
+  assert.match(await page.locator(".integration-health").innerText(), /271[\s\S]*35[\s\S]*26/, "full-corpus health is visible");
+  assert.match(await page.locator(".addon-download").getAttribute("href"), /ForeverRouteCompanion\.zip$/);
+  const companionText = page.getByRole("textbox", { name: "Companion exchange text" });
+  await companionText.fill("WFRP1C|name=Gate+Runner|realm=Forever|level=18|xp=420|xpmax=12000|faction=Horde|class=WARRIOR|active=1,2|complete=3,4|gear=Head:123|bind=Orgrimmar|flights=Crossroads,Thunder+Bluff|professions=Mining:75:150");
+  await page.getByRole("button", { name: "Import character / plan", exact: true }).click();
+  assert.match(await page.locator(".companion-panel").innerText(), /Gate Runner · Forever[\s\S]*2 active quests[\s\S]*2 completed dungeon quests/);
+  await page.getByRole("button", { name: "Copy route for addon", exact: true }).click();
+  assert.match(await companionText.inputValue(), /^WFRP1P\|/);
 
   await page.getByRole("button", { name: "Loot", exact: true }).click();
   await page.getByPlaceholder("Search item, boss, slot, or dungeon").fill("");

@@ -1,0 +1,9 @@
+## Interface: 11508
+## Title: Forever Route Companion
+## Notes: Two-way character and route exchange for the Forever Route Planner.
+## Author: Adam Boas / Moltbot
+## Version: 0.2.0
+## SavedVariables: ForeverRouteCompanionDB
+
+Data.lua
+ForeverRouteCompanion.lua

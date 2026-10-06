@@ -6,6 +6,7 @@ import { clampCharacter, formatCharacter, progressPercent, XP_TO_NEXT } from "./
 import { buildOptimizerCandidates, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
 import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySourceUrl, itemKey, itemPowerScore, itemSummary, lootVisibleForFaction, questSourceUrl, recommendedForProfile, reportIssueUrl, runsForConfidence, specFitScore, specProfile } from "./gear.js";
+import { parseCompanionString, serializePlannerString } from "./companion.js";
 
 const CLASSES = CLASS_OPTIONS.map(({ id }) => id);
 const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"].map((dungeonId, index) => ({
@@ -30,6 +31,7 @@ const DEFAULT_STATE = {
   wishlist: [],
   equipped: {},
   party: [],
+  characterMeta: { name: "", realm: "", bindLocation: "", flightPaths: [], professions: [], importedAt: null },
   savedRoutes: [],
   lootPreferences: { query: "", dungeonId: "all", slot: "all", rarity: "all", classFilter: null, fitMode: "usable", sourceFilter: "all", wishlistOnly: false, sort: "fit", viewMode: "boss" },
 };
@@ -337,11 +339,12 @@ function QuestTooltip({ quest, dungeon, gate }) {
         <span><b>Ends:</b> {actorList(quest.to)}</span>
         <span><b>Experience:</b> {Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "Unverified"}</span>
         {quest.rep && <span><b>Reputation:</b> {quest.rep}</span>}
-        {!!quest.chain?.length && <span><b>Prerequisites:</b> {quest.chain.join(", ")}</span>}
+        {!!quest.chain?.length && <span><b>Prerequisites:</b> {quest.chain.map((entry) => entry.name || entry).join(", ")}</span>}
+        {!!quest.prerequisiteIds?.length && !quest.chain?.length && <span><b>Prerequisite IDs:</b> {quest.prerequisiteIds.join(", ")}</span>}
       </div>
       {!!rewards.length && <div className="tooltip-rewards"><span>Rewards</span>{rewards.map((reward, index) => <strong className={qualityClass(reward)} key={`${reward.id || reward.name}-${index}`}>{reward.name}</strong>)}</div>}
       {quest.rewardNote && <div className="tooltip-warning">{quest.rewardNote}</div>}
-      <div className="tooltip-source"><span>Dungeon</span><strong>{dungeon.name}</strong><small>{quest.dataStatus === "verified" ? "Verified Forever quest record" : "Partial beta coverage"}</small></div>
+      <div className="tooltip-source"><span>Dungeon</span><strong>{dungeon.name}</strong><small>{quest.dataStatus === "verified" ? "Verified Forever quest record" : quest.dataStatus === "source-only" ? "WOWF quest-chain record · XP pending" : "Partial beta coverage"}</small></div>
     </div>
   );
 }
@@ -376,7 +379,7 @@ function QuestTray({ selection, onClose, itemLookup }) {
           <div><dt>Ends</dt><dd>{actorList(quest.to)}</dd></div>
           {quest.rep && <div><dt>Reputation</dt><dd>{quest.rep}</dd></div>}
         </dl>
-        <section className="tray-checklist"><h3>Readiness checklist</h3><span className={gate?.status === "level-locked" ? "blocked" : "ready"}>Character level {questMinimumLevel(quest, dungeon)}+</span><span className={gate?.status === "wrong-faction" ? "blocked" : "ready"}>{humanize(quest.faction || "Any faction")}</span><span className={gate?.status === "needs-prerequisites" ? "blocked" : "ready"}>{quest.chain?.length ? `${quest.chain.length} prerequisite quest${quest.chain.length === 1 ? "" : "s"}` : "No pre-quests required"}</span></section>
+        <section className="tray-checklist"><h3>Readiness checklist</h3><span className={gate?.status === "level-locked" ? "blocked" : "ready"}>Character level {questMinimumLevel(quest, dungeon)}+</span><span className={gate?.status === "wrong-faction" ? "blocked" : "ready"}>{humanize(quest.faction || "Any faction")}</span><span className={gate?.status === "needs-prerequisites" ? "blocked" : "ready"}>{quest.chain?.length ? `${quest.chain.length} prerequisite quest${quest.chain.length === 1 ? "" : "s"}` : quest.prerequisiteIds?.length ? `${quest.prerequisiteIds.length} sourced prerequisite` : "No pre-quests required"}</span></section>
         {!!quest.chain?.length && <section className="tray-chain"><h3>Prerequisite quests</h3>{quest.chain.map((entry, index) => <span key={`${entry.id || entry.name}-${index}`}>{entry.name || entry}</span>)}</section>}
         <section className="tray-rewards">
           <h3>Rewards <span>{rewards.length}</span></h3>
@@ -388,7 +391,7 @@ function QuestTray({ selection, onClose, itemLookup }) {
             </TooltipTrigger>
           )) : <p className="empty-copy">No item rewards are listed in the current source record.</p>}
         </section>
-        <footer><span><a href={questSourceUrl(quest)} target="_blank" rel="noreferrer">Wowhead quest ↗</a> · <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Forever source ↗</a> · <a href={reportIssueUrl({ quest, dungeon })} target="_blank" rel="noreferrer">Report data ↗</a></span><span>{quest.dataStatus === "verified" ? "Verified Forever details" : "Rewards-only coverage"}</span></footer>
+        <footer><span><a href={questSourceUrl(quest)} target="_blank" rel="noreferrer">Wowhead quest ↗</a> · <a href={quest.sourcePages?.[0]?.url || dungeon.questSourceUrl} target="_blank" rel="noreferrer">Forever source ↗</a> · <a href={reportIssueUrl({ quest, dungeon })} target="_blank" rel="noreferrer">Report data ↗</a></span><span>{quest.dataStatus === "verified" ? "Verified Forever details" : quest.dataStatus === "source-only" ? "Sourced chain details · XP pending" : "Rewards-only coverage"}</span></footer>
       </aside>
     </div>,
     document.body,
@@ -560,7 +563,7 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin, onNavigate })
     patch({ route: result.route });
     setExpandedSteps(new Set());
     setOptimizerCandidates(null);
-    setOptimization(`${candidate.label} applied: ${number(result.totalQuestXp)} quest XP, ${number(result.totalBridgeXp)} world XP between stops, ${result.totalTravelMinutes} travel minutes, and ${result.readyQuests} ready quests.`);
+    setOptimization(`${candidate.label} applied: ${number(result.totalQuestXp)} quest XP, ${number(result.totalBridgeXp)} world XP between stops, ${result.totalTravelMinutes} travel minutes, ${result.readyQuests} ready quests, and ${result.guideHits} class-guide matches.`);
   }
 
   function updateQuestState(questId, value) {
@@ -644,7 +647,7 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin, onNavigate })
           {optimizerCandidates.map((candidate) => <article key={candidate.id}>
             <div className="optimizer-title"><span>{candidate.id === "fastest" ? "⚡" : candidate.id === "completion" ? "✓" : "◎"}</span><div><h3>{candidate.label}</h3><p>{candidate.description}</p></div></div>
             <div className="optimizer-path">{candidate.result.route.map((entry) => dungeonsById.get(entry.dungeonId)?.name || entry.dungeonId).join(" → ")}</div>
-            <div className="optimizer-metrics"><span><strong>{number(candidate.result.totalBridgeXp)}</strong> world XP</span><span><strong>{candidate.result.readyQuests}</strong> ready quests</span><span><strong>{candidate.result.totalTravelMinutes}m</strong> travel</span><span><strong>{number(candidate.result.totalQuestXp)}</strong> quest XP</span></div>
+            <div className="optimizer-metrics"><span><strong>{number(candidate.result.totalBridgeXp)}</strong> world XP</span><span><strong>{candidate.result.readyQuests}</strong> ready quests</span><span><strong>{candidate.result.totalTravelMinutes}m</strong> travel</span><span><strong>{number(candidate.result.totalQuestXp)}</strong> quest XP</span><span><strong>{candidate.result.guideHits}</strong> guide matches</span><span><strong>{candidate.result.wishlistHits}</strong> wishlist hits</span></div>
             <p className="optimizer-why">{candidate.id === "fastest" ? "Why: penalizes travel and pre-dungeon grinding most heavily." : candidate.id === "completion" ? "Why: rewards every ready verified quest before considering travel cost." : "Why: weighs XP, readiness, travel, and wishlist goals together."}</p>
             <button onClick={() => applyCandidate(candidate)}>Apply {candidate.label}</button>
           </article>)}
@@ -931,6 +934,25 @@ function Profile({ dungeons }) {
   const gear = useGear();
   const dungeonsById = useMemo(() => new Map(dungeons.map((dungeon) => [dungeon.id, dungeon])), [dungeons]);
   const equippedItems = Object.values(gear.equipped);
+  const [companionText, setCompanionText] = useState("");
+  const [companionNotice, setCompanionNotice] = useState("");
+
+  function importCompanion() {
+    try {
+      const result = gear.importCompanion(companionText);
+      setCompanionNotice(result);
+    } catch (error) {
+      setCompanionNotice(error.message);
+    }
+  }
+
+  async function exportPlanner() {
+    const value = gear.exportPlanner();
+    setCompanionText(value);
+    try { await navigator.clipboard.writeText(value); } catch { /* The text remains selected in the workspace. */ }
+    setCompanionNotice("Planner route copied when clipboard access is available. Import it in game with /wfrp import <text>.");
+  }
+
   return (
     <main className="library-shell profile-shell">
       <header className="library-header"><div><div className="section-kicker">Character workspace</div><h1>Loadout, wishlist & party</h1><p>Persistent gear goals feed the loot browser and route optimizer.</p></div><div className="profile-metrics"><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{equippedItems.length}</strong> equipped</span><span><strong>{gear.party.length + 1}</strong> party</span></div></header>
@@ -939,6 +961,15 @@ function Profile({ dungeons }) {
         <section className="profile-panel panel"><header><div><span>Party roster</span><h2>Who wants each drop?</h2></div><button onClick={gear.addPartyMember} disabled={gear.party.length >= 4}>Add member</button></header><div className="party-editor">{gear.party.map((member) => <div className="party-member" key={member.id}><input aria-label="Party member name" value={member.name} onChange={(event) => gear.updatePartyMember(member.id, { name: event.target.value })} /><select aria-label={`${member.name} class`} value={member.characterClass} onChange={(event) => gear.updatePartyMember(member.id, { characterClass: event.target.value, spec: defaultSpec(event.target.value) })}>{CLASSES.map((entry) => <option key={entry}>{humanize(entry)}</option>)}</select><select aria-label={`${member.name} specialization`} value={member.spec} onChange={(event) => gear.updatePartyMember(member.id, { spec: event.target.value })}>{(CLASS_SPECS[member.characterClass] || []).map((entry) => <option value={entry.id} key={entry.id}>{entry.label} · {entry.role}</option>)}</select><button onClick={() => gear.removePartyMember(member.id)} aria-label={`Remove ${member.name}`}>×</button></div>)}{!gear.party.length && <p className="empty-copy">Add up to four party members. Item tooltips will show who has a strong rules-based fit.</p>}</div></section>
       </div>
       <section className="wishlist-panel panel"><header><div><span>Loot goals</span><h2>Wishlist</h2></div><strong>{gear.wishlist.length} tracked</strong></header>{gear.wishlist.length ? <div className="wishlist-grid">{gear.wishlist.map((item) => { const dungeon = dungeonsById.get(item.dungeonId); const equipped = item.slot ? gear.equipped[item.slot] : null; const comparison = compareItems(item, equipped, gear.characterClass, gear.spec); const partyFit = gear.party.filter((member) => recommendedForProfile(item, member.characterClass, member.spec)); return <div className="wishlist-card" key={item.key}><div><ItemIcon item={item} /><span><strong className={qualityClass(item)}>{item.name}</strong><small>{item.dungeonName || "Dungeon pending"} · {item.slot || item.type || "Item"}</small></span></div><div className="wishlist-card-meta"><span>{equipped ? `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)} vs equipped` : "No equipped comparison"}</span><span>{partyFit.length ? `Party: ${partyFit.map((member) => member.name).join(", ")}` : "No party conflict"}</span></div><ItemActions item={item} dungeon={dungeon} /></div>; })}</div> : <p className="profile-empty">Star items in dungeon details, grouped loot, quest rewards, or the full archive.</p>}</section>
+      <section className="companion-panel panel">
+        <header><div><span>Companion integration</span><h2>Import your character. Export your route.</h2></div><a className="addon-download" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download addon</a></header>
+        <div className="companion-grid">
+          <div className="companion-copy"><strong>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No character imported"}</strong><p>In game, run <code>/wfrp export</code>, copy the text, and paste it here. The import updates level, XP, faction, class, active/completed dungeon quests, equipped gear, hearth, flight paths, and professions.</p>{gear.characterMeta.importedAt && <small>Last imported {new Date(gear.characterMeta.importedAt).toLocaleString()} · Hearth: {gear.characterMeta.bindLocation || "unknown"} · {gear.characterMeta.flightPaths.length} known flight paths</small>}</div>
+          <textarea aria-label="Companion exchange text" value={companionText} onChange={(event) => setCompanionText(event.target.value)} placeholder="Paste WFRP1C character text here, or export a WFRP1P route for the addon." spellCheck="false" />
+        </div>
+        <div className="companion-actions"><button onClick={importCompanion} disabled={!companionText.trim()}>Import character / plan</button><button className="secondary" onClick={exportPlanner}>Copy route for addon</button><a href="https://github.com/anboas/wow-forever-route-planner/tree/main/addon/ForeverRouteCompanion" target="_blank" rel="noreferrer">Source & install guide ↗</a>{companionNotice && <span role="status">{companionNotice}</span>}</div>
+      </section>
+      <section className="integration-health panel"><header><div><span>Live source coverage</span><h2>WOWF.IO full corpus</h2></div><strong>{snapshot.context.inventory.totalEnglishPages} indexed pages</strong></header><div><span><b>{snapshot.context.dataHealth.quests}</b> normalized quests</span><span><b>{snapshot.context.dataHealth.levelingGuides}</b> class/spec guides</span><span><b>{snapshot.context.dataHealth.zones}</b> zones and instances</span><span><b>{snapshot.context.dataHealth.unresolvedCoordinates}</b> unresolved coordinates</span></div><p>Every retained record carries its source URL, source update time, retrieval time, and review state. Refresh with <code>npm run sync:all</code>; validation fails closed before replacing the checked snapshot.</p></section>
       <section className="provenance-panel"><div><span className="status-dot" /><strong>Snapshot {new Date(snapshot.fetchedAt).toLocaleString()}</strong><small>{snapshot.dungeons.length} dungeons · {number(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0))} loot records</small></div><div>{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name} ↗</a>)}</div><a href={reportIssueUrl({ dungeon: null })} target="_blank" rel="noreferrer">Report incorrect data ↗</a></section>
     </main>
   );
@@ -957,6 +988,11 @@ export default function App() {
       if (item.id) lookup.set(`id:${item.id}`, item);
       lookup.set(`name:${item.name.toLowerCase()}`, item);
     }
+    return lookup;
+  }, [dungeons]);
+  const itemRecordLookup = useMemo(() => {
+    const lookup = new Map();
+    for (const dungeon of dungeons) for (const item of dungeon.loot) if (item.id && !lookup.has(String(item.id))) lookup.set(String(item.id), { item, dungeon });
     return lookup;
   }, [dungeons]);
 
@@ -988,12 +1024,76 @@ export default function App() {
     if (openPlanner) setView("planner");
   }
 
+  function importCompanion(value) {
+    const payload = parseCompanionString(value);
+    let result = "";
+    setState((current) => {
+      const questStates = { ...current.questStates };
+      for (const id of payload.completedQuestIds || []) questStates[String(id)] = "complete";
+      for (const id of payload.activeQuestIds || []) if (!questStates[String(id)]) questStates[String(id)] = "have";
+      if (payload.type === "plan") {
+        const route = payload.route.filter((id) => dungeonsById.has(id)).map((dungeonId, index) => ({ uid: `imported-${Date.now()}-${index}`, dungeonId, bridgeXp: 0, bonusXp: 0, runs: 1, combatXpPerRun: 0, restedPercent: 0 }));
+        const wishlist = [...current.wishlist];
+        for (const id of payload.wishlistItemIds) {
+          const record = itemRecordLookup.get(String(id));
+          if (record && !wishlist.some((entry) => entry.key === itemKey(record.item, record.dungeon.id))) wishlist.push(itemSummary(record.item, record.dungeon));
+        }
+        result = `Imported ${route.length} route stops, ${payload.completedQuestIds.length} completed quests, and ${payload.wishlistItemIds.length} wishlist IDs.`;
+        return {
+          ...current,
+          level: payload.level || current.level,
+          xp: payload.xp ?? current.xp,
+          faction: ["horde", "alliance"].includes(payload.faction) ? payload.faction : current.faction,
+          characterClass: CLASSES.includes(payload.characterClass) ? payload.characterClass : current.characterClass,
+          spec: payload.spec || current.spec,
+          route: route.length ? route : current.route,
+          wishlist,
+          questStates,
+        };
+      }
+      const equipped = { ...current.equipped };
+      let matchedGear = 0;
+      for (const entry of payload.gear) {
+        const record = itemRecordLookup.get(String(entry.itemId));
+        if (record) {
+          const summary = itemSummary(record.item, record.dungeon);
+          equipped[summary.slot || entry.slot] = summary;
+          matchedGear += 1;
+        } else {
+          equipped[entry.slot] = { id: entry.itemId, name: `Item ${entry.itemId}`, slot: entry.slot, key: `addon:${entry.itemId}`, source: "companion-addon" };
+        }
+      }
+      const characterClass = CLASSES.includes(payload.characterClass) ? payload.characterClass : current.characterClass;
+      result = `Imported ${payload.name || "character"}: ${payload.activeQuestIds.length} active quests, ${payload.completedQuestIds.length} completed dungeon quests, and ${matchedGear}/${payload.gear.length} recognized gear items.`;
+      return {
+        ...current,
+        level: payload.level || current.level,
+        xp: payload.xp ?? current.xp,
+        faction: ["horde", "alliance"].includes(payload.faction) ? payload.faction : current.faction,
+        characterClass,
+        spec: (CLASS_SPECS[characterClass] || []).some((entry) => entry.id === payload.spec) ? payload.spec : current.characterClass === characterClass ? current.spec : defaultSpec(characterClass),
+        questStates,
+        equipped,
+        characterMeta: {
+          name: payload.name,
+          realm: payload.realm,
+          bindLocation: payload.bindLocation,
+          flightPaths: payload.flightPaths,
+          professions: payload.professions,
+          importedAt: new Date().toISOString(),
+        },
+      };
+    });
+    return result;
+  }
+
   const gear = {
     characterClass: state.characterClass,
     spec: state.spec,
     wishlist: state.wishlist,
     equipped: state.equipped,
     party: state.party,
+    characterMeta: state.characterMeta,
     lootPreferences: state.lootPreferences,
     updateLootPreferences: (values) => setState((current) => ({ ...current, lootPreferences: { ...current.lootPreferences, ...values } })),
     isWishlisted: (item, dungeon) => state.wishlist.some((entry) => entry.key === itemKey(item, dungeon?.id)),
@@ -1003,6 +1103,8 @@ export default function App() {
     addPartyMember: () => setState((current) => current.party.length >= 4 ? current : ({ ...current, party: [...current.party, { id: uid(), name: `Member ${current.party.length + 2}`, characterClass: "warrior", spec: "arms" }] })),
     updatePartyMember: (id, values) => setState((current) => ({ ...current, party: current.party.map((member) => member.id === id ? { ...member, ...values } : member) })),
     removePartyMember: (id) => setState((current) => ({ ...current, party: current.party.filter((member) => member.id !== id) })),
+    importCompanion,
+    exportPlanner: () => serializePlannerString(state),
   };
 
   return (

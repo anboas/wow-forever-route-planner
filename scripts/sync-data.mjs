@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -10,6 +10,19 @@ const outputPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../src/data/wow-forever.json",
 );
+const contextPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/data/wowf-context.json");
+const context = JSON.parse(await readFile(contextPath, "utf8"));
+const contextQuestById = new Map(context.quests.map((quest) => [String(quest.id), quest]));
+
+function profileKey(guide) {
+  return `${guide.classId}:${guide.spec}`;
+}
+
+const recommendedProfilesByQuest = new Map();
+for (const guide of context.levelingGuides) for (const quest of guide.dungeonQuests) {
+  const keys = [quest.id ? `id:${quest.id}` : null, quest.name ? `name:${nameKey(quest.name)}` : null].filter(Boolean);
+  for (const key of keys) recommendedProfilesByQuest.set(key, [...new Set([...(recommendedProfilesByQuest.get(key) || []), profileKey(guide)])]);
+}
 
 function flightPayload(html) {
   const chunks = [];
@@ -175,6 +188,13 @@ function slimQuestStep(step) {
 }
 
 function slimQuest(quest) {
+  const contextQuest = contextQuestById.get(String(quest.id));
+  const recommendedProfiles = [...new Set([
+    ...(recommendedProfilesByQuest.get(`id:${quest.id}`) || []),
+    ...(recommendedProfilesByQuest.get(`name:${nameKey(quest.name)}`) || []),
+  ])];
+  const startPlaces = contextQuest?.stages?.find((stage) => stage.key === "start")?.places;
+  const endPlaces = contextQuest?.stages?.find((stage) => stage.key === "end")?.places;
   return clean({
     id: quest.id,
     name: quest.name,
@@ -184,8 +204,8 @@ function slimQuest(quest) {
     classes: quest.classes,
     objective: quest.objective,
     note: quest.note,
-    from: list(quest.from).map(slimPerson),
-    to: list(quest.to).map(slimPerson),
+    from: list(quest.from).length ? list(quest.from).map(slimPerson) : startPlaces,
+    to: list(quest.to).length ? list(quest.to).map(slimPerson) : endPlaces,
     chain: list(quest.chain).map(slimQuestStep),
     next: list(quest.next).map(slimQuestStep),
     rewards: list(quest.rewards).map(slimItem),
@@ -195,7 +215,41 @@ function slimQuest(quest) {
     rep: quest.rep,
     site: quest.site,
     series: quest.series,
+    stages: contextQuest?.stages,
+    prerequisiteIds: contextQuest?.previousIds,
+    sourcePages: contextQuest?.sourcePages,
+    sourceUpdatedAt: contextQuest?.sourceUpdatedAt,
+    reviewState: contextQuest?.reviewState,
+    recommendedProfiles,
     dataStatus: "verified",
+  });
+}
+
+function questFromContext(quest) {
+  const start = quest.stages.find((stage) => stage.key === "start");
+  const end = quest.stages.find((stage) => stage.key === "end");
+  return clean({
+    id: quest.id,
+    name: quest.name,
+    level: quest.level,
+    minLevel: quest.minLevel,
+    faction: quest.faction,
+    classes: quest.classes,
+    objective: quest.objective,
+    from: start?.places,
+    to: end?.places,
+    stages: quest.stages,
+    prerequisiteIds: quest.previousIds,
+    rewards: quest.rewards,
+    rewardChoices: quest.rewardChoices,
+    sourcePages: quest.sourcePages,
+    sourceUpdatedAt: quest.sourceUpdatedAt,
+    reviewState: quest.reviewState,
+    recommendedProfiles: [...new Set([
+      ...(recommendedProfilesByQuest.get(`id:${quest.id}`) || []),
+      ...(recommendedProfilesByQuest.get(`name:${nameKey(quest.name)}`) || []),
+    ])],
+    dataStatus: "source-only",
   });
 }
 
@@ -258,6 +312,21 @@ const dungeons = await mapLimit(lootCatalog, 4, async (lootSummary, index) => {
     });
   }
 
+  const knownQuestIds = new Set(quests.map((quest) => String(quest.id)));
+  const knownQuestNames = new Set(quests.map((quest) => nameKey(quest.name)));
+  for (const contextQuest of context.quests) {
+    const linked = contextQuest.stages.some((stage) => nameKey(stage.dungeon?.name || "") === nameKey(lootSummary.name));
+    if (!linked || knownQuestIds.has(String(contextQuest.id)) || knownQuestNames.has(nameKey(contextQuest.name))) continue;
+    quests.push(questFromContext(contextQuest));
+    knownQuestIds.add(String(contextQuest.id));
+    knownQuestNames.add(nameKey(contextQuest.name));
+  }
+
+  const guideRecommendations = context.levelingGuides.flatMap((guide) => guide.dungeonQuests
+    .filter((quest) => nameKey(quest.dungeon || "") === nameKey(lootSummary.name))
+    .map((quest) => clean({ classId: guide.classId, spec: guide.spec, questId: quest.id, questName: quest.name, sourceUrl: guide.source.url })));
+  const world = context.zones.find((zone) => zone.id === (wowfSummary?.id ?? slug) || nameKey(zone.name) === nameKey(lootSummary.name));
+
   const merged = clean({
     id: wowfSummary?.id ?? slug,
     name: lootSummary.name,
@@ -267,6 +336,7 @@ const dungeons = await mapLimit(lootCatalog, 4, async (lootSummary, index) => {
     location: wowfSummary?.location,
     status: wowfSummary?.status,
     entryLevel: wowfSummary?.entryLevel,
+    world: world ? clean({ summary: world.summary, faction: world.faction, location: world.location, atlasPoints: world.atlasPoints, worldPoints: world.worldPoints, source: world.source }) : undefined,
     bosses: (wowfData?.bosses ?? lootGroups.bosses ?? []).map((boss) => ({
       name: boss.name,
       level: boss.level,
@@ -274,6 +344,7 @@ const dungeons = await mapLimit(lootCatalog, 4, async (lootSummary, index) => {
     })),
     loot: [...lootById.values()],
     quests,
+    guideRecommendations,
     questSourceUrl: wowfSummary ? `${SOURCE_INDEX}/${wowfSummary.id}/quests` : pageDataUrl,
     lootSourceUrl: `${LOOT_SOURCE_ORIGIN}${lootSummary.path}`,
     dataCoverage: wowfSummary ? "detailed" : "loot-only",
@@ -285,13 +356,18 @@ const dungeons = await mapLimit(lootCatalog, 4, async (lootSummary, index) => {
 });
 
 const snapshot = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   fetchedAt: new Date().toISOString(),
+  context: {
+    fetchedAt: context.fetchedAt,
+    inventory: context.inventory,
+    dataHealth: context.dataHealth,
+  },
   sources: [
     {
       name: "WOWF.IO",
       url: SOURCE_INDEX,
-      note: "Beta-client and public-announcement dungeon, verified quest, and detailed loot compilation.",
+      note: "Beta-client and public-announcement dungeon data plus the complete published quest, zone, and leveling-guide corpus.",
     },
     {
       name: "Warcraft Tavern",

@@ -11,6 +11,9 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Compact collapsed route stops, a sticky mobile command dock, and per-quest Auto, Already have, Complete, or Skip state.
 - Explicit world XP, observed XP-per-clear, repeat-run, rested-XP, travel-time, and hearth inputs so the planner never presents inferred Forever combat values as source facts.
 - Actual-result repair: enter the level and XP reached after a stop to mark its ready quests complete and rebuild the remaining route automatically.
+- Full WOWF.IO corpus ingestion: 413 indexed English pages, 271 normalized quest-chain records with resolved pickup/turn-in coordinates, 35 class/spec leveling guides, and 26 zone/instance records.
+- Class/spec guide matches and sourced world coordinates feed optimizer scoring and travel estimates while retaining visible provenance and review state.
+- Downloadable `ForeverRouteCompanion` addon with two-way exchange: import character level/XP, faction, class, active/completed dungeon quests, gear, hearth, discovered flight paths, and professions; export the planned route and wishlist back to the game.
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
 - Class, specialization, role, usable/recommended, source, slot, rarity, level, and wishlist filters with transparent rules-based fit icons.
 - Dungeon-to-boss loot browsing with explicit Boss, Quest reward, Mob, Trash, and Unknown source labels and remembered collapsible groups.
@@ -25,14 +28,25 @@ The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → S
 
 ## Data provenance
 
-- [WOWF.IO](https://wowf.io/en/dungeons): detailed beta-client quest and loot compilation.
+- [WOWF.IO](https://wowf.io/sitemap.xml): complete published English quest, zone, leveling-guide, dungeon, and beta-client compilation. Every retained context record carries source URL, source update time, retrieval time, and review state.
 - [wowtbc.gg](https://wowtbc.gg/warcraftforever/loot-tables/dungeons/): full dungeon and loot catalog cross-check.
 - [Warcraft Tavern](https://www.warcrafttavern.com/forever/guides/dungeons/): dungeon ranges, locations, and the quest-centered XP model.
 - [Wowhead Classic](https://www.wowhead.com/classic): stable public item deep links/search targets and Blizzard-style icon delivery.
 - [AtlasLootClassic Maps](https://github.com/Hoizame/AtlasLootClassic_Maps): GPL-2.0 Classic instance maps converted from BLP to checked-in PNG assets.
 - [Warcraft Wiki](https://warcraft.wiki.gg/wiki/Experience_to_level): Classic XP curve reference.
 
-Run `npm run sync:all` to rebuild the checked-in data snapshot and map assets. `sync:data` preserves item IDs, icons, stats, source bosses, and quest metadata from the upstream sources; `sync:maps` deterministically rebuilds the licensed PNG map set. Beta values can change; unverified quest XP is excluded from route totals.
+Run `npm run sync:all` to rebuild every checked-in integration. `sync:context` atomically normalizes the WOWF.IO sitemap corpus; `sync:data` merges dungeon/loot sources with quest chains, class/spec guide recommendations, and world positions; `sync:maps` deterministically rebuilds the licensed PNG map set; `sync:addon` regenerates the addon quest catalog and downloadable ZIP. Validation fails closed before a generated snapshot replaces the prior version. Beta values can change; unverified quest XP remains excluded from route totals.
+
+The scheduled `Refresh source-backed data` GitHub Actions workflow runs the same pipeline daily, validates every non-browser data/planner contract plus the Cloudflare production build, publishes a health summary, and opens a review pull request only when checked source artifacts changed. Production is never mutated directly by the refresh job.
+
+## Companion addon
+
+1. Download `ForeverRouteCompanion.zip` from the live **My Gear** workspace.
+2. Extract `ForeverRouteCompanion` into `World of Warcraft/_classic_era_/Interface/AddOns/`.
+3. Run `/wfrp export` in game and paste the result into **My Gear → Companion integration**.
+4. Use **Copy route for addon**, then run `/wfrp import <planner text>` in game. `/wfrp next` reports the next planned dungeon.
+
+The addon uses local game APIs only and never uploads data automatically. Its source is checked in under `addon/ForeverRouteCompanion/`.
 
 ## Development
 
