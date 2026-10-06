@@ -14,6 +14,7 @@
     "verify:data": "node scripts/verify-data.mjs",
     "verify:planner": "node scripts/verify-planner.mjs",
     "verify:ui": "node scripts/verify-site.mjs",
+    "verify:prod-smoke": "node scripts/prod-smoke.mjs",
     "verify": "npm run verify:data && npm run verify:planner && npm run build && npm run verify:ui",
     "pages:dev": "npm run build:cloudflare && wrangler pages dev dist",
     "pages:deploy": "npm run build:cloudflare && wrangler pages deploy dist --project-name wow-forever-route-planner",
