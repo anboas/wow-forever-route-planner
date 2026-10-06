@@ -8,6 +8,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "build:cloudflare": "VITE_BASE_PATH=/ npm run build",
+    "build:github-pages": "VITE_BASE_PATH=/wow-forever-route-planner/ npm run build",
     "preview": "vite preview --host 0.0.0.0",
     "serve": "node server.mjs",
     "sync:data": "node scripts/sync-data.mjs",

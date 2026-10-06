@@ -1,9 +1,9 @@
 {
   "name": "Forever Route Planner",
   "short_name": "Routeforge",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#090c0d",
   "theme_color": "#090c0d",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }

@@ -51,4 +51,6 @@ npm run verify:prod-smoke
 
 Production: <https://wow-forever-route-planner.pages.dev/>
 
+GitHub Pages mirror: <https://anboas.github.io/wow-forever-route-planner/>
+
 This is an unofficial fan-made planning tool and is not affiliated with Blizzard Entertainment.
