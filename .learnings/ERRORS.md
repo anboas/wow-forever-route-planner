@@ -1,5 +1,69 @@
 # Errors
 
+## [ERR-20261006-TOOLTIP-HOVER-CLICK-RACE] Hover and click competed for tooltip state
+
+**Logged**: 2026-10-06T00:40:00-04:00
+**Priority**: medium
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+A pointer click opened a tooltip through hover and then immediately closed it through a naive click toggle.
+
+### Error
+```
+locator.boundingBox: Timeout 30000ms exceeded waiting for locator('.wow-tooltip')
+```
+
+### Context
+- Desktop hover and touch tap shared one boolean open state.
+- Playwright's mobile-width click reproduced the competing event sequence.
+
+### Suggested Fix
+Track transient hover/focus visibility separately from a click/tap-pinned state.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T00:42:00-04:00
+- **Notes**: Added an explicit pinned state; hover remains transient, click/tap pins, and a second click or Escape closes.
+
+---
+
+## [ERR-20261006-MIXED-LOOT-EFFECT-SHAPE] Loot effects use mixed array and object shapes
+
+**Logged**: 2026-10-06T00:31:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+The checked-in loot snapshot contains both array-valued and object-valued `effects`, so consumers cannot assume every effect collection is directly iterable.
+
+### Error
+```
+TypeError: object is not iterable
+```
+
+### Context
+- A schema inventory probe iterated every dungeon loot entry.
+- Most detailed Forever records use arrays, while some imported legacy catalog records use object maps.
+
+### Suggested Fix
+Normalize effect values at the rendering boundary and cover both shapes in the UI verifier.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, scripts/verify-site.mjs, src/data/wow-forever.json
+
+### Resolution
+- **Resolved**: 2026-10-06T00:44:00-04:00
+- **Notes**: Added a rendering-boundary normalizer for array, object-map, and scalar effects plus browser coverage for the legacy object-map shape.
+
+---
+
 ## [ERR-20261006-PLAYWRIGHT-LABEL-SUBSTRING] Exact input selector required
 
 **Logged**: 2026-10-06T00:32:00-04:00

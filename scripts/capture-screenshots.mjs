@@ -7,9 +7,16 @@ try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 1 });
   await desktop.goto("http://127.0.0.1:4179", { waitUntil: "networkidle" });
   await desktop.screenshot({ path: new URL("../test-results/planner-desktop.png", import.meta.url).pathname, fullPage: true });
+  await desktop.getByRole("button", { name: "Loot", exact: true }).click();
+  await desktop.getByPlaceholder("Search item, boss, slot, or dungeon").fill("Fang of Magmatus");
+  await desktop.locator(".loot-row").hover();
+  await desktop.screenshot({ path: new URL("../test-results/loot-tooltip-desktop.png", import.meta.url).pathname, fullPage: false });
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
   await mobile.goto("http://127.0.0.1:4179", { waitUntil: "networkidle" });
   await mobile.screenshot({ path: new URL("../test-results/planner-mobile.png", import.meta.url).pathname, fullPage: true });
+  await mobile.getByRole("button", { name: "Quests", exact: true }).click();
+  await mobile.locator(".quest-archive-row").first().click();
+  await mobile.screenshot({ path: new URL("../test-results/quest-tooltip-mobile.png", import.meta.url).pathname, fullPage: false });
 } finally {
   await browser.close();
 }

@@ -8,7 +8,9 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Verified Forever dungeon quest XP, pickup levels, faction gates, class gates, and prerequisite-chain warnings where source data exists.
 - Sequential route simulation against the Classic 1–60 XP curve.
 - Manual combat/travel XP per stop so the planner never invents unverified per-run XP.
-- Searchable dungeon and loot libraries with explicit detailed/partial beta coverage states.
+- Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
+- WoW/Wowhead-inspired item and quest cards on hover, keyboard focus, and touch, including complete stats, effects, objectives, reward items, gates, and source context.
+- Per-dungeon drill-downs expose every associated quest, drop, and boss/source record.
 - Persistent planner state in local storage.
 
 The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → Shadowfang Keep.

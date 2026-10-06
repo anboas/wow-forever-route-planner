@@ -29,6 +29,7 @@ button, input, select { font: inherit; }
 button { color: inherit; }
 button, select, input { min-height: 44px; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.tooltip-trigger:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -2px; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; letter-spacing: .01em; }
 a { color: var(--gold-2); }
@@ -128,7 +129,9 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .quest-summary { display: flex; gap: 16px; padding: 17px 20px 10px; color: var(--muted); font-size: 11px; }
 .quest-summary strong { color: var(--success); }
 .quest-list { display: grid; gap: 1px; margin: 0; padding: 0 20px 18px; list-style: none; }
-.quest-row { display: grid; grid-template-columns: 24px minmax(0,1fr) auto; align-items: center; gap: 11px; min-height: 58px; padding: 8px 10px; background: #0d1214; border-left: 2px solid var(--line); }
+.quest-row { min-height: 58px; background: #0d1214; border-left: 2px solid var(--line); }
+.quest-row-trigger { display: grid; grid-template-columns: 24px minmax(0,1fr) auto; align-items: center; gap: 11px; min-height: 58px; padding: 8px 10px; cursor: help; }
+.quest-row-trigger:hover { background: #141b1d; }
 .quest-row.gate-ready { border-left-color: var(--success); }
 .quest-row.gate-level-locked, .quest-row.gate-needs-prerequisites { border-left-color: var(--warning); }
 .quest-row.gate-wrong-faction, .quest-row.gate-wrong-class { opacity: .58; }
@@ -153,6 +156,7 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .library-header p { margin: 0; color: var(--muted); }
 .library-filters { display: grid; grid-template-columns: minmax(240px, 1fr) 170px; gap: 10px; min-width: min(480px, 100%); }
 .library-filters.wide { grid-template-columns: minmax(260px, 1.4fr) 1fr 160px; min-width: min(760px, 100%); }
+.library-filters.quest-filters { grid-template-columns: minmax(260px, 1.4fr) 1fr 130px 150px; min-width: min(900px, 100%); }
 .dungeon-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .dungeon-card { position: relative; min-height: 210px; padding: 22px; border-color: var(--line); background: var(--surface); text-align: left; overflow: hidden; }
 .dungeon-card:hover { border-color: var(--gold-dark); background: var(--surface-2); }
@@ -167,14 +171,29 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .detail-panel h2 { margin-top: 7px; font-size: 34px; }
 .detail-lead { color: var(--muted); }
 .detail-columns { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-top: 24px; }
-.detail-columns h3 { color: var(--gold-2); font-size: 18px; }
+.detail-columns h3, .boss-section h3 { color: var(--gold-2); font-size: 18px; }
+.detail-columns h3 span { margin-left: 7px; color: var(--muted); font: 700 11px/1 Inter, sans-serif; }
+.inspect-hint { margin: 16px 0 -8px; color: var(--muted); font-size: 11px; }
 .simple-list { max-height: 360px; overflow: auto; margin: 0; padding: 0; border: 1px solid var(--line-soft); list-style: none; }
-.simple-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 9px 12px; border-bottom: 1px solid var(--line-soft); background: #0d1214; }
+.simple-list li { min-height: 52px; border-bottom: 1px solid var(--line-soft); background: #0d1214; }
 .simple-list li:last-child { border-bottom: 0; }
 .simple-list strong, .simple-list span { display: block; }
 .simple-list strong { font-size: 12px; }
 .simple-list span { margin-top: 3px; color: var(--muted); font-size: 10px; }
 .simple-list b { color: var(--gold-2); font-size: 11px; white-space: nowrap; }
+.simple-list-trigger { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 9px 12px; cursor: help; }
+.simple-list-trigger:hover { background: #141b1d; }
+.quest-link { color: #ffd100; }
+.mini-loot-name { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.mini-loot-icon { display: grid !important; flex: 0 0 auto; place-items: center; width: 30px; height: 30px; margin: 0 !important; border: 1px solid currentColor; background: #07090a; font: 700 13px/1 Georgia, serif !important; }
+.loot-detail-list { max-height: 360px; }
+.boss-section { margin-top: 24px; }
+.boss-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1px; margin: 0; padding: 1px; background: var(--line-soft); list-style: none; }
+.boss-grid li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 58px; padding: 10px 12px; background: #0d1214; }
+.boss-grid strong, .boss-grid span { display: block; }
+.boss-grid strong { font-size: 12px; }
+.boss-grid span { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.boss-grid b { color: var(--gold-2); font-size: 10px; white-space: nowrap; }
 
 .result-count { margin-bottom: 10px; color: var(--muted); font-size: 11px; }
 .loot-table { border: 1px solid var(--line); background: var(--surface); }
@@ -182,6 +201,7 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .loot-head { min-height: 40px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .loot-row { min-height: 66px; padding: 9px 16px; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
 .loot-row:last-child { border-bottom: 0; }
+.loot-row { cursor: help; }
 .loot-row:hover { background: #141c1e; }
 .loot-row strong, .loot-row small { display: block; }
 .loot-row small { margin-top: 3px; color: var(--muted); font-size: 10px; }
@@ -194,6 +214,41 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .quality-4, .quality-epic { color: #b46cf0; }
 .quality-5, .quality-legendary { color: #ff8b2d; }
 
+.quest-table { border: 1px solid var(--line); background: var(--surface); }
+.quest-head, .quest-archive-row { display: grid; grid-template-columns: 1.4fr 1fr .45fr .4fr; align-items: center; gap: 18px; }
+.quest-head { min-height: 40px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.quest-archive-row { min-height: 66px; padding: 9px 16px; border-bottom: 1px solid var(--line-soft); cursor: help; font-size: 12px; }
+.quest-archive-row:last-child { border-bottom: 0; }
+.quest-archive-row:hover { background: #141c1e; }
+.quest-archive-row strong, .quest-archive-row small { display: block; }
+.quest-archive-row small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.archive-quest-name { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.quest-archive-mark { display: grid; flex: 0 0 auto; place-items: center; width: 40px; height: 40px; border: 1px solid #8e7424; background: #1d190b; color: #ffd100; font: 700 23px/1 Georgia, serif; }
+.archive-xp { color: var(--gold-2); font-weight: 800; }
+
+.wow-tooltip { position: fixed; z-index: 1000; max-width: calc(100vw - 20px); max-height: calc(100vh - 20px); overflow: auto; padding: 14px 15px 12px; border: 1px solid #5076bb; border-radius: 4px; background: #05070a; color: #fff; box-shadow: inset 0 0 0 1px #17233a, 0 10px 32px rgba(0,0,0,.9); font: 400 13px/1.35 Arial, sans-serif; pointer-events: none; }
+.wow-tooltip::before { content: ""; position: absolute; inset: 3px; border: 1px solid rgba(80,118,187,.22); border-radius: 2px; pointer-events: none; }
+.tooltip-title { position: relative; margin-bottom: 2px; font-size: 15px; font-weight: 700; }
+.tooltip-meta { margin-bottom: 7px; color: #ffd100; font-size: 11px; }
+.tooltip-split { display: flex; justify-content: space-between; gap: 18px; }
+.tooltip-stat { color: #fff; }
+.tooltip-effect { margin-top: 6px; color: #1eff00; }
+.tooltip-drop { margin-top: 6px; color: #ffd100; }
+.tooltip-objective { margin: 9px 0; color: #fff; line-height: 1.45; }
+.tooltip-facts { display: grid; gap: 3px; margin-top: 8px; }
+.tooltip-facts b { color: #ffd100; }
+.tooltip-rewards { display: grid; gap: 3px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #25334d; }
+.tooltip-rewards > span { color: #ffd100; font-weight: 700; }
+.tooltip-source { display: grid; gap: 1px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #25334d; color: #9d9d9d; }
+.tooltip-source strong { color: #fff; }
+.tooltip-source small { color: #7f91ae; }
+.tooltip-warning { margin-top: 8px; color: #ff8040; }
+.tooltip-gate { width: fit-content; margin: 5px 0 8px; padding: 2px 6px; border: 1px solid currentColor; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.gate-text-ready { color: #1eff00; }
+.gate-text-level-locked, .gate-text-needs-prerequisites { color: #ff8040; }
+.quest-quality { color: #ffd100; }
+.tooltip-dismiss { display: block; margin-top: 9px; color: #596a83; font-size: 9px; text-align: right; text-transform: uppercase; letter-spacing: .08em; }
+
 .site-footer { display: grid; grid-template-columns: 1fr auto; gap: 18px 30px; padding: 26px clamp(20px, 4vw, 60px); border-top: 1px solid var(--line); background: #0c1113; color: var(--muted); font-size: 11px; }
 .site-footer strong, .site-footer span { display: block; }
 .site-footer strong { color: var(--gold-2); margin-bottom: 4px; }
@@ -205,7 +260,10 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .data-stamp { display: none; }
   .dungeon-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .library-header { align-items: stretch; flex-direction: column; }
-  .library-filters, .library-filters.wide { min-width: 0; }
+  .library-filters, .library-filters.wide, .library-filters.quest-filters { min-width: 0; }
+  .library-filters.quest-filters { grid-template-columns: 1fr 1fr; }
+  .library-filters.quest-filters input { grid-column: 1 / -1; }
+  .boss-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
 }
 
 @media (max-width: 900px) {
@@ -222,6 +280,9 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .library-filters.wide input { grid-column: 1 / -1; }
   .loot-head, .loot-row { grid-template-columns: 1.4fr 1fr .45fr; }
   .loot-head > :last-child, .loot-row > :last-child { display: none; }
+  .quest-head, .quest-archive-row { grid-template-columns: 1.4fr 1fr .45fr; }
+  .quest-head > :nth-child(3), .quest-archive-row > :nth-child(3) { display: none; }
+  .boss-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (max-width: 620px) {
@@ -246,15 +307,15 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .callout { margin-inline: 12px; }
   .quest-summary { padding-inline: 12px; flex-wrap: wrap; }
   .quest-list { padding-inline: 12px; }
-  .quest-row { grid-template-columns: 19px minmax(0,1fr); }
+  .quest-row-trigger { grid-template-columns: 19px minmax(0,1fr); }
   .quest-xp { grid-column: 2; }
   .quest-title-line { align-items: start; flex-direction: column; gap: 4px; }
   .quest-title-line strong { white-space: normal; }
   .bonus-input { grid-template-columns: 1fr; padding-inline: 14px; }
   .route-adder { grid-template-columns: 1fr; margin-left: 30px; }
   .empty-state { margin-left: 30px; }
-  .library-filters, .library-filters.wide { grid-template-columns: 1fr; }
-  .library-filters.wide input { grid-column: auto; }
+  .library-filters, .library-filters.wide, .library-filters.quest-filters { grid-template-columns: 1fr; }
+  .library-filters.wide input, .library-filters.quest-filters input { grid-column: auto; }
   .dungeon-grid { grid-template-columns: 1fr; }
   .dungeon-card { min-height: 190px; }
   .detail-panel { padding: 20px 14px; }
@@ -263,6 +324,11 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
   .loot-head { display: none; }
   .loot-row { grid-template-columns: 1fr; gap: 8px; min-height: 0; padding: 14px; }
   .loot-row > :nth-child(3) { color: var(--muted); }
+  .quest-head { display: none; }
+  .quest-archive-row { grid-template-columns: 1fr; gap: 8px; min-height: 0; padding: 14px; }
+  .quest-archive-row > :nth-child(3) { display: block; color: var(--muted); }
+  .boss-grid { grid-template-columns: 1fr; }
+  .wow-tooltip { font-size: 12px; }
   .site-footer { grid-template-columns: 1fr; }
   .source-links { justify-content: start; }
 }
