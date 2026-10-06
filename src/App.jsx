@@ -1,10 +1,11 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import snapshot from "./data/wow-forever.json";
 import dungeonMaps from "./data/dungeon-maps.json";
 import { formatCharacter, progressPercent, XP_TO_NEXT } from "./xp.js";
 import { buildOptimizedRoute, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
+import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySourceUrl, itemKey, itemPowerScore, itemSummary, lootVisibleForFaction, questSourceUrl, recommendedForProfile, reportIssueUrl, runsForConfidence, specFitScore, specProfile } from "./gear.js";
 
 const CLASSES = CLASS_OPTIONS.map(({ id }) => id);
 const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"].map((dungeonId, index) => ({
@@ -14,21 +15,65 @@ const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"
   bonusXp: 0,
 }));
 
+const DEFAULT_STATE = {
+  level: 13,
+  xp: 0,
+  faction: "horde",
+  characterClass: "warrior",
+  spec: "arms",
+  assumePrerequisites: true,
+  route: DEFAULT_ROUTE,
+  wishlist: [],
+  equipped: {},
+  party: [],
+  savedRoutes: [],
+  lootPreferences: { query: "", dungeonId: "all", slot: "all", rarity: "all", classFilter: null, fitMode: "usable", sourceFilter: "all", wishlistOnly: false, sort: "fit", viewMode: "boss" },
+};
+
+function decodePlan() {
+  try {
+    const encoded = new URLSearchParams(window.location.search).get("plan");
+    if (!encoded) return null;
+    const base64 = encoded.replaceAll("-", "+").replaceAll("_", "/");
+    return JSON.parse(decodeURIComponent(escape(atob(base64))));
+  } catch {
+    return null;
+  }
+}
+
+function encodePlan(state) {
+  const plan = {
+    level: state.level,
+    xp: state.xp,
+    faction: state.faction,
+    characterClass: state.characterClass,
+    spec: state.spec,
+    assumePrerequisites: state.assumePrerequisites,
+    route: state.route,
+    wishlist: state.wishlist,
+    lootPreferences: state.lootPreferences,
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(plan)))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem("forever-route-planner:v1"));
-    if (saved && Array.isArray(saved.route)) return saved;
+    const shared = decodePlan();
+    const saved = shared || JSON.parse(localStorage.getItem("forever-route-planner:v1"));
+    if (saved && Array.isArray(saved.route)) {
+      const characterClass = saved.characterClass || DEFAULT_STATE.characterClass;
+      return { ...DEFAULT_STATE, ...saved, characterClass, spec: saved.spec || defaultSpec(characterClass) };
+    }
   } catch {
     // Ignore damaged local state and return the useful starter route.
   }
-  return {
-    level: 13,
-    xp: 0,
-    faction: "horde",
-    characterClass: "warrior",
-    assumePrerequisites: true,
-    route: DEFAULT_ROUTE,
-  };
+  return DEFAULT_STATE;
+}
+
+const GearContext = createContext(null);
+
+function useGear() {
+  return useContext(GearContext);
 }
 
 function uid() {
@@ -116,6 +161,28 @@ function ClassFilterStrip({ value, onChange, compact = false }) {
   );
 }
 
+function SourceFilter({ value, onChange }) {
+  const options = [["all", "All"], ["quest", "Quest"], ["boss", "Boss"], ["drop", "Mob"], ["trash", "Trash"], ["unknown", "Unknown"]];
+  return <div className="source-filter" role="group" aria-label="Filter loot by source">{options.map(([id, label]) => <button key={id} className={value === id ? "active" : ""} aria-pressed={value === id} onClick={() => onChange(id)}>{label}</button>)}</div>;
+}
+
+function FitMode({ value, onChange }) {
+  return <div className="fit-mode" role="group" aria-label="Loot fit mode"><button className={value === "usable" ? "active" : ""} onClick={() => onChange("usable")}>Usable</button><button className={value === "recommended" ? "active" : ""} onClick={() => onChange("recommended")}>Recommended</button><button className={value === "all" ? "active" : ""} onClick={() => onChange("all")}>All</button></div>;
+}
+
+function ItemActions({ item, dungeon, compact = false }) {
+  const gear = useGear();
+  const wished = gear.isWishlisted(item, dungeon);
+  const equipped = item.slot && gear.equipped[item.slot]?.key === itemKey(item, dungeon?.id);
+  return (
+    <span className={`item-actions ${compact ? "compact" : ""}`} data-no-activate onClick={(event) => event.stopPropagation()} onFocus={(event) => event.stopPropagation()}>
+      <button className={wished ? "active" : ""} onClick={() => gear.toggleWishlist(item, dungeon)} aria-label={`${wished ? "Remove" : "Add"} ${item.name} ${wished ? "from" : "to"} wishlist`}>{wished ? "★" : "☆"}</button>
+      {item.slot && <button className={equipped ? "active" : ""} onClick={() => gear.equipItem(item, dungeon)} aria-label={`${equipped ? "Unequip" : "Equip"} ${item.name}`}>{equipped ? "✓" : "⇄"}</button>}
+      <a href={reportIssueUrl({ item, dungeon })} target="_blank" rel="noreferrer" aria-label={`Report incorrect data for ${item.name}`}>!</a>
+    </span>
+  );
+}
+
 function TooltipTrigger({ children, content, className = "", label, role, onActivate }) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -181,7 +248,8 @@ function TooltipTrigger({ children, content, className = "", label, role, onActi
           setOpen(true);
         }}
         onBlur={() => !pinned && setOpen(false)}
-        onClick={() => {
+        onClick={(event) => {
+          if (event.target.closest("[data-no-activate]")) return;
           if (onActivate) {
             onActivate();
             setPinned(false);
@@ -220,6 +288,11 @@ function TooltipTrigger({ children, content, className = "", label, role, onActi
 function ItemTooltip({ item, dungeon }) {
   const effects = normalizedEffects(item.effects);
   const source = dungeon ? itemSourceMeta(item, dungeon) : null;
+  const gear = useGear();
+  const equipped = item.slot ? gear.equipped[item.slot] : null;
+  const comparison = compareItems(item, equipped, gear.characterClass, gear.spec);
+  const chance = dropChancePercent(item);
+  const partyFit = gear.party.filter((member) => recommendedForProfile(item, member.characterClass, member.spec));
   return (
     <div className="item-tooltip">
       <div className="tooltip-item-head"><ItemIcon item={item} /><div><div className={`tooltip-title ${qualityClass(item)}`}>{item.name}</div><div className="tooltip-meta">Item Level {item.itemLevel || "Unknown"} · {qualityName(item)}</div></div></div>
@@ -231,9 +304,11 @@ function ItemTooltip({ item, dungeon }) {
       {Number.isFinite(item.requiredLevel) && item.requiredLevel > 0 && <div>Requires Level {item.requiredLevel}</div>}
       {(item.stats || []).map((stat, index) => <div className="tooltip-stat" key={`${stat.label}-${index}`}>+{stat.value} {stat.label}</div>)}
       {effects.map((effect, index) => <div className="tooltip-effect" key={`${effect}-${index}`}>{effect}</div>)}
-      {Number.isFinite(item.dropChance) && <div className="tooltip-drop">Drop chance: {item.dropChance}%</div>}
-      <div className="tooltip-class-fit"><span>Suggested fit</span><ClassChips item={item} bestOnly /></div>
-      {dungeon && <div className="tooltip-source"><span>{source.label}</span><strong>{dungeon.name}</strong><small>{source.name}</small></div>}
+      {chance && <div className="tooltip-drop">Drop chance: {chance.toFixed(chance < 10 ? 1 : 0)}% · {runsForConfidence(item, .5)} runs for 50% · {runsForConfidence(item, .75)} for 75% · {runsForConfidence(item, .9)} for 90%</div>}
+      <div className="tooltip-class-fit"><span>{specProfile(gear.characterClass, gear.spec).label} recommendation</span><ClassChips item={item} bestOnly /></div>
+      {equipped && <div className={`tooltip-compare ${comparison.delta >= 0 ? "positive" : "negative"}`}><strong>{comparison.delta >= 0 ? "+" : ""}{comparison.delta.toFixed(1)} profile score vs {equipped.name}</strong>{comparison.changes.map((change) => <span key={change.label}>{change.value > 0 ? "+" : ""}{change.value} {change.label}</span>)}</div>}
+      {!!partyFit.length && <div className="tooltip-party"><span>Party interest</span><strong>{partyFit.map((member) => member.name).join(", ")}</strong></div>}
+      {dungeon && <div className="tooltip-source"><span>{source.label}</span><strong>{dungeon.name}</strong><small>{source.name}</small><small>Snapshot {new Date(snapshot.fetchedAt).toLocaleDateString()}</small></div>}
       {item.uncertain && <div className="tooltip-warning">Partial beta record. Some properties may change.</div>}
       <div className="tooltip-wowhead">Click to open {Number(item.id) < 200000 ? "the item" : "a name search"} on Wowhead ↗</div>
     </div>
@@ -295,18 +370,19 @@ function QuestTray({ selection, onClose, itemLookup }) {
           <div><dt>Ends</dt><dd>{actorList(quest.to)}</dd></div>
           {quest.rep && <div><dt>Reputation</dt><dd>{quest.rep}</dd></div>}
         </dl>
-        {!!quest.chain?.length && <section className="tray-chain"><h3>Prerequisites</h3>{quest.chain.map((entry, index) => <span key={`${entry.id || entry.name}-${index}`}>{entry.name || entry}</span>)}</section>}
+        <section className="tray-checklist"><h3>Readiness checklist</h3><span className={gate?.status === "level-locked" ? "blocked" : "ready"}>Character level {questMinimumLevel(quest, dungeon)}+</span><span className={gate?.status === "wrong-faction" ? "blocked" : "ready"}>{humanize(quest.faction || "Any faction")}</span><span className={gate?.status === "needs-prerequisites" ? "blocked" : "ready"}>{quest.chain?.length ? `${quest.chain.length} prerequisite quest${quest.chain.length === 1 ? "" : "s"}` : "No pre-quests required"}</span></section>
+        {!!quest.chain?.length && <section className="tray-chain"><h3>Prerequisite quests</h3>{quest.chain.map((entry, index) => <span key={`${entry.id || entry.name}-${index}`}>{entry.name || entry}</span>)}</section>}
         <section className="tray-rewards">
           <h3>Rewards <span>{rewards.length}</span></h3>
           {rewards.length ? rewards.map((item, index) => (
             <TooltipTrigger key={`${item.id || item.name}-${index}`} className="reward-card" label={`Reward item ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
               <ItemIcon item={item} />
               <div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Reward item"}</small><ClassChips item={item} bestOnly /></div>
-              <span>↗</span>
+              <ItemActions item={item} dungeon={dungeon} compact />
             </TooltipTrigger>
           )) : <p className="empty-copy">No item rewards are listed in the current source record.</p>}
         </section>
-        <footer><a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Open source record ↗</a><span>{quest.dataStatus === "verified" ? "Verified Forever details" : "Rewards-only coverage"}</span></footer>
+        <footer><span><a href={questSourceUrl(quest)} target="_blank" rel="noreferrer">Wowhead quest ↗</a> · <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Forever source ↗</a> · <a href={reportIssueUrl({ quest, dungeon })} target="_blank" rel="noreferrer">Report data ↗</a></span><span>{quest.dataStatus === "verified" ? "Verified Forever details" : "Rewards-only coverage"}</span></footer>
       </aside>
     </div>,
     document.body,
@@ -368,7 +444,7 @@ function QuestRow({ entry, dungeon, onPin }) {
   );
 }
 
-function RouteStep({ step, index, total, onMove, onRemove, onBridge, onBonus, onPin }) {
+function RouteStep({ step, index, total, lootGoalCount, onMove, onRemove, onBridge, onBonus, onPin }) {
   const ready = step.quests.filter((entry) => entry.gate.status === "ready").length;
   const locked = step.quests.filter((entry) => !["ready", "unverified", "xp-unverified", "already-done"].includes(entry.gate.status)).length;
   const belowBand = step.before.level < step.dungeon.level[0];
@@ -397,7 +473,7 @@ function RouteStep({ step, index, total, onMove, onRemove, onBridge, onBonus, on
         {belowBand && <div className="callout warning">You arrive below the recommended dungeon band. Eligible quests are still calculated individually.</div>}
         {step.bridgeShortfall > 0 && <div className="callout bridge-callout"><strong>{number(step.bridgeShortfall)} XP needed before this stop</strong><span>Reach level {step.completionLevel} to unlock every verified {step.dungeon.name} quest available to this faction and class.</span></div>}
         <div className="quest-summary">
-          <strong>{ready} ready</strong><span>{locked} blocked</span><span>{step.quests.length} faction-valid</span><span>{Math.round(step.completionRate * 100)}% complete</span>
+          <strong>{ready} ready</strong><span>{locked} blocked</span><span>{step.quests.length} faction-valid</span><span>{Math.round(step.completionRate * 100)}% complete</span>{lootGoalCount > 0 && <span className="wishlist-hit">★ {lootGoalCount} loot goal{lootGoalCount === 1 ? "" : "s"}</span>}
         </div>
         <ul className="quest-list">{step.quests.map((entry) => <QuestRow key={`${entry.quest.id}-${entry.quest.name}`} entry={entry} dungeon={step.dungeon} onPin={onPin} />)}</ul>
         <label className="bonus-input bridge-input">
@@ -417,6 +493,8 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
   const simulation = useMemo(() => simulateRoute({ dungeonsById, ...state }), [dungeonsById, state]);
   const [addId, setAddId] = useState(dungeons[0].id);
   const [optimization, setOptimization] = useState(null);
+  const [presetName, setPresetName] = useState("");
+  const lootGoals = useMemo(() => state.wishlist.reduce((counts, item) => ({ ...counts, [item.dungeonId]: (counts[item.dungeonId] || 0) + 1 }), {}), [state.wishlist]);
   const totalXp = simulation.steps.reduce((sum, step) => sum + step.questXp + step.bonusXp, 0);
   const externalXp = simulation.steps.reduce((sum, step) => sum + step.bridgeXp + step.bonusXp, 0);
   const readyQuests = simulation.steps.reduce((sum, step) => sum + step.quests.filter((entry) => entry.gate.status === "ready").length, 0);
@@ -440,15 +518,36 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
   }
 
   function optimizeCurrent() {
-    const result = optimizeRouteOrder({ dungeonsById, ...state });
+    const result = optimizeRouteOrder({ dungeonsById, ...state, lootGoals });
     patch({ route: result.route });
-    setOptimization(`Route reordered for full verified-quest completion with ${number(result.totalBridgeXp)} planned external XP.`);
+    setOptimization(`Route reordered for full verified-quest completion with ${number(result.totalBridgeXp)} planned external XP and ${result.wishlistHits || 0} wishlist hits.`);
   }
 
   function buildBest() {
-    const result = buildOptimizedRoute({ dungeonsById, ...state, count: 6 });
+    const result = buildOptimizedRoute({ dungeonsById, ...state, lootGoals, count: 6 });
     patch({ route: result.route });
-    setOptimization(`Built a six-stop faction-valid route with ${number(result.totalQuestXp)} verified quest XP and ${number(result.totalBridgeXp)} planned bridge XP.`);
+    setOptimization(`Built a six-stop faction-valid route with ${number(result.totalQuestXp)} verified quest XP, ${number(result.totalBridgeXp)} planned bridge XP, and ${result.wishlistHits || 0} wishlist hits.`);
+  }
+
+  function savePreset() {
+    const name = presetName.trim() || `Level ${state.level} route ${state.savedRoutes.length + 1}`;
+    const preset = { id: uid(), name, level: state.level, xp: state.xp, faction: state.faction, characterClass: state.characterClass, spec: state.spec, assumePrerequisites: state.assumePrerequisites, route: state.route };
+    patch({ savedRoutes: [...state.savedRoutes, preset] });
+    setPresetName("");
+    setOptimization(`Saved route preset “${name}”.`);
+  }
+
+  function loadPreset(preset) {
+    patch({ level: preset.level, xp: preset.xp, faction: preset.faction, characterClass: preset.characterClass, spec: preset.spec, assumePrerequisites: preset.assumePrerequisites, route: preset.route });
+    setOptimization(`Loaded route preset “${preset.name}”.`);
+  }
+
+  async function shareRoute() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("plan", encodePlan(state));
+    window.history.replaceState(null, "", url);
+    try { await navigator.clipboard.writeText(url.toString()); } catch { /* URL remains shareable in the address bar. */ }
+    setOptimization("Shareable route URL is ready and copied when clipboard access is available.");
   }
 
   return (
@@ -458,7 +557,8 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
         <h2>Starting point</h2>
         <div className="field-grid">
           <label><span>Faction</span><select value={state.faction} onChange={(event) => patch({ faction: event.target.value })}><option value="horde">Horde</option><option value="alliance">Alliance</option></select></label>
-          <label><span>Class</span><select value={state.characterClass} onChange={(event) => patch({ characterClass: event.target.value })}>{CLASSES.map((value) => <option value={value} key={value}>{value}</option>)}</select></label>
+          <label><span>Class</span><select value={state.characterClass} onChange={(event) => patch({ characterClass: event.target.value, spec: defaultSpec(event.target.value) })}>{CLASSES.map((value) => <option value={value} key={value}>{humanize(value)}</option>)}</select></label>
+          <label><span>Specialization</span><select value={state.spec} onChange={(event) => patch({ spec: event.target.value })}>{(CLASS_SPECS[state.characterClass] || []).map((entry) => <option value={entry.id} key={entry.id}>{entry.label} · {entry.role}</option>)}</select></label>
           <label><span>Level</span><input type="number" min="1" max="60" value={state.level} onChange={(event) => patch({ level: event.target.value })} /></label>
           <label><span>Current XP</span><input type="number" min="0" max={XP_TO_NEXT[state.level] || 0} value={state.xp} onChange={(event) => patch({ xp: event.target.value })} /></label>
         </div>
@@ -476,8 +576,10 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
       <section className="route-workspace">
         <header className="workspace-header">
           <div><div className="section-kicker">Dungeon route</div><h2>Quest XP projection</h2><p>Quests are gated at the level you arrive, then applied before the next stop.</p></div>
-          <div className="workspace-actions"><button onClick={optimizeCurrent} disabled={!state.route.length}>Optimize route</button><button onClick={buildBest}>Build best route</button><button className="secondary" onClick={() => patch({ route: DEFAULT_ROUTE })}>Reset</button></div>
+          <div className="workspace-actions"><button onClick={optimizeCurrent} disabled={!state.route.length}>Optimize route</button><button onClick={buildBest}>Build best route</button><button className="secondary" onClick={shareRoute}>Share</button><button className="secondary" onClick={() => patch({ route: DEFAULT_ROUTE })}>Reset</button></div>
         </header>
+
+        <div className="preset-bar"><label><span>Named route preset</span><input value={presetName} onChange={(event) => setPresetName(event.target.value)} placeholder="Weekend dungeon circuit" /></label><button onClick={savePreset}>Save preset</button><div className="preset-list">{state.savedRoutes.map((preset) => <button className="secondary" key={preset.id} onClick={() => loadPreset(preset)}>{preset.name}</button>)}</div></div>
 
         {optimization && <div className="optimization-note"><strong>Optimizer</strong><span>{optimization}</span><button onClick={() => setOptimization(null)} aria-label="Dismiss optimizer note">×</button></div>}
 
@@ -497,6 +599,7 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin }) {
               step={step}
               index={index}
               total={simulation.steps.length}
+              lootGoalCount={lootGoals[step.dungeon.id] || 0}
               onMove={move}
               onRemove={(target) => updateRoute((current) => current.filter((_, itemIndex) => itemIndex !== target))}
               onBridge={(target, value) => updateRoute((current) => current.map((entry, itemIndex) => itemIndex === target ? { ...entry, bridgeXp: value } : entry))}
@@ -528,61 +631,87 @@ function QuestListEntry({ quest, dungeon, onPin }) {
 
 function LootListEntry({ item, dungeon }) {
   const source = itemSourceMeta(item, dungeon);
+  const sourceHref = source.kind === "quest" ? questSourceUrl({ id: source.questId, name: source.name }) : entitySourceUrl(source);
   return (
     <li className="inspectable-entry">
       <TooltipTrigger className="simple-list-trigger" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
-        <div className="mini-loot-name"><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><span className="loot-source-line"><em className={`source-badge source-${source.kind}`}>{source.label}</em><span>{source.name}</span></span></div></div>
+        <div className="mini-loot-name"><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><span className="loot-source-line"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a data-no-activate href={sourceHref} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{source.name} ↗</a></span></div></div>
         <ClassChips item={item} bestOnly limit={3} />
+        <ItemActions item={item} dungeon={dungeon} compact />
         <b>{item.itemLevel ? `iLvl ${item.itemLevel}` : item.requiredLevel ? `Req ${item.requiredLevel}` : "—"}</b>
       </TooltipTrigger>
     </li>
   );
 }
 
-function DungeonDetail({ dungeon, faction, characterClass, onPin, onClose }) {
+function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin, onClose, onAddRoute, onPlanNext }) {
   const [classFilter, setClassFilter] = useState(characterClass || "all");
+  const [fitMode, setFitMode] = useState("usable");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [slotFilter, setSlotFilter] = useState("all");
+  const [rarityFilter, setRarityFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
   useEffect(() => setClassFilter(characterClass || "all"), [characterClass]);
   if (!dungeon) return null;
   const quests = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction));
-  const loot = dungeon.loot.filter((item) => classFilter === "all" || classCanUseItem(item, classFilter));
+  const factionLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction));
+  const slots = [...new Set(factionLoot.map((item) => item.slot).filter(Boolean))].sort();
+  const selectedSpec = classFilter === characterClass ? characterSpec : defaultSpec(classFilter);
+  const loot = factionLoot.filter((item) => {
+    const source = itemSourceMeta(item, dungeon);
+    const fitMatch = classFilter === "all" || fitMode === "all" || (fitMode === "recommended" ? recommendedForProfile(item, classFilter, selectedSpec) : classCanUseItem(item, classFilter));
+    const rarity = String(item.rarity || item.quality || "common").toLowerCase();
+    return fitMatch
+      && (sourceFilter === "all" || source.kind === sourceFilter)
+      && (slotFilter === "all" || item.slot === slotFilter)
+      && (rarityFilter === "all" || rarity === rarityFilter)
+      && (levelFilter === "all" || Number(item.requiredLevel || item.itemLevel || 0) <= Number(levelFilter));
+  }).sort((a, b) => (classFilter === "all" ? 0 : specFitScore(b, classFilter, selectedSpec) - specFitScore(a, classFilter, selectedSpec)) || (b.itemLevel || 0) - (a.itemLevel || 0));
   const verified = quests.filter((quest) => quest.dataStatus === "verified").length;
   const map = dungeonMaps[dungeon.id];
+  const sourceCounts = factionLoot.reduce((counts, item) => {
+    const kind = itemSourceMeta(item, dungeon).kind;
+    return { ...counts, [kind]: (counts[kind] || 0) + 1 };
+  }, {});
   return (
     <section className="detail-panel panel">
       <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>
       <div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div>
-      <h2>{dungeon.name}</h2>
-      <p className="detail-lead">Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified in the detailed source"}</p>
+      <div className="detail-title-row"><div><h2>{dungeon.name}</h2><p className="detail-lead">Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified in the detailed source"}</p></div><div className="detail-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report data</a></div></div>
       <div className="summary-grid compact">
-        <div className="summary-card"><span>Loot</span><strong>{dungeon.loot.length}</strong></div>
+        <div className="summary-card"><span>Faction-visible loot</span><strong>{factionLoot.length}</strong></div>
         <div className="summary-card"><span>{humanize(faction)} quests</span><strong>{quests.length}</strong></div>
         <div className="summary-card"><span>Verified XP</span><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></div>
+        <div className="summary-card"><span>Boss / quest loot</span><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></div>
         <div className="summary-card"><span>Detailed quests</span><strong>{verified}</strong></div>
+        <div className="summary-card"><span>Snapshot</span><strong>{new Date(snapshot.fetchedAt).toLocaleDateString()}</strong></div>
       </div>
       <div className="dungeon-map-panel">
         {map ? <img src={assetUrl(map.src)} alt={`${dungeon.name} instance map`} /> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public instance map is available yet.</small></div>}
-        <div><span>Instance map</span><strong>{dungeon.name}</strong>{map ? <a href={map.sourceUrl} target="_blank" rel="noreferrer">AtlasLootClassic · {map.license} ↗</a> : <a href={dungeon.lootSourceUrl} target="_blank" rel="noreferrer">Watch source coverage ↗</a>}</div>
+        <div><span>Instance map</span><strong>{dungeon.name}</strong>{map ? <a href={map.sourceUrl} target="_blank" rel="noreferrer">AtlasLootClassic · {map.license} ↗</a> : <a href={dungeon.lootSourceUrl} target="_blank" rel="noreferrer">Watch source coverage ↗</a>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>Source order only. Coordinates remain unclaimed unless the map source provides them.</small></div></div>
       </div>
       <p className="inspect-hint">Hover or focus for the full in-game-style card. Click quests to pin them; click items to open Wowhead.</p>
       <div className="detail-columns">
         <div><h3>{humanize(faction)} quests <span>{quests.length}</span></h3><ul className="simple-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></div>
         <div className="dungeon-loot-column">
-          <h3>All loot <span>{loot.length} of {dungeon.loot.length}</span></h3>
+          <h3>All loot <span>{loot.length} of {factionLoot.length}</span></h3>
           <div className="dungeon-loot-controls">
-            <div className="detail-filter-label"><strong>Wearable by</strong><span>{classFilter === "all" ? "Showing every item" : `${humanize(classFilter)}-usable items`}</span></div>
+            <div className="detail-filter-label"><strong>Loot controls</strong><span>{classFilter === "all" ? "Every class" : `${humanize(classFilter)} · ${specProfile(classFilter, selectedSpec).label}`}</span></div>
             <ClassFilterStrip value={classFilter} onChange={setClassFilter} compact />
-            <div className="source-legend" aria-label="Loot source legend"><span><em className="source-badge source-quest">Quest reward</em></span><span><em className="source-badge source-boss">Boss</em></span><span><em className="source-badge source-drop">Boss / mob</em></span><span><em className="source-badge source-trash">Trash drop</em></span></div>
+            <div className="detail-fit-row"><FitMode value={fitMode} onChange={setFitMode} /><SourceFilter value={sourceFilter} onChange={setSourceFilter} /></div>
+            <div className="detail-quick-filters"><select aria-label="Filter dungeon loot by slot" value={slotFilter} onChange={(event) => setSlotFilter(event.target.value)}><option value="all">All slots</option>{slots.map((slot) => <option key={slot}>{slot}</option>)}</select><select aria-label="Filter dungeon loot by rarity" value={rarityFilter} onChange={(event) => setRarityFilter(event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select aria-label="Filter dungeon loot by level" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="all">Any level</option>{[20,30,40,50,60].map((level) => <option value={level} key={level}>Up to level {level}</option>)}</select></div>
+            <div className="source-legend" aria-label="Loot source legend"><span><em className="source-badge source-quest">Quest {sourceCounts.quest || 0}</em></span><span><em className="source-badge source-boss">Boss {sourceCounts.boss || 0}</em></span><span><em className="source-badge source-drop">Boss / mob {sourceCounts.drop || 0}</em></span><span><em className="source-badge source-trash">Trash {sourceCounts.trash || 0}</em></span></div>
           </div>
           <ul className="simple-list loot-detail-list">{loot.map((item, index) => <LootListEntry key={`${item.id || item.name}-${index}`} item={item} dungeon={dungeon} />)}</ul>
           {!loot.length && <p className="loot-empty-state">No items in this dungeon match the selected class.</p>}
         </div>
       </div>
-      <div className="boss-section"><h3>Bosses / sources</h3><ul className="boss-grid">{dungeon.bosses.length ? dungeon.bosses.map((boss) => <li key={boss.name}><div><strong>{boss.name}</strong><span>{boss.level ? `Level ${boss.level}` : "Level pending"}</span></div><b>{boss.lootCount} items</b></li>) : <li><span>No verified boss breakdown yet.</span></li>}</ul></div>
+      <div className="boss-section"><h3>Bosses / sources</h3><ul className="boss-grid">{dungeon.bosses.length ? dungeon.bosses.map((boss) => <li key={boss.name}><div><a href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><strong>{boss.name} ↗</strong></a><span>{boss.level ? `Level ${boss.level}` : "Level pending"}</span></div><b>{boss.lootCount} items</b></li>) : <li><span>No verified boss breakdown yet.</span></li>}</ul></div>
     </section>
   );
 }
 
-function Dungeons({ dungeons, faction, characterClass, onPin, selected, setSelected }) {
+function Dungeons({ dungeons, faction, characterClass, characterSpec, onPin, selected, setSelected, onAddRoute, onPlanNext }) {
   const [query, setQuery] = useState("");
   const [band, setBand] = useState("all");
   const filtered = dungeons.filter((dungeon) => {
@@ -593,8 +722,8 @@ function Dungeons({ dungeons, faction, characterClass, onPin, selected, setSelec
   return (
     <main className="library-shell">
       <header className="library-header"><div><div className="section-kicker">Dungeon atlas</div><h1>All Forever dungeons</h1><p>{dungeons.length} instances with quest and loot coverage.</p></div><div className="library-filters"><input type="search" placeholder="Search dungeon or zone" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={band} onChange={(event) => setBand(event.target.value)}><option value="all">All levels</option>{[10, 20, 30, 40, 50].map((value) => <option key={value} value={value}>Levels {value}–{value + 9}</option>)}</select></div></header>
-      <DungeonDetail dungeon={selected} faction={faction} characterClass={characterClass} onPin={onPin} onClose={() => setSelected(null)} />
-      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; return <button className="dungeon-card" key={dungeon.id} onClick={() => setSelected(dungeon)}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} {faction} quests</span><span>{dungeon.loot.length} loot</span><span>{dungeonMaps[dungeon.id] ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></button>; })}</div>
+      <DungeonDetail dungeon={selected} faction={faction} characterClass={characterClass} characterSpec={characterSpec} onPin={onPin} onClose={() => setSelected(null)} onAddRoute={onAddRoute} onPlanNext={onPlanNext} />
+      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; const visibleLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction)); const counts = visibleLoot.reduce((result, item) => { const kind = itemSourceMeta(item, dungeon).kind; return { ...result, [kind]: (result[kind] || 0) + 1 }; }, {}); return <button className="dungeon-card" key={dungeon.id} onClick={() => setSelected(dungeon)}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} quests</span><span>{counts.boss || 0} boss</span><span>{counts.quest || 0} quest rewards</span><span>{dungeonMaps[dungeon.id] ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></button>; })}</div>
     </main>
   );
 }
@@ -632,19 +761,30 @@ function Quests({ dungeons, faction, onPin }) {
 }
 
 function LootRow({ item, dungeon }) {
+  const source = itemSourceMeta(item, dungeon);
   return (
     <TooltipTrigger className="loot-row" role="row" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
       <div className="loot-name"><ItemIcon item={item} /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.type || "Type pending"}</small></div></div>
-      <div><strong>{dungeon.name}</strong><small>{item.boss || "Source not yet discovered"}</small></div>
+      <div><strong>{dungeon.name}</strong><small><em className={`source-badge source-${source.kind}`}>{source.label}</em> {source.name}</small></div>
       <div>{item.slot || "—"}</div>
       <ClassChips item={item} bestOnly limit={4} />
       <div>{item.requiredLevel ? `Req ${item.requiredLevel}` : item.itemLevel ? `iLvl ${item.itemLevel}` : "—"}</div>
-      <span className="external-mark">↗</span>
+      <ItemActions item={item} dungeon={dungeon} compact />
     </TooltipTrigger>
   );
 }
 
 function BossGroupedLoot({ entries }) {
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("forever-route-planner:collapsed-loot")) || {}; } catch { return {}; }
+  });
+  function toggle(key) {
+    setCollapsed((current) => {
+      const next = { ...current, [key]: !current[key] };
+      localStorage.setItem("forever-route-planner:collapsed-loot", JSON.stringify(next));
+      return next;
+    });
+  }
   const dungeons = [...new Map(entries.map((entry) => [entry.dungeon.id, entry.dungeon])).values()];
   return (
     <div className="loot-groups">
@@ -653,14 +793,15 @@ function BossGroupedLoot({ entries }) {
         const bosses = [...new Set(dungeonEntries.map(({ item }) => itemSourceMeta(item, dungeon).name))];
         return (
           <section className="loot-dungeon-group" key={dungeon.id}>
-            <header><div><span>Levels {dungeon.level.join("–")}</span><h2>{dungeon.name}</h2></div><strong>{dungeonEntries.length} items</strong></header>
-            <div className="boss-loot-grid">
+            <header><div><span>Levels {dungeon.level.join("–")}</span><h2>{dungeon.name}</h2></div><button className="collapse-button" onClick={() => toggle(`dungeon:${dungeon.id}`)}>{collapsed[`dungeon:${dungeon.id}`] ? `Show ${dungeonEntries.length}` : `Hide ${dungeonEntries.length}`}</button></header>
+            {!collapsed[`dungeon:${dungeon.id}`] && <div className="boss-loot-grid">
               {bosses.map((boss) => {
                 const items = dungeonEntries.filter(({ item }) => itemSourceMeta(item, dungeon).name === boss);
                 const source = itemSourceMeta(items[0].item, dungeon);
-                return <section className="boss-loot-group" key={boss}><h3><span className="source-heading"><em className={`source-badge source-${source.kind}`}>{source.label}</em>{boss}</span><span>{items.length}</span></h3><div className="boss-item-grid">{items.map(({ item }, index) => <TooltipTrigger key={`${item.id || item.name}-${index}`} className="loot-card" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Item"}</small><ClassChips item={item} bestOnly limit={3} /></div><span>↗</span></TooltipTrigger>)}</div></section>;
+                const groupKey = `${dungeon.id}:${source.kind}:${boss}`;
+                return <section className="boss-loot-group" key={boss}><h3><span className="source-heading"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a href={source.kind === "quest" ? questSourceUrl({ id: source.questId, name: source.name }) : entitySourceUrl(source)} target="_blank" rel="noreferrer">{boss} ↗</a></span><button className="group-toggle" onClick={() => toggle(groupKey)}>{collapsed[groupKey] ? `Show ${items.length}` : `Hide ${items.length}`}</button></h3>{!collapsed[groupKey] && <div className="boss-item-grid">{items.map(({ item }, index) => <TooltipTrigger key={`${item.id || item.name}-${index}`} className="loot-card" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Item"}</small><ClassChips item={item} bestOnly limit={3} /></div><ItemActions item={item} dungeon={dungeon} compact /></TooltipTrigger>)}</div>}</section>;
               })}
-            </div>
+            </div>}
           </section>
         );
       })}
@@ -668,37 +809,59 @@ function BossGroupedLoot({ entries }) {
   );
 }
 
-function Loot({ dungeons, characterClass }) {
-  const [query, setQuery] = useState("");
-  const [dungeonId, setDungeonId] = useState("all");
-  const [slot, setSlot] = useState("all");
-  const [classFilter, setClassFilter] = useState(characterClass || "all");
-  const [sort, setSort] = useState("fit");
-  const [viewMode, setViewMode] = useState("boss");
+function Loot({ dungeons, characterClass, characterSpec, faction }) {
+  const gear = useGear();
+  const { query, dungeonId, slot, rarity, fitMode, sourceFilter, wishlistOnly, sort, viewMode } = gear.lootPreferences;
+  const classFilter = gear.lootPreferences.classFilter || characterClass || "all";
+  const setPreference = (key, value) => gear.updateLootPreferences({ [key]: value });
   const allLoot = useMemo(() => dungeons.flatMap((dungeon) => dungeon.loot.map((item) => ({ item, dungeon }))), [dungeons]);
   const slots = useMemo(() => [...new Set(allLoot.map(({ item }) => item.slot).filter(Boolean))].sort(), [allLoot]);
-  useEffect(() => setClassFilter(characterClass || "all"), [characterClass]);
   const filtered = allLoot.filter(({ item, dungeon }) => {
+    const source = itemSourceMeta(item, dungeon);
+    const selectedSpec = classFilter === characterClass ? characterSpec : defaultSpec(classFilter);
     const haystack = `${item.name} ${item.slot || ""} ${item.type || ""} ${item.boss || ""} ${dungeon.name}`.toLowerCase();
     return haystack.includes(query.toLowerCase())
       && (dungeonId === "all" || dungeon.id === dungeonId)
       && (slot === "all" || item.slot === slot)
-      && (classFilter === "all" || classCanUseItem(item, classFilter));
+      && (rarity === "all" || String(item.rarity || item.quality).toLowerCase() === rarity)
+      && lootVisibleForFaction(item, dungeon, faction)
+      && (sourceFilter === "all" || source.kind === sourceFilter)
+      && (!wishlistOnly || gear.isWishlisted(item, dungeon))
+      && (classFilter === "all" || fitMode === "all" || (fitMode === "recommended" ? recommendedForProfile(item, classFilter, selectedSpec) : classCanUseItem(item, classFilter)));
   }).sort((a, b) => {
-    if (sort === "fit" && classFilter !== "all") return classFitScore(b.item, classFilter) - classFitScore(a.item, classFilter) || (b.item.itemLevel || 0) - (a.item.itemLevel || 0);
+    const selectedSpec = classFilter === characterClass ? characterSpec : defaultSpec(classFilter);
+    if (sort === "fit" && classFilter !== "all") return specFitScore(b.item, classFilter, selectedSpec) - specFitScore(a.item, classFilter, selectedSpec) || (b.item.itemLevel || 0) - (a.item.itemLevel || 0);
     if (sort === "level") return (b.item.itemLevel || 0) - (a.item.itemLevel || 0);
     if (sort === "name") return a.item.name.localeCompare(b.item.name);
     return a.dungeon.level[0] - b.dungeon.level[0] || a.dungeon.name.localeCompare(b.dungeon.name);
   });
   return (
     <main className="library-shell">
-      <header className="library-header loot-library-header"><div><div className="section-kicker">Loot workbench</div><h1>Dungeon loot</h1><p>{number(allLoot.length)} source-backed drops and rewards. Click any item for Wowhead.</p></div><div className="view-switch" aria-label="Loot view"><button className={viewMode === "boss" ? "active" : ""} onClick={() => setViewMode("boss")}>Dungeon → boss</button><button className={viewMode === "list" ? "active" : ""} onClick={() => setViewMode("list")}>All items</button></div></header>
+      <header className="library-header loot-library-header"><div><div className="section-kicker">Loot workbench</div><h1>Dungeon loot</h1><p>{number(allLoot.length)} source-backed drops and rewards. Click any item for Wowhead.</p></div><div className="view-switch" aria-label="Loot view"><button className={viewMode === "boss" ? "active" : ""} onClick={() => setPreference("viewMode", "boss")}>Dungeon → boss</button><button className={viewMode === "list" ? "active" : ""} onClick={() => setPreference("viewMode", "list")}>All items</button></div></header>
       <section className="loot-control-deck panel">
-        <ClassFilterStrip value={classFilter} onChange={setClassFilter} />
-        <div className="loot-filter-grid"><input type="search" placeholder="Search item, boss, slot, or dungeon" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={dungeonId} onChange={(event) => setDungeonId(event.target.value)}><option value="all">All dungeons</option>{dungeons.map((dungeon) => <option key={dungeon.id} value={dungeon.id}>{dungeon.name}</option>)}</select><select value={slot} onChange={(event) => setSlot(event.target.value)}><option value="all">All slots</option>{slots.map((value) => <option key={value}>{value}</option>)}</select><select value={sort} onChange={(event) => setSort(event.target.value)}><option value="fit">Best class fit</option><option value="dungeon">Dungeon level</option><option value="level">Highest item level</option><option value="name">Item name</option></select></div>
+        <ClassFilterStrip value={classFilter} onChange={(value) => setPreference("classFilter", value)} />
+        <div className="loot-mode-row"><FitMode value={fitMode} onChange={(value) => setPreference("fitMode", value)} /><SourceFilter value={sourceFilter} onChange={(value) => setPreference("sourceFilter", value)} /><button className={`wishlist-filter ${wishlistOnly ? "active" : ""}`} onClick={() => setPreference("wishlistOnly", !wishlistOnly)}>★ Wishlist only</button></div>
+        <div className="loot-filter-grid"><input type="search" placeholder="Search item, boss, slot, or dungeon" value={query} onChange={(event) => setPreference("query", event.target.value)} /><select value={dungeonId} onChange={(event) => setPreference("dungeonId", event.target.value)}><option value="all">All dungeons</option>{dungeons.map((dungeon) => <option key={dungeon.id} value={dungeon.id}>{dungeon.name}</option>)}</select><select value={slot} onChange={(event) => setPreference("slot", event.target.value)}><option value="all">All slots</option>{slots.map((value) => <option key={value}>{value}</option>)}</select><select value={rarity} onChange={(event) => setPreference("rarity", event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select value={sort} onChange={(event) => setPreference("sort", event.target.value)}><option value="fit">Best spec fit</option><option value="dungeon">Dungeon level</option><option value="level">Highest item level</option><option value="name">Item name</option></select></div>
       </section>
-      <div className="result-count">Showing all {number(filtered.length)} matching items · {classFilter === "all" ? "choose a class for wearability" : `${humanize(classFilter)}-usable gear`} · green-ring icons are rules-based suggestions</div>
+      <div className="result-count">Showing {number(filtered.length)} matching items · {classFilter === "all" ? "every class" : `${humanize(classFilter)} ${specProfile(classFilter, classFilter === characterClass ? characterSpec : defaultSpec(classFilter)).label}`} · opposing-faction quest rewards hidden · rules-based fit</div>
       {viewMode === "boss" ? <BossGroupedLoot entries={filtered} /> : <div className="loot-table" role="table" aria-label="Dungeon loot results"><div className="loot-head" role="row"><span>Item</span><span>Dungeon / source</span><span>Slot</span><span>Best fit</span><span>Level</span><span /></div>{filtered.map(({ item, dungeon }, index) => <LootRow item={item} dungeon={dungeon} key={`${dungeon.id}-${item.id || item.name}-${index}`} />)}</div>}
+    </main>
+  );
+}
+
+function Profile({ dungeons }) {
+  const gear = useGear();
+  const dungeonsById = useMemo(() => new Map(dungeons.map((dungeon) => [dungeon.id, dungeon])), [dungeons]);
+  const equippedItems = Object.values(gear.equipped);
+  return (
+    <main className="library-shell profile-shell">
+      <header className="library-header"><div><div className="section-kicker">Character workspace</div><h1>Loadout, wishlist & party</h1><p>Persistent gear goals feed the loot browser and route optimizer.</p></div><div className="profile-metrics"><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{equippedItems.length}</strong> equipped</span><span><strong>{gear.party.length + 1}</strong> party</span></div></header>
+      <div className="profile-grid">
+        <section className="profile-panel panel"><header><div><span>Current loadout</span><h2>{humanize(gear.characterClass)} · {specProfile(gear.characterClass, gear.spec).label}</h2></div><small>Equip items from any loot row</small></header><div className="loadout-grid">{equippedItems.length ? equippedItems.map((item) => <div className="loadout-slot" key={item.slot}><span>{item.slot}</span><div><ItemIcon item={item} compact /><strong className={qualityClass(item)}>{item.name}</strong></div><button onClick={() => gear.clearEquipped(item.slot)} aria-label={`Clear equipped ${item.slot}`}>×</button></div>) : <p className="empty-copy">No gear equipped yet. Use ⇄ on an item to establish comparison baselines.</p>}</div></section>
+        <section className="profile-panel panel"><header><div><span>Party roster</span><h2>Who wants each drop?</h2></div><button onClick={gear.addPartyMember} disabled={gear.party.length >= 4}>Add member</button></header><div className="party-editor">{gear.party.map((member) => <div className="party-member" key={member.id}><input aria-label="Party member name" value={member.name} onChange={(event) => gear.updatePartyMember(member.id, { name: event.target.value })} /><select aria-label={`${member.name} class`} value={member.characterClass} onChange={(event) => gear.updatePartyMember(member.id, { characterClass: event.target.value, spec: defaultSpec(event.target.value) })}>{CLASSES.map((entry) => <option key={entry}>{humanize(entry)}</option>)}</select><select aria-label={`${member.name} specialization`} value={member.spec} onChange={(event) => gear.updatePartyMember(member.id, { spec: event.target.value })}>{(CLASS_SPECS[member.characterClass] || []).map((entry) => <option value={entry.id} key={entry.id}>{entry.label} · {entry.role}</option>)}</select><button onClick={() => gear.removePartyMember(member.id)} aria-label={`Remove ${member.name}`}>×</button></div>)}{!gear.party.length && <p className="empty-copy">Add up to four party members. Item tooltips will show who has a strong rules-based fit.</p>}</div></section>
+      </div>
+      <section className="wishlist-panel panel"><header><div><span>Loot goals</span><h2>Wishlist</h2></div><strong>{gear.wishlist.length} tracked</strong></header>{gear.wishlist.length ? <div className="wishlist-grid">{gear.wishlist.map((item) => { const dungeon = dungeonsById.get(item.dungeonId); const equipped = item.slot ? gear.equipped[item.slot] : null; const comparison = compareItems(item, equipped, gear.characterClass, gear.spec); const partyFit = gear.party.filter((member) => recommendedForProfile(item, member.characterClass, member.spec)); return <div className="wishlist-card" key={item.key}><div><ItemIcon item={item} /><span><strong className={qualityClass(item)}>{item.name}</strong><small>{item.dungeonName || "Dungeon pending"} · {item.slot || item.type || "Item"}</small></span></div><div className="wishlist-card-meta"><span>{equipped ? `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)} vs equipped` : "No equipped comparison"}</span><span>{partyFit.length ? `Party: ${partyFit.map((member) => member.name).join(", ")}` : "No party conflict"}</span></div><ItemActions item={item} dungeon={dungeon} /></div>; })}</div> : <p className="profile-empty">Star items in dungeon details, grouped loot, quest rewards, or the full archive.</p>}</section>
+      <section className="provenance-panel"><div><span className="status-dot" /><strong>Snapshot {new Date(snapshot.fetchedAt).toLocaleString()}</strong><small>{snapshot.dungeons.length} dungeons · {number(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0))} loot records</small></div><div>{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name} ↗</a>)}</div><a href={reportIssueUrl({ dungeon: null })} target="_blank" rel="noreferrer">Report incorrect data ↗</a></section>
     </main>
   );
 }
@@ -723,18 +886,60 @@ export default function App() {
     localStorage.setItem("forever-route-planner:v1", JSON.stringify(state));
   }, [state]);
 
+  function toggleWishlist(item, dungeon) {
+    setState((current) => {
+      const key = itemKey(item, dungeon?.id);
+      const exists = current.wishlist.some((entry) => entry.key === key);
+      return { ...current, wishlist: exists ? current.wishlist.filter((entry) => entry.key !== key) : [...current.wishlist, itemSummary(item, dungeon)] };
+    });
+  }
+
+  function equipItem(item, dungeon) {
+    if (!item.slot) return;
+    setState((current) => {
+      const equipped = { ...current.equipped };
+      const summary = itemSummary(item, dungeon);
+      if (equipped[item.slot]?.key === summary.key) delete equipped[item.slot];
+      else equipped[item.slot] = summary;
+      return { ...current, equipped };
+    });
+  }
+
+  function addDungeonToRoute(dungeonId, openPlanner = false) {
+    setState((current) => ({ ...current, route: [...current.route, { uid: uid(), dungeonId, bridgeXp: 0, bonusXp: 0 }] }));
+    if (openPlanner) setView("planner");
+  }
+
+  const gear = {
+    characterClass: state.characterClass,
+    spec: state.spec,
+    wishlist: state.wishlist,
+    equipped: state.equipped,
+    party: state.party,
+    lootPreferences: state.lootPreferences,
+    updateLootPreferences: (values) => setState((current) => ({ ...current, lootPreferences: { ...current.lootPreferences, ...values } })),
+    isWishlisted: (item, dungeon) => state.wishlist.some((entry) => entry.key === itemKey(item, dungeon?.id)),
+    toggleWishlist,
+    equipItem,
+    clearEquipped: (slot) => setState((current) => { const equipped = { ...current.equipped }; delete equipped[slot]; return { ...current, equipped }; }),
+    addPartyMember: () => setState((current) => current.party.length >= 4 ? current : ({ ...current, party: [...current.party, { id: uid(), name: `Member ${current.party.length + 2}`, characterClass: "warrior", spec: "arms" }] })),
+    updatePartyMember: (id, values) => setState((current) => ({ ...current, party: current.party.map((member) => member.id === id ? { ...member, ...values } : member) })),
+    removePartyMember: (id) => setState((current) => ({ ...current, party: current.party.filter((member) => member.id !== id) })),
+  };
+
   return (
-    <div className="app-shell">
+    <GearContext.Provider value={gear}><div className="app-shell">
       <header className="topbar">
         <button className="brand" onClick={() => setView("planner")}><span className="brand-mark" aria-hidden="true">F</span><span><strong>Forever Route Planner</strong><small>Dungeon leveling companion</small></span></button>
-        <nav aria-label="Primary navigation">{[["planner", "Route Planner"], ["dungeons", "Dungeons"], ["quests", "Quests"], ["loot", "Loot"]].map(([id, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}>{label}</button>)}</nav>
+        <nav aria-label="Primary navigation">{[["planner", "Route"], ["dungeons", "Dungeons"], ["quests", "Quests"], ["loot", "Loot"], ["profile", "My Gear"]].map(([id, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</button>)}</nav>
         <div className="data-stamp"><span className="status-dot" />Beta snapshot · {new Date(snapshot.fetchedAt).toLocaleDateString()}</div>
       </header>
 
       {view === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} />}
-      {view === "dungeons" && <Dungeons dungeons={dungeons} faction={state.faction} characterClass={state.characterClass} onPin={setPinnedQuest} selected={selectedDungeon} setSelected={setSelectedDungeon} />}
+      {view === "dungeons" && <Dungeons dungeons={dungeons} faction={state.faction} characterClass={state.characterClass} characterSpec={state.spec} onPin={setPinnedQuest} selected={selectedDungeon} setSelected={setSelectedDungeon} onAddRoute={(id) => addDungeonToRoute(id, false)} onPlanNext={(id) => addDungeonToRoute(id, true)} />}
       {view === "quests" && <Quests dungeons={dungeons} faction={state.faction} onPin={setPinnedQuest} />}
-      {view === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} />}
+      {view === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}
+      {view === "profile" && <Profile dungeons={dungeons} />}
 
       <QuestTray selection={pinnedQuest} onClose={() => setPinnedQuest(null)} itemLookup={itemLookup} />
 
@@ -743,6 +948,6 @@ export default function App() {
         <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://www.wowhead.com/classic" target="_blank" rel="noreferrer">Wowhead Classic</a><a href="https://github.com/Hoizame/AtlasLootClassic_Maps" target="_blank" rel="noreferrer">Atlas maps</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">XP curve reference</a></div>
         <p>Unofficial fan-made planning tool. Forever beta data changes quickly; partial values are labeled and excluded from projections. Class-fit icons are transparent rules-based suggestions, not source claims.</p>
       </footer>
-    </div>
+    </div></GearContext.Provider>
   );
 }

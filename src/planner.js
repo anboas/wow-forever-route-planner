@@ -97,11 +97,12 @@ export function simulateRoute({ dungeonsById, route, level, xp, faction, charact
   return { start: clampCharacter(level, xp), finish: character, steps };
 }
 
-function completeRoute({ dungeonsById, route, level, xp, faction, characterClass, assumePrerequisites }) {
+function completeRoute({ dungeonsById, route, level, xp, faction, characterClass, assumePrerequisites, lootGoals = {} }) {
   let character = clampCharacter(level, xp);
   const completedIds = new Set();
   let totalBridgeXp = 0;
   let totalQuestXp = 0;
+  let wishlistHits = 0;
   const planned = [];
 
   for (const routeEntry of route) {
@@ -118,9 +119,10 @@ function completeRoute({ dungeonsById, route, level, xp, faction, characterClass
     character = addExperience(character, questXp + Math.max(0, Number(routeEntry.bonusXp) || 0));
     totalBridgeXp += bridgeXp;
     totalQuestXp += questXp;
+    wishlistHits += Number(lootGoals[dungeon.id]) || 0;
     planned.push({ ...routeEntry, bridgeXp });
   }
-  return { route: planned, totalBridgeXp, totalQuestXp, finish: character };
+  return { route: planned, totalBridgeXp, totalQuestXp, wishlistHits, finish: character };
 }
 
 function permutations(values) {
@@ -136,6 +138,7 @@ function permutations(values) {
 function betterPlan(candidate, current) {
   if (!current) return true;
   if (candidate.totalBridgeXp !== current.totalBridgeXp) return candidate.totalBridgeXp < current.totalBridgeXp;
+  if (candidate.wishlistHits !== current.wishlistHits) return candidate.wishlistHits > current.wishlistHits;
   if (candidate.totalQuestXp !== current.totalQuestXp) return candidate.totalQuestXp > current.totalQuestXp;
   if (candidate.finish.level !== current.finish.level) return candidate.finish.level > current.finish.level;
   return candidate.finish.xp > current.finish.xp;
@@ -153,7 +156,7 @@ export function optimizeRouteOrder(options) {
   return best;
 }
 
-export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characterClass, assumePrerequisites, count = 6, candidates }) {
+export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characterClass, assumePrerequisites, count = 6, candidates, lootGoals = {} }) {
   let character = clampCharacter(level, xp);
   const completedIds = new Set();
   const available = (candidates ? candidates.map((id) => dungeonsById.get(id)) : [...dungeonsById.values()])
@@ -162,6 +165,7 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
   const route = [];
   let totalBridgeXp = 0;
   let totalQuestXp = 0;
+  let wishlistHits = 0;
 
   while (available.length && route.length < count) {
     const ranked = available.map((dungeon) => {
@@ -174,8 +178,9 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
       const questXp = quests.reduce((sum, entry) => sum + entry.gate.xp, 0);
       const ready = quests.filter((entry) => entry.gate.status === "ready").length;
       const distance = Math.abs(dungeon.level[0] - character.level);
-      const score = questXp + ready * 700 - bridgeXp * .18 - distance * 180;
-      return { dungeon, bridgeXp, bridged, quests, questXp, score };
+      const lootHits = Number(lootGoals[dungeon.id]) || 0;
+      const score = questXp + ready * 700 + lootHits * 2500 - bridgeXp * .18 - distance * 180;
+      return { dungeon, bridgeXp, bridged, quests, questXp, lootHits, score };
     }).sort((a, b) => b.score - a.score || a.bridgeXp - b.bridgeXp);
     const choice = ranked[0];
     const index = available.indexOf(choice.dungeon);
@@ -184,8 +189,9 @@ export function buildOptimizedRoute({ dungeonsById, level, xp, faction, characte
     character = addExperience(choice.bridged, choice.questXp);
     totalBridgeXp += choice.bridgeXp;
     totalQuestXp += choice.questXp;
+    wishlistHits += choice.lootHits;
     route.push({ uid: `optimized-${route.length}-${choice.dungeon.id}`, dungeonId: choice.dungeon.id, bridgeXp: choice.bridgeXp, bonusXp: 0 });
   }
 
-  return { route, totalBridgeXp, totalQuestXp, finish: character };
+  return { route, totalBridgeXp, totalQuestXp, wishlistHits, finish: character };
 }

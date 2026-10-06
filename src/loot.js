@@ -135,8 +135,8 @@ export function itemSourceMeta(item, dungeon) {
   const boss = bosses.find((entry) => sourceKey(entry.name) === sourceKey(sourceName));
 
   if (sourceType.startsWith("quest") || quest) {
-    const faction = sourceType.includes("alliance") ? "Alliance" : sourceType.includes("horde") ? "Horde" : null;
-    return { kind: "quest", label: "Quest reward", name: quest?.name || sourceName || "Quest source pending", faction };
+    const faction = sourceType.includes("alliance") ? "Alliance" : sourceType.includes("horde") ? "Horde" : quest?.faction || null;
+    return { kind: "quest", label: "Quest reward", name: quest?.name || sourceName || "Quest source pending", faction, questId: quest?.id };
   }
   if (boss) return { kind: "boss", label: "Boss", name: boss.name };
   if (/trash|plunder/.test(sourceKey(sourceName))) return { kind: "trash", label: "Trash drop", name: sourceName || "Dungeon trash" };

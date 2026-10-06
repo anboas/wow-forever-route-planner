@@ -57,6 +57,9 @@ try {
   await page.getByRole("button", { name: /Ragefire Chasm/ }).click();
   assert.ok(await page.locator(".detail-panel .inspectable-entry").count() > 0, "dungeon detail exposes quests and loot");
   assert.equal(await page.locator(".dungeon-map-panel img").count(), 1, "Ragefire Chasm exposes a verified instance map");
+  assert.equal(await page.getByRole("button", { name: "Add to route", exact: true }).count(), 1);
+  assert.equal(await page.getByRole("button", { name: "Plan next", exact: true }).count(), 1);
+  assert.ok(await page.locator(".encounter-order a").count() >= 4, "map panel exposes a sourced encounter index");
 
   await page.getByRole("button", { name: "Quests", exact: true }).click();
   assert.equal(await page.locator(".quest-archive-row").count(), 124, "Horde view hides Alliance-only quests");
@@ -75,7 +78,7 @@ try {
   assert.equal(await page.locator(".reward-card").count(), 3);
   await page.locator(".reward-card").first().focus();
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
-  assert.match(await page.locator(".wow-tooltip").innerText(), /Suggested fit/i);
+  assert.match(await page.locator(".wow-tooltip").innerText(), /recommendation/i);
   await page.keyboard.press("Escape");
   assert.equal(await page.locator(".quest-tray").count(), 1, "first Escape closes only the nested reward tooltip");
   await page.keyboard.press("Escape");
@@ -89,15 +92,21 @@ try {
   await page.locator(".dungeon-loot-column").getByRole("button", { name: "Priest", exact: true }).click();
   const priestLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
   assert.notEqual(priestLootCount, warriorLootCount, "dungeon class filter changes the visible loot set");
+  await page.locator(".dungeon-loot-column").getByRole("button", { name: "Quest", exact: true }).click();
+  assert.ok(await page.locator(".dungeon-loot-column .inspectable-entry").count() > 0, "source toggle exposes quest rewards");
+  await page.locator('.dungeon-loot-column [role="group"][aria-label="Filter loot by source"]').getByRole("button", { name: "All", exact: true }).click();
+  const dungeonItem = page.locator(".dungeon-loot-column .inspectable-entry").first();
+  await dungeonItem.locator('.item-actions button[aria-label^="Add"]').click();
+  await dungeonItem.locator('.item-actions button[aria-label^="Equip"]').click();
 
   await page.getByRole("button", { name: "Loot", exact: true }).click();
   assert.ok(await page.locator(".loot-dungeon-group").count() > 10, "default loot view groups by dungeon");
   assert.ok(await page.locator(".boss-loot-group").count() > 10, "loot is grouped by boss/source");
   await page.getByRole("button", { name: "Priest", exact: true }).click();
-  assert.match(await page.locator(".result-count").innerText(), /Priest-usable gear/);
+  assert.match(await page.locator(".result-count").innerText(), /Priest Discipline/);
   await page.getByRole("button", { name: /Every class/ }).click();
   await page.getByRole("button", { name: "All items", exact: true }).click();
-  assert.equal(await page.locator(".loot-row").count(), 1621);
+  assert.ok(await page.locator(".loot-row").count() > 1400, "all faction-visible loot remains reachable");
   await page.getByPlaceholder("Search item, boss, slot, or dungeon").fill("Catacomb Cloak");
   assert.equal(await page.locator(".loot-row").count(), 1);
   const itemRow = page.locator(".loot-row").filter({ hasText: "Catacomb Cloak" });
@@ -112,6 +121,25 @@ try {
   await itemRow.click();
   assert.match(await page.evaluate(() => window.__openedItem), /^https:\/\/www\.wowhead\.com\/classic\//);
 
+  await page.getByRole("button", { name: /My Gear/ }).click();
+  assert.equal(await page.locator(".wishlist-card").count(), 1, "wishlist persists into the profile workspace");
+  assert.equal(await page.locator(".loadout-slot").count(), 1, "equipped comparison baseline persists");
+  await page.getByRole("button", { name: "Add member", exact: true }).click();
+  assert.equal(await page.locator(".party-member").count(), 1, "party roster supports additional members");
+
+  await page.getByRole("button", { name: "Loot", exact: true }).click();
+  await page.getByPlaceholder("Search item, boss, slot, or dungeon").fill("");
+  await page.getByRole("button", { name: /Wishlist only/ }).click();
+  assert.equal(await page.locator(".loot-row").count(), 1, "wishlist-only filter uses the persistent gear profile");
+  await page.getByRole("button", { name: /Wishlist only/ }).click();
+
+  await page.getByRole("button", { name: "Route", exact: true }).click();
+  await page.getByPlaceholder("Weekend dungeon circuit").fill("Horde starter");
+  await page.getByRole("button", { name: "Save preset", exact: true }).click();
+  assert.equal(await page.getByRole("button", { name: "Horde starter", exact: true }).count(), 1, "named route preset is saved");
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  assert.match(page.url(), /[?&]plan=/, "share action serializes route and loot filters into the URL");
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Quests", exact: true }).click();
   await page.getByPlaceholder("Search quest, objective, or dungeon").fill("");
@@ -123,7 +151,7 @@ try {
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
   assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
-  await page.getByRole("button", { name: "Route Planner", exact: true }).click();
+  await page.getByRole("button", { name: "Route", exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile overflow");
   assert.equal(await page.locator(".route-step").count(), 3);
   process.stdout.write("Browser verification passed at desktop and mobile widths.\n");

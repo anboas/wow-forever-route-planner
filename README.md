@@ -7,15 +7,17 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Complete current 34-dungeon catalog with 1,600+ indexed loot entries.
 - Verified Forever dungeon quest XP, pickup levels, faction gates, class gates, and prerequisite-chain warnings where source data exists.
 - Sequential route simulation against the Classic 1–60 XP curve.
-- One-click route optimization that reorders selected dungeons for quest completeness, plans the minimum bridge XP needed between stops, or builds a six-stop suggested route.
+- One-click route optimization that reorders selected dungeons for quest completeness, plans the minimum bridge XP needed between stops, considers wishlist targets, or builds a six-stop suggested route.
 - Explicit bridge XP and dungeon-run XP inputs so the planner never invents unverified experience.
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
-- Class wearability filters and transparent rules-based best-fit class icons for every item.
-- Dungeon-to-boss loot browsing plus an all-items table with slot, source, class-fit, and level sorting.
+- Class, specialization, role, usable/recommended, source, slot, rarity, level, and wishlist filters with transparent rules-based fit icons.
+- Dungeon-to-boss loot browsing with explicit Boss, Quest reward, Mob, Trash, and Unknown source labels and remembered collapsible groups.
 - WoW/Wowhead-inspired item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct Wowhead item/search links.
-- Faction-aware quest archives that omit opposing-faction quests entirely.
-- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, and 25 source-licensed Classic instance maps.
-- Persistent planner state in local storage.
+- Faction-aware quest and reward archives that omit opposing-faction records entirely.
+- Wishlist, equipped-slot comparisons, party-interest profiles, normalized drop chances, and estimated runs for 50%, 75%, and 90% acquisition confidence.
+- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, and 25 source-licensed Classic instance maps.
+- Named route presets, shareable planner/filter URLs, source freshness labels, deep source links, and prefilled data-report links.
+- Compact responsive workspace with persistent planner, filters, gear, wishlist, party, preset, and collapsed-group state in local storage.
 
 The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → Shadowfang Keep.
 
