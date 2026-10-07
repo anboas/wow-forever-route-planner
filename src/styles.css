@@ -259,7 +259,16 @@ button.secondary:hover { color: var(--ink); background: var(--surface-2); }
 .dungeon-map-panel { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(260px, .42fr); align-items: stretch; gap: 0; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #080a0e; overflow: hidden; }
 .dungeon-map-stage { position: relative; display: grid; place-items: center; min-width: 0; background: #020305; }
 .map-image-link { display: grid; width: 100%; min-height: 100%; place-items: center; background: #020305; }
+.map-image-link { position: relative; }
 .map-image-link > img { display: block; width: 100%; height: min(38vw, 520px); object-fit: contain; background: #020305; }
+.map-image-link.client-floor-link { width: min(100%, 780px); min-height: 0; aspect-ratio: 1002 / 668; }
+.map-image-link.client-floor-link > img { width: 100%; height: 100%; object-fit: fill; }
+.client-map-pins { position: absolute; inset: 0; pointer-events: none; }
+.client-map-pin { position: absolute; display: grid; width: 24px; height: 24px; place-items: center; transform: translate(-50%, -50%); border: 2px solid #f3c964; border-radius: 50%; background: #16100a; box-shadow: 0 2px 8px #000, 0 0 0 2px rgba(0,0,0,.55); color: #fff4ce; font-style: normal; pointer-events: auto; }
+.client-map-pin b { font: 800 10px/1 Inter, sans-serif; }
+.client-map-pin em { position: absolute; left: 28px; display: none; width: max-content; max-width: 180px; padding: 5px 7px; border: 1px solid var(--gold-dark); border-radius: 4px; background: rgba(8,10,12,.94); color: var(--ink); font: 700 10px/1.25 Inter, sans-serif; }
+.client-map-pin:hover em { display: block; }
+.entrance-pin { border-color: #55d39a; background: #10251d; color: #8ff2c2; font-size: 9px; }
 .map-schematic .map-image-link > img { background: #080c12; }
 .map-floor-tabs { position: absolute; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: calc(100% - 24px); padding: 5px; border: 1px solid #35404d; border-radius: 10px; background: rgba(4, 7, 11, .9); box-shadow: 0 8px 24px rgba(0,0,0,.38); backdrop-filter: blur(8px); }
 .map-floor-tabs button { min-height: 32px; padding: 6px 10px; border-color: transparent; color: var(--muted); background: transparent; font-size: 10px; }

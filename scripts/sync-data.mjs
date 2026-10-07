@@ -362,8 +362,16 @@ const dungeons = await mapLimit(lootCatalog, 4, async (lootSummary, index) => {
 });
 
 const snapshot = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   fetchedAt: new Date().toISOString(),
+  xpPolicy: {
+    questRewardModel: "wow-forever-current",
+    levelCurveModel: "classic-1-60",
+    combatXpModel: "player-observed",
+    sourceUrl: "https://wowf.io/en/news/beta-update-oct-1",
+    sourcePublishedAt: "2026-10-01T15:56:00-07:00",
+    note: "Quest rewards are the current values published by WOWF.IO after Forever's October 1 balance pass. That pass halved only the extra dungeon-quest bonus beyond normal quest values; it did not revert rewards to original Classic values. Mob and boss-clear XP stays player-observed until Forever publishes authoritative per-clear values.",
+  },
   context: {
     fetchedAt: context.fetchedAt,
     inventory: context.inventory,

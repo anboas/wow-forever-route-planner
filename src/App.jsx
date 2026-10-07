@@ -338,7 +338,7 @@ function QuestTooltip({ quest, dungeon, gate }) {
       <div className="tooltip-facts">
         <span><b>Starts:</b> {actorList(quest.from)}</span>
         <span><b>Ends:</b> {actorList(quest.to)}</span>
-        <span><b>Experience:</b> {Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "Unverified"}</span>
+        <span><b>Forever experience:</b> {Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "Unverified"}</span>
         {quest.rep && <span><b>Reputation:</b> {quest.rep}</span>}
         {!!quest.chain?.length && <span><b>Prerequisites:</b> {quest.chain.map((entry) => entry.name || entry).join(", ")}</span>}
         {!!quest.prerequisiteIds?.length && !quest.chain?.length && <span><b>Prerequisite IDs:</b> {quest.prerequisiteIds.join(", ")}</span>}
@@ -427,7 +427,7 @@ function QuestTray({ selection, onClose, itemLookup, questLookup, onSelect }) {
       <button className="tray-backdrop" onClick={onClose} aria-label="Close quest tray" />
       <aside className="quest-tray" aria-label={`Pinned quest: ${quest.name}`}>
         <header><div>{selection.previous && <button className="tray-back" onClick={() => onSelect(selection.previous)}>← Back</button>}<div className="section-kicker">Quest inspector</div><h2>{quest.name}</h2></div><button className="tray-close" onClick={onClose} aria-label="Close quest tray">×</button></header>
-        <div className="tray-meta"><span>{dungeon.name}</span><span>Level {questMinimumLevel(quest, dungeon)}+</span>{Number.isFinite(quest.xp) && <strong>{number(quest.xp)} XP</strong>}</div>
+        <div className="tray-meta"><span>{dungeon.name}</span><span>Level {questMinimumLevel(quest, dungeon)}+</span>{Number.isFinite(quest.xp) && <strong title="Current WOWF.IO Forever reward">{number(quest.xp)} Forever XP</strong>}</div>
         {gate && <div className={`tooltip-gate gate-text-${gate.status}`}>{GATE_COPY[gate.status]}</div>}
         {quest.objective && <p className="tray-objective">{quest.objective}</p>}
         {quest.note && <p className="tray-note">{quest.note}</p>}
@@ -688,7 +688,8 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin, onNavigate })
         </label>
         <div className="curve-note">
           <strong>XP model</strong>
-          <p>Verified quest XP on the Classic 1–60 curve. Enter observed XP per clear; travel remains an editable planning estimate.</p>
+          <p><strong>Forever quest rewards</strong> from the current WOWF.IO dataset, including Forever's post–October 1 dungeon bonus. Level thresholds use the Classic 1–60 curve. Enter observed mob/boss XP per clear until Forever publishes authoritative clear totals.</p>
+          <a href={snapshot.xpPolicy.sourceUrl} target="_blank" rel="noreferrer">Forever XP balance source ↗</a>
         </div>
       </aside>
 
@@ -791,14 +792,16 @@ function DungeonMapPanel({ dungeon, map }) {
   useEffect(() => setFloorIndex(0), [dungeon.id]);
   const floors = map?.floors || (map ? [{ name: "Instance map", src: map.src }] : []);
   const floor = floors[Math.min(floorIndex, Math.max(0, floors.length - 1))];
-  const isSchematic = map?.kind === "route-schematic";
+  const floorKind = floor?.kind || map?.kind;
+  const isSchematic = floorKind === "route-schematic";
+  const mapLabel = isSchematic ? "Sourced route schematic" : floorKind === "client-overhead" ? "Official client overhead" : floorKind === "fallback-map" ? "Fallback overview" : "Official client floor map";
   return (
     <div className={`dungeon-map-panel ${isSchematic ? "map-schematic" : ""}`}>
       <div className="dungeon-map-stage">
-        {map ? <a className="map-image-link" href={assetUrl(floor.src)} target="_blank" rel="noreferrer" title="Open full-resolution map"><img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${isSchematic ? "route schematic" : "instance map"}`} /></a> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
+        {map ? <a className={`map-image-link ${floorKind === "client-map" ? "client-floor-link" : ""}`} href={assetUrl(floor.src)} target="_blank" rel="noreferrer" title="Open full-resolution map"><img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${mapLabel.toLowerCase()}`} />{floorKind === "client-map" && <span className="client-map-pins" aria-label={`${floor.name} boss pins`}>{floor.entrance && <i className="client-map-pin entrance-pin" style={{ left: `${floor.entrance.x * 100}%`, top: `${floor.entrance.y * 100}%` }} title="Entrance">▲</i>}{(floor.pins || []).map((pin) => <i className="client-map-pin" style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }} title={`${pin.order}. ${pin.name}`} key={`${pin.id}-${pin.order}`}><b>{pin.order}</b><em>{pin.name}</em></i>)}</span>}</a> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
         {floors.length > 1 && <div className="map-floor-tabs" aria-label={`${dungeon.name} map floors`}>{floors.map((entry, index) => <button key={entry.name} aria-pressed={index === floorIndex} onClick={() => setFloorIndex(index)}>{entry.name}</button>)}</div>}
       </div>
-      <div><span>{isSchematic ? "Sourced route schematic" : "Instance map"}</span><strong>{dungeon.name}</strong>{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a></> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch Forever coverage ↗</a>}{map?.quality && <small className="map-quality">{map.quality}</small>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
+      <div><span>{mapLabel}</span><strong>{dungeon.name}</strong>{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a>{map.clientSourceUrl && <a href={map.clientSourceUrl} target="_blank" rel="noreferrer">Forever client build ↗</a>}</> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch Forever coverage ↗</a>}{(floor?.quality || map?.quality) && <small className="map-quality">{floor?.quality || map?.quality}</small>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
     </div>
   );
 }
@@ -807,14 +810,17 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   const [classFilter, setClassFilter] = useState(characterClass || "all");
   const [fitMode, setFitMode] = useState("usable");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [bossFilter, setBossFilter] = useState("all");
   const [slotFilter, setSlotFilter] = useState("all");
   const [rarityFilter, setRarityFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   useEffect(() => setClassFilter(characterClass || "all"), [characterClass]);
+  useEffect(() => setBossFilter("all"), [dungeon?.id]);
   if (!dungeon) return null;
   const quests = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction));
   const factionLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction));
   const slots = [...new Set(factionLoot.map((item) => item.slot).filter(Boolean))].sort();
+  const bossOptions = [...new Set(factionLoot.map((item) => itemSourceMeta(item, dungeon)).filter((source) => source.kind === "boss").map((source) => source.name))].sort();
   const selectedSpec = classFilter === characterClass ? characterSpec : defaultSpec(classFilter);
   const loot = factionLoot.filter((item) => {
     const source = itemSourceMeta(item, dungeon);
@@ -822,6 +828,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
     const rarity = String(item.rarity || item.quality || "common").toLowerCase();
     return fitMatch
       && (sourceFilter === "all" || source.kind === sourceFilter)
+      && (bossFilter === "all" || source.kind === "boss" && source.name === bossFilter)
       && (slotFilter === "all" || item.slot === slotFilter)
       && (rarityFilter === "all" || rarity === rarityFilter)
       && (levelFilter === "all" || Number(item.requiredLevel || item.itemLevel || 0) <= Number(levelFilter));
@@ -840,7 +847,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
       <div className="summary-grid compact">
         <div className="summary-card"><span>Faction-visible loot</span><strong>{factionLoot.length}</strong></div>
         <div className="summary-card"><span>{humanize(faction)} quests</span><strong>{quests.length}</strong></div>
-        <div className="summary-card"><span>Verified XP</span><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></div>
+        <div className="summary-card"><span>Forever quest XP</span><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></div>
         <div className="summary-card"><span>Boss / quest loot</span><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></div>
         <div className="summary-card"><span>Mapped / detailed</span><strong>{map ? "Map ready" : `${verified} quests`}</strong></div>
       </div>
@@ -854,7 +861,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
             <div className="detail-filter-label"><strong>Loot controls</strong><span>{classFilter === "all" ? "Every class" : `${humanize(classFilter)} · ${specProfile(classFilter, selectedSpec).label}`}</span></div>
             <ClassFilterStrip value={classFilter} onChange={setClassFilter} compact />
             <div className="detail-fit-row"><FitMode value={fitMode} onChange={setFitMode} /><SourceFilter value={sourceFilter} onChange={setSourceFilter} /></div>
-            <div className="detail-quick-filters"><select aria-label="Filter dungeon loot by slot" value={slotFilter} onChange={(event) => setSlotFilter(event.target.value)}><option value="all">All slots</option>{slots.map((slot) => <option key={slot}>{slot}</option>)}</select><select aria-label="Filter dungeon loot by rarity" value={rarityFilter} onChange={(event) => setRarityFilter(event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select aria-label="Filter dungeon loot by level" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="all">Any level</option>{[20,30,40,50,60].map((level) => <option value={level} key={level}>Up to level {level}</option>)}</select></div>
+            <div className="detail-quick-filters"><select aria-label="Filter dungeon loot by boss" value={bossFilter} onChange={(event) => setBossFilter(event.target.value)}><option value="all">All bosses</option>{bossOptions.map((boss) => <option value={boss} key={boss}>{boss}</option>)}</select><select aria-label="Filter dungeon loot by slot" value={slotFilter} onChange={(event) => setSlotFilter(event.target.value)}><option value="all">All slots</option>{slots.map((slot) => <option key={slot}>{slot}</option>)}</select><select aria-label="Filter dungeon loot by rarity" value={rarityFilter} onChange={(event) => setRarityFilter(event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select aria-label="Filter dungeon loot by level" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="all">Any level</option>{[20,30,40,50,60].map((level) => <option value={level} key={level}>Up to level {level}</option>)}</select></div>
             <div className="source-legend" aria-label="Loot source legend"><span><em className="source-badge source-quest">Quest {sourceCounts.quest || 0}</em></span><span><em className="source-badge source-boss">Boss {sourceCounts.boss || 0}</em></span><span><em className="source-badge source-drop">Boss / mob {sourceCounts.drop || 0}</em></span><span><em className="source-badge source-trash">Trash {sourceCounts.trash || 0}</em></span></div>
           </div>
           <ul className="simple-list loot-detail-list">{loot.map((item, index) => <LootListEntry key={`${item.id || item.name}-${index}`} item={item} dungeon={dungeon} />)}</ul>
@@ -1227,7 +1234,7 @@ export default function App() {
 
       <footer className="site-footer">
         <div><strong>Coverage</strong><span>{dungeons.length} dungeons · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0))} loot entries · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0))} quest groups</span></div>
-        <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map</a><a href="https://github.com/Hoizame/AtlasLootClassic_Maps" target="_blank" rel="noreferrer">Atlas maps</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">XP curve reference</a></div>
+        <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map</a><a href="https://wago.tools/api/builds" target="_blank" rel="noreferrer">Forever client maps</a><a href={snapshot.xpPolicy.sourceUrl} target="_blank" rel="noreferrer">Forever XP policy</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">Level curve reference</a></div>
         <p>Unofficial fan-made planning tool. Forever beta data changes quickly; partial values are labeled and excluded from projections. Class-fit icons are transparent rules-based suggestions, not source claims.</p>
       </footer>
     </div></GearContext.Provider>
