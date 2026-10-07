@@ -20,7 +20,9 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - WoW-style item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct WoW Forever item/quest links.
 - Faction-aware quest and reward archives that omit opposing-faction records entirely.
 - Wishlist, equipped-slot comparisons, party-interest profiles, normalized drop chances, and estimated runs for 50%, 75%, and 90% acquisition confidence.
-- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, high-quality 1002×668 Blizzard client floor art for every supported classic floor, and combined official-client/route-schematic views for the four published Forever dungeons.
+- Every top-level workspace and all 34 dungeons have directly loadable static HTML URLs with page metadata, breadcrumbs, native browser history, and a generated sitemap. Navigation performs normal document loads rather than client-side view swapping.
+- Per-dungeon pages expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, high-quality 1002×668 Blizzard client floor art for every supported classic floor, and combined official-client/route-schematic views for the four published Forever dungeons.
+- The map is the primary responsive canvas on dungeon pages and includes wheel/button zoom, drag-to-pan, reset, fullscreen, floor switching, sourced pins, and a full-resolution asset link.
 - Named route presets, shareable planner/filter URLs, source freshness labels, deep source links, and prefilled data-report links.
 - Compact responsive workspace with persistent planner, filters, gear, wishlist, party, preset, and collapsed-group state in local storage.
 
@@ -60,6 +62,8 @@ npm install
 npm run verify
 npm run dev
 ```
+
+`npm run build` emits separate documents for `/route/`, `/dungeons/`, every `/dungeons/<slug>/`, `/quests/`, `/loot/`, `/gear/`, and `/404.html`. Use `npm run serve` when validating direct route loads; Vite's development server is intended only for component iteration.
 
 ## Container
 

@@ -10,7 +10,8 @@ const candidates = [process.env.CHROMIUM_PATH, "/usr/bin/chromium-browser", "/us
 const executablePath = candidates.find(existsSync);
 assert.ok(executablePath, "No Chromium executable found");
 
-const server = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", String(port)], {
+const server = spawn(process.execPath, ["server.mjs"], {
+  env: { ...process.env, PORT: String(port) },
   stdio: ["ignore", "pipe", "pipe"],
 });
 
@@ -28,6 +29,13 @@ async function waitForServer() {
 let browser;
 try {
   await waitForServer();
+  const staticRoutes = ["/route/", "/dungeons/", "/quests/", "/loot/", "/gear/", ...snapshot.dungeons.map((dungeon) => `/dungeons/${dungeon.id}/`)];
+  for (const route of staticRoutes) {
+    const response = await fetch(`${baseUrl}${route}`);
+    assert.equal(response.status, 200, `${route} is a directly loadable HTML page`);
+    assert.match(response.headers.get("content-type") || "", /text\/html/);
+  }
+  assert.equal((await fetch(`${baseUrl}/dungeons/not-a-real-dungeon/`)).status, 404, "unknown dungeon routes return a real 404 document");
   browser = await chromium.launch({ executablePath, headless: true, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
@@ -71,35 +79,50 @@ try {
   assert.match(await page.locator(".optimization-note").innerText(), /travel minutes/i);
   assert.equal(await page.locator(".route-card-details").count(), 0, "applying an optimizer result restores compact stops");
 
-  await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  await page.getByRole("link", { name: "Dungeons", exact: true }).click();
+  await page.waitForLoadState("domcontentloaded");
+  assert.match(page.url(), /\/dungeons\/$/, "Dungeons is a real page URL");
   assert.equal(await page.locator(".dungeon-card").count(), 34);
-  await page.getByRole("button", { name: /Ragefire Chasm/ }).click();
+  await page.getByRole("link", { name: /Ragefire Chasm/ }).click();
+  await page.waitForLoadState("domcontentloaded");
+  assert.match(page.url(), /\/dungeons\/ragefire-chasm\/$/, "each dungeon has its own URL");
+  assert.deepEqual(await page.locator(".breadcrumbs > *").allTextContents(), ["Home", "Dungeons", "Ragefire Chasm"], "dungeon page exposes a complete breadcrumb trail");
   assert.equal(await page.locator(".dense-overview-grid .dungeon-map-panel").count(), 1, "dungeon detail keeps the map visible in the dense overview");
   assert.ok(await page.locator(".dense-overview-grid .dungeon-quest-list .inspectable-entry").count() > 0, "dungeon detail keeps quests beside the map");
   assert.match(await page.locator(".dense-detail").innerText(), /Ragefire Chasm[\s\S]*Forever quest XP[\s\S]*5,680/i, "dense dungeon header exposes essential metadata");
   assert.equal(await page.locator(".dungeon-map-panel img").count(), 1, "Ragefire Chasm exposes a verified instance map");
-  assert.equal(await page.locator('.dungeon-map-panel a[title="Open full-resolution map"]').count(), 1, "map can be opened at source resolution");
+  assert.equal(await page.locator('.dungeon-map-panel a').filter({ hasText: "Open full map" }).count(), 1, "map can be opened at source resolution");
   assert.match(await page.locator(".dungeon-map-panel .map-quality").innerText(), /1002×668|high-quality/i, "official client map quality is disclosed");
   assert.ok(await page.locator(".client-map-pin").count() >= 4, "official client floor map includes sourced boss pins");
   assert.equal(await page.getByRole("button", { name: "Add to route", exact: true }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Plan next", exact: true }).count(), 1);
   assert.ok(await page.locator(".encounter-order a").count() >= 4, "map panel exposes a sourced encounter index");
-  await page.getByRole("button", { name: "Close dungeon details", exact: true }).click();
+  assert.equal(await page.getByRole("group", { name: "Map controls" }).count(), 1, "map exposes zoom, reset, and fullscreen controls");
+  await page.getByRole("button", { name: "Zoom map in" }).click();
+  assert.equal(await page.locator(".map-controls output").innerText(), "125%", "map zoom control updates the canvas");
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  assert.equal(await page.locator(".map-controls output").innerText(), "100%", "map reset restores fit view");
+  const mapWidth1440 = (await page.locator(".map-viewport").boundingBox())?.width || 0;
+  await page.setViewportSize({ width: 2200, height: 1200 });
+  const mapWidth2200 = (await page.locator(".map-viewport").boundingBox())?.width || 0;
+  assert.ok(mapWidth2200 > mapWidth1440 * 1.35, "map canvas materially expands with wide screens");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("link", { name: "Dungeons", exact: true }).click();
   await page.getByPlaceholder("Search dungeon or zone").fill("Hall of Thanes");
-  await page.getByRole("button", { name: /Hall of Thanes/ }).click();
+  await page.getByRole("link", { name: /Hall of Thanes/ }).click();
   assert.equal(await page.locator(".map-floor-tabs button").count(), 2, "Hall of Thanes exposes official client art and a route schematic");
   assert.match(await page.locator(".dungeon-map-panel").innerText(), /Official client floor map[\s\S]*1002×668/i);
   await page.getByRole("button", { name: "Boss route", exact: true }).click();
   assert.match(await page.locator(".dungeon-map-panel").innerText(), /Sourced route schematic[\s\S]*no third-party map artwork copied/i);
   assert.match(await page.locator(".dungeon-map-panel img").getAttribute("alt"), /route schematic/i);
-  await page.getByRole("button", { name: "Close dungeon details", exact: true }).click();
+  await page.getByRole("link", { name: "Dungeons", exact: true }).click();
   await page.getByPlaceholder("Search dungeon or zone").fill("City of Dalaran");
-  await page.getByRole("button", { name: /City of Dalaran/ }).click();
+  await page.getByRole("link", { name: /City of Dalaran/ }).click();
   assert.equal(await page.locator(".map-floor-tabs button").count(), 3, "City of Dalaran exposes route floors plus official client overhead");
   await page.getByRole("button", { name: "City of Dalaran route", exact: true }).click();
   assert.equal(await page.getByRole("button", { name: "City of Dalaran route", exact: true }).getAttribute("aria-pressed"), "true");
 
-  await page.getByRole("button", { name: "Quests", exact: true }).click();
+  await page.getByRole("link", { name: "Quests", exact: true }).click();
   const expectedHordeQuests = snapshot.dungeons.flatMap((dungeon) => dungeon.quests).filter((quest) => !quest.faction || quest.faction === "both" || quest.faction === "horde").length;
   assert.ok(await page.locator(".quest-archive-row").count() >= expectedHordeQuests, "Horde view includes dungeon quests and their browsable prerequisites");
   assert.equal((await page.locator(".quest-archive-row > div:nth-child(2) small").allTextContents()).some((value) => value === "Alliance"), false);
@@ -139,7 +162,8 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await page.locator(".quest-tray").count(), 0, "second Escape closes the pinned quest tray");
 
-  await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  await page.getByRole("link", { name: "Dungeons", exact: true }).click();
+  await page.getByRole("link", { name: /Ragefire Chasm/ }).click();
   assert.equal(await page.locator('.dungeon-loot-column [role="group"][aria-label="Filter loot by class"]').count(), 1, "dungeon loot exposes class filters");
   assert.ok(await page.locator(".dungeon-loot-column .source-quest").count() > 0, "dungeon loot identifies quest rewards");
   assert.ok(await page.locator(".dungeon-loot-column .source-boss").count() > 0, "dungeon loot identifies boss drops");
@@ -162,7 +186,7 @@ try {
   await dungeonItem.locator('.item-actions button[aria-label^="Add"]').click();
   await dungeonItem.locator('.item-actions button[aria-label^="Equip"]').click();
 
-  await page.getByRole("button", { name: "Loot", exact: true }).click();
+  await page.getByRole("link", { name: "Loot", exact: true }).click();
   assert.ok(await page.locator(".loot-dungeon-group").count() > 10, "default loot view groups by dungeon");
   assert.ok(await page.locator(".boss-loot-group").count() > 10, "loot is grouped by boss/source");
   await page.getByRole("button", { name: "Priest", exact: true }).click();
@@ -185,7 +209,7 @@ try {
   assert.match(await page.evaluate(() => window.__openedItem), /^https:\/\/wowf\.io\/en\/dungeons\/.+#item-/);
   assert.equal(await page.locator('a[href*="wowhead.com"]').count(), 0, "application links do not send items or quests to non-Forever versions");
 
-  await page.getByRole("button", { name: /My Gear/ }).click();
+  await page.getByRole("link", { name: /My Gear/ }).click();
   assert.equal(await page.locator(".wishlist-card").count(), 1, "wishlist persists into the profile workspace");
   assert.equal(await page.locator(".loadout-slot").count(), 1, "equipped comparison baseline persists");
   await page.getByRole("button", { name: "Add member", exact: true }).click();
@@ -199,13 +223,13 @@ try {
   await page.getByRole("button", { name: "Copy route for addon", exact: true }).click();
   assert.match(await companionText.inputValue(), /^WFRP1P\|/);
 
-  await page.getByRole("button", { name: "Loot", exact: true }).click();
+  await page.getByRole("link", { name: "Loot", exact: true }).click();
   await page.getByPlaceholder("Search item, boss, slot, or dungeon").fill("");
   await page.getByRole("button", { name: /Wishlist only/ }).click();
   assert.equal(await page.locator(".loot-row").count(), 1, "wishlist-only filter uses the persistent gear profile");
   await page.getByRole("button", { name: /Wishlist only/ }).click();
 
-  await page.getByRole("button", { name: "Route", exact: true }).click();
+  await page.getByRole("link", { name: "Route", exact: true }).click();
   await page.getByPlaceholder("Weekend dungeon circuit").fill("Horde starter");
   await page.getByRole("button", { name: "Save preset", exact: true }).click();
   assert.equal(await page.getByRole("button", { name: "Horde starter", exact: true }).count(), 1, "named route preset is saved");
@@ -213,17 +237,18 @@ try {
   assert.match(page.url(), /[?&]plan=/, "share action serializes route and loot filters into the URL");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Quests", exact: true }).click();
+  await page.getByRole("link", { name: "Quests", exact: true }).click();
   await page.getByPlaceholder("Search quest, giver, zone, or dungeon").fill("");
   await page.locator(".quest-archive-row").first().focus();
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
   const tooltipBox = await page.locator(".wow-tooltip").boundingBox();
   assert.ok(tooltipBox && tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 390 && tooltipBox.y + tooltipBox.height <= 844, "mobile tooltip stays in viewport");
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  await page.getByRole("link", { name: "Dungeons", exact: true }).click();
+  await page.getByRole("link", { name: /Ragefire Chasm/ }).click();
   assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
-  await page.getByRole("button", { name: "Route", exact: true }).click();
+  await page.getByRole("link", { name: "Route", exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile overflow");
   assert.equal(await page.locator(".route-step").count(), 3);
   assert.equal(await page.locator(".mobile-command-dock").isVisible(), true, "mobile route dock remains visible");

@@ -10,6 +10,30 @@ import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySource
 import { parseCompanionString, serializePlannerString } from "./companion.js";
 
 const CLASSES = CLASS_OPTIONS.map(({ id }) => id);
+const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
+const PAGE_PATHS = {
+  planner: "/route/",
+  dungeons: "/dungeons/",
+  quests: "/quests/",
+  loot: "/loot/",
+  profile: "/gear/",
+};
+
+function appHref(path = "/") {
+  return `${BASE_PATH}${path.startsWith("/") ? path : `/${path}`}` || "/";
+}
+
+function currentPage() {
+  const pathname = window.location.pathname.replace(BASE_PATH, "") || "/";
+  const parts = pathname.split("/").filter(Boolean);
+  if (!parts.length || parts[0] === "route") return { id: "planner" };
+  if (parts[0] === "dungeons" && parts[1]) return { id: "dungeon", dungeonId: parts[1] };
+  if (parts[0] === "dungeons") return { id: "dungeons" };
+  if (parts[0] === "quests") return { id: "quests" };
+  if (parts[0] === "loot") return { id: "loot" };
+  if (parts[0] === "gear") return { id: "profile" };
+  return { id: "not-found" };
+}
 const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"].map((dungeonId, index) => ({
   uid: `starter-${index}`,
   dungeonId,
@@ -794,16 +818,72 @@ function LootListEntry({ item, dungeon }) {
 
 function DungeonMapPanel({ dungeon, map }) {
   const [floorIndex, setFloorIndex] = useState(0);
-  useEffect(() => setFloorIndex(0), [dungeon.id]);
+  const panelRef = useRef(null);
+  const layerRef = useRef(null);
+  const zoomLabelRef = useRef(null);
+  const transformRef = useRef({ scale: 1, x: 0, y: 0 });
+  const dragRef = useRef(null);
+  useEffect(() => {
+    setFloorIndex(0);
+    resetMap();
+  }, [dungeon.id]);
+  useEffect(() => resetMap(), [floorIndex]);
   const floors = map?.floors || (map ? [{ name: "Instance map", src: map.src }] : []);
   const floor = floors[Math.min(floorIndex, Math.max(0, floors.length - 1))];
   const floorKind = floor?.kind || map?.kind;
   const isSchematic = floorKind === "route-schematic";
   const mapLabel = isSchematic ? "Sourced route schematic" : floorKind === "client-overhead" ? "Official client overhead" : floorKind === "fallback-map" ? "Fallback overview" : "Official client floor map";
+  function applyTransform() {
+    if (!layerRef.current) return;
+    const { scale, x, y } = transformRef.current;
+    layerRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+    if (zoomLabelRef.current) zoomLabelRef.current.textContent = `${Math.round(scale * 100)}%`;
+  }
+  function zoomBy(amount) {
+    const current = transformRef.current;
+    const scale = Math.min(4, Math.max(1, current.scale + amount));
+    transformRef.current = scale === 1 ? { scale: 1, x: 0, y: 0 } : { ...current, scale };
+    applyTransform();
+  }
+  function resetMap() {
+    transformRef.current = { scale: 1, x: 0, y: 0 };
+    applyTransform();
+  }
+  function startPan(event) {
+    if (transformRef.current.scale <= 1) return;
+    dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, x: transformRef.current.x, y: transformRef.current.y };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.classList.add("is-panning");
+  }
+  function movePan(event) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    transformRef.current = { ...transformRef.current, x: drag.x + event.clientX - drag.startX, y: drag.y + event.clientY - drag.startY };
+    applyTransform();
+  }
+  function endPan(event) {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    event.currentTarget.classList.remove("is-panning");
+  }
+  async function toggleFullscreen() {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await panelRef.current?.requestFullscreen?.();
+  }
   return (
-    <div className={`dungeon-map-panel ${isSchematic ? "map-schematic" : ""}`}>
+    <div ref={panelRef} className={`dungeon-map-panel ${isSchematic ? "map-schematic" : ""}`}>
       <div className="dungeon-map-stage">
-        {map ? <a className={`map-image-link ${floorKind === "client-map" ? "client-floor-link" : ""}`} href={assetUrl(floor.src)} target="_blank" rel="noreferrer" title="Open full-resolution map"><img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${mapLabel.toLowerCase()}`} />{floorKind === "client-map" && <span className="client-map-pins" aria-label={`${floor.name} boss pins`}>{floor.entrance && <i className="client-map-pin entrance-pin" style={{ left: `${floor.entrance.x * 100}%`, top: `${floor.entrance.y * 100}%` }} title="Entrance">▲</i>}{(floor.pins || []).map((pin) => <i className="client-map-pin" style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }} title={`${pin.order}. ${pin.name}`} key={`${pin.id}-${pin.order}`}><b>{pin.order}</b><em>{pin.name}</em></i>)}</span>}</a> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
+        {map ? <div
+          className={`map-viewport ${floorKind === "client-map" ? "client-floor-link" : ""}`}
+          onWheel={(event) => { event.preventDefault(); zoomBy(event.deltaY < 0 ? .25 : -.25); }}
+          onDoubleClick={() => zoomBy(.5)}
+          onPointerDown={startPan}
+          onPointerMove={movePan}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
+          aria-label={`${dungeon.name} interactive map. Use the controls, mouse wheel, or drag while zoomed.`}
+        ><div ref={layerRef} className="map-transform-layer"><img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${mapLabel.toLowerCase()}`} draggable="false" />{floorKind === "client-map" && <span className="client-map-pins" aria-label={`${floor.name} boss pins`}>{floor.entrance && <i className="client-map-pin entrance-pin" style={{ left: `${floor.entrance.x * 100}%`, top: `${floor.entrance.y * 100}%` }} title="Entrance">▲</i>}{(floor.pins || []).map((pin) => <i className="client-map-pin" style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }} title={`${pin.order}. ${pin.name}`} key={`${pin.id}-${pin.order}`}><b>{pin.order}</b><em>{pin.name}</em></i>)}</span>}</div></div> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
+        {map && <div className="map-controls" role="group" aria-label="Map controls"><button onClick={() => zoomBy(-.25)} aria-label="Zoom map out">−</button><output ref={zoomLabelRef} aria-live="polite">100%</output><button onClick={() => zoomBy(.25)} aria-label="Zoom map in">+</button><button onClick={resetMap}>Reset</button><button onClick={toggleFullscreen} aria-label="View map fullscreen">Fullscreen</button></div>}
         {floors.length > 1 && <div className="map-floor-tabs" aria-label={`${dungeon.name} map floors`}>{floors.map((entry, index) => <button key={entry.name} aria-pressed={index === floorIndex} onClick={() => setFloorIndex(index)}>{entry.name}</button>)}</div>}
       </div>
       <div><span>{mapLabel}</span><strong>{dungeon.name}</strong>{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a>{map.clientSourceUrl && <a href={map.clientSourceUrl} target="_blank" rel="noreferrer">Forever client build ↗</a>}</> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch Forever coverage ↗</a>}{(floor?.quality || map?.quality) && <small className="map-quality">{floor?.quality || map?.quality}</small>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
@@ -851,7 +931,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   }
   return (
     <section className="detail-panel panel dense-detail">
-      <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>
+      {onClose && <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>}
       <header className="dense-detail-header">
         <div><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
         <div className="detail-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report</a></div>
@@ -895,7 +975,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   );
 }
 
-function Dungeons({ dungeons, faction, characterClass, characterSpec, onPin, selected, setSelected, onAddRoute, onPlanNext }) {
+function Dungeons({ dungeons, faction }) {
   const [query, setQuery] = useState("");
   const [band, setBand] = useState("all");
   const filtered = dungeons.filter((dungeon) => {
@@ -906,10 +986,21 @@ function Dungeons({ dungeons, faction, characterClass, characterSpec, onPin, sel
   return (
     <main className="library-shell">
       <header className="library-header"><div><div className="section-kicker">Dungeon atlas</div><h1>All Forever dungeons</h1><p>{dungeons.length} instances with quest and loot coverage.</p></div><div className="library-filters"><input type="search" placeholder="Search dungeon or zone" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={band} onChange={(event) => setBand(event.target.value)}><option value="all">All levels</option>{[10, 20, 30, 40, 50].map((value) => <option key={value} value={value}>Levels {value}–{value + 9}</option>)}</select></div></header>
-      <DungeonDetail dungeon={selected} faction={faction} characterClass={characterClass} characterSpec={characterSpec} onPin={onPin} onClose={() => setSelected(null)} onAddRoute={onAddRoute} onPlanNext={onPlanNext} />
-      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; const visibleLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction)); const counts = visibleLoot.reduce((result, item) => { const kind = itemSourceMeta(item, dungeon).kind; return { ...result, [kind]: (result[kind] || 0) + 1 }; }, {}); const map = dungeonMaps[dungeon.id]; return <button className="dungeon-card" key={dungeon.id} onClick={() => setSelected(dungeon)}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} quests</span><span>{counts.boss || 0} boss</span><span>{counts.quest || 0} quest rewards</span><span>{map?.kind === "route-schematic" ? "Route map" : map ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></button>; })}</div>
+      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; const visibleLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction)); const counts = visibleLoot.reduce((result, item) => { const kind = itemSourceMeta(item, dungeon).kind; return { ...result, [kind]: (result[kind] || 0) + 1 }; }, {}); const map = dungeonMaps[dungeon.id]; return <a className="dungeon-card" href={appHref(`/dungeons/${dungeon.id}/`)} key={dungeon.id}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} quests</span><span>{counts.boss || 0} boss</span><span>{counts.quest || 0} quest rewards</span><span>{map?.kind === "route-schematic" ? "Route map" : map ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></a>; })}</div>
     </main>
   );
+}
+
+function DungeonPage({ dungeon, ...props }) {
+  return <main className="library-shell dungeon-page-shell"><DungeonDetail dungeon={dungeon} {...props} /></main>;
+}
+
+function Breadcrumbs({ page, dungeon }) {
+  const items = [{ label: "Home", href: appHref("/") }];
+  if (page.id === "dungeon") items.push({ label: "Dungeons", href: appHref("/dungeons/") }, { label: dungeon?.name || "Not found" });
+  else if (page.id === "planner") items.push({ label: "Route" });
+  else items.push({ label: PAGE_PATHS[page.id] ? humanize(page.id === "profile" ? "My Gear" : page.id) : "Not found" });
+  return <nav className="breadcrumbs" aria-label="Breadcrumb">{items.map((item) => item.href ? <a href={item.href} key={item.label}>{item.label}</a> : <span aria-current="page" key={item.label}>{item.label}</span>)}</nav>;
 }
 
 function Quests({ dungeons, faction, onPin }) {
@@ -1093,9 +1184,8 @@ function Profile({ dungeons }) {
 }
 
 export default function App() {
-  const [view, setView] = useState("planner");
+  const page = useMemo(currentPage, []);
   const [state, setState] = useState(loadState);
-  const [selectedDungeon, setSelectedDungeon] = useState(null);
   const [pinnedQuest, setPinnedQuest] = useState(null);
   const dungeons = snapshot.dungeons;
   const dungeonsById = useMemo(() => new Map(dungeons.map((dungeon) => [dungeon.id, dungeon])), [dungeons]);
@@ -1152,7 +1242,7 @@ export default function App() {
 
   function addDungeonToRoute(dungeonId, openPlanner = false) {
     setState((current) => ({ ...current, route: [...current.route, { uid: uid(), dungeonId, bridgeXp: 0, bonusXp: 0, runs: 1, combatXpPerRun: 0, restedPercent: 0 }] }));
-    if (openPlanner) setView("planner");
+    if (openPlanner) window.location.assign(appHref(PAGE_PATHS.planner));
   }
 
   function importCompanion(value) {
@@ -1241,16 +1331,19 @@ export default function App() {
   return (
     <GearContext.Provider value={gear}><div className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => setView("planner")}><span className="brand-mark" aria-hidden="true">F</span><span><strong>Forever Route Planner</strong><small>Dungeon leveling companion</small></span></button>
-        <nav aria-label="Primary navigation">{[["planner", "Route"], ["dungeons", "Dungeons"], ["quests", "Quests"], ["loot", "Loot"], ["profile", "My Gear"]].map(([id, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => setView(id)}>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</button>)}</nav>
+        <a className="brand" href={appHref("/")}><span className="brand-mark" aria-hidden="true">F</span><span><strong>Forever Route Planner</strong><small>Dungeon leveling companion</small></span></a>
+        <nav aria-label="Primary navigation">{[["planner", "Route"], ["dungeons", "Dungeons"], ["quests", "Quests"], ["loot", "Loot"], ["profile", "My Gear"]].map(([id, label]) => <a key={id} className={(page.id === id || id === "dungeons" && page.id === "dungeon") ? "active" : ""} href={appHref(PAGE_PATHS[id])}>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</a>)}</nav>
         <div className="data-stamp"><span className="status-dot" />Beta snapshot · {new Date(snapshot.fetchedAt).toLocaleDateString()}</div>
       </header>
 
-      {view === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} onNavigate={setView} />}
-      {view === "dungeons" && <Dungeons dungeons={dungeons} faction={state.faction} characterClass={state.characterClass} characterSpec={state.spec} onPin={setPinnedQuest} selected={selectedDungeon} setSelected={setSelectedDungeon} onAddRoute={(id) => addDungeonToRoute(id, false)} onPlanNext={(id) => addDungeonToRoute(id, true)} />}
-      {view === "quests" && <Quests dungeons={dungeons} faction={state.faction} onPin={setPinnedQuest} />}
-      {view === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}
-      {view === "profile" && <Profile dungeons={dungeons} />}
+      <Breadcrumbs page={page} dungeon={page.id === "dungeon" ? dungeonsById.get(page.dungeonId) : null} />
+      {page.id === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} onNavigate={(id) => window.location.assign(appHref(PAGE_PATHS[id]))} />}
+      {page.id === "dungeons" && <Dungeons dungeons={dungeons} faction={state.faction} />}
+      {page.id === "dungeon" && dungeonsById.has(page.dungeonId) && <DungeonPage dungeon={dungeonsById.get(page.dungeonId)} faction={state.faction} characterClass={state.characterClass} characterSpec={state.spec} onPin={setPinnedQuest} onAddRoute={(id) => addDungeonToRoute(id, false)} onPlanNext={(id) => addDungeonToRoute(id, true)} />}
+      {page.id === "quests" && <Quests dungeons={dungeons} faction={state.faction} onPin={setPinnedQuest} />}
+      {page.id === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}
+      {page.id === "profile" && <Profile dungeons={dungeons} />}
+      {(page.id === "not-found" || page.id === "dungeon" && !dungeonsById.has(page.dungeonId)) && <main className="not-found"><span>404</span><h1>Page not found</h1><p>This route or dungeon does not exist.</p><a href={appHref("/dungeons/")}>Browse dungeons</a></main>}
 
       <QuestTray selection={pinnedQuest} onClose={() => setPinnedQuest(null)} itemLookup={itemLookup} questLookup={questLookup} onSelect={setPinnedQuest} />
 

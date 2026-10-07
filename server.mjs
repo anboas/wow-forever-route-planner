@@ -23,8 +23,14 @@ createServer((request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
   const candidate = normalize(join(root, pathname));
   const safeCandidate = candidate.startsWith(root) ? candidate : join(root, "index.html");
-  const file = existsSync(safeCandidate) && statSync(safeCandidate).isFile() ? safeCandidate : join(root, "index.html");
-  response.writeHead(200, {
+  const directoryIndex = join(safeCandidate, "index.html");
+  const file = existsSync(safeCandidate) && statSync(safeCandidate).isFile()
+    ? safeCandidate
+    : existsSync(directoryIndex) && statSync(directoryIndex).isFile()
+      ? directoryIndex
+      : join(root, "404.html");
+  const status = file.endsWith("404.html") ? 404 : 200;
+  response.writeHead(status, {
     "content-type": mime[extname(file)] || "application/octet-stream",
     "cache-control": file.endsWith("index.html") ? "no-cache" : "public, max-age=31536000, immutable",
     "x-content-type-options": "nosniff",

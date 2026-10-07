@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-pages.mjs",
     "build:cloudflare": "VITE_BASE_PATH=/ npm run build",
     "build:github-pages": "VITE_BASE_PATH=/wow-forever-route-planner/ npm run build",
     "preview": "vite preview --host 0.0.0.0",
