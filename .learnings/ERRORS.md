@@ -99,6 +99,38 @@ Use checked raw source URLs for deterministic adapters, browser-render SVGs befo
 
 ---
 
+## [ERR-20261006-PUBLIC-MAP-PROBE-CASE] Public map probe assumed visual text casing
+
+**Logged**: 2026-10-06T20:12:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The one-off public probe expected title casing even though CSS exposes the map label as uppercase accessibility text.
+
+### Error
+```
+AssertionError: /Sourced route schematic/ did not match "SOURCED ROUTE SCHEMATIC"
+```
+
+### Context
+- Production loaded the correct release and map content.
+- The repository browser gate already used a case-insensitive assertion.
+
+### Suggested Fix
+Use case-insensitive matching for visually transformed labels in public diagnostics.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T20:12:00-04:00
+- **Notes**: Reran the bounded public probe with case-insensitive matching; Hall of Thanes, Dalaran floor switching, and mobile containment passed.
+
+---
+
 ## [ERR-20261006-PUBLIC-NETWORKIDLE] Public browser proof waited indefinitely for network idle
 
 **Logged**: 2026-10-06T18:20:00-04:00
