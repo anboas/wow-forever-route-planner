@@ -74,8 +74,9 @@ try {
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
   assert.equal(await page.locator(".dungeon-card").count(), 34);
   await page.getByRole("button", { name: /Ragefire Chasm/ }).click();
-  assert.equal(await page.locator(".dungeon-section-nav button").count(), 3, "dungeon detail exposes compact Map, Quests, and Loot workspaces");
-  assert.match(await page.locator(".dungeon-hero").innerText(), /Ragefire Chasm[\s\S]*Quest XP[\s\S]*5,680/i, "dungeon hero exposes WOWF-style essential metadata");
+  assert.equal(await page.locator(".dense-overview-grid .dungeon-map-panel").count(), 1, "dungeon detail keeps the map visible in the dense overview");
+  assert.ok(await page.locator(".dense-overview-grid .dungeon-quest-list .inspectable-entry").count() > 0, "dungeon detail keeps quests beside the map");
+  assert.match(await page.locator(".dense-detail").innerText(), /Ragefire Chasm[\s\S]*Forever quest XP[\s\S]*5,680/i, "dense dungeon header exposes essential metadata");
   assert.equal(await page.locator(".dungeon-map-panel img").count(), 1, "Ragefire Chasm exposes a verified instance map");
   assert.equal(await page.locator('.dungeon-map-panel a[title="Open full-resolution map"]').count(), 1, "map can be opened at source resolution");
   assert.match(await page.locator(".dungeon-map-panel .map-quality").innerText(), /1002×668|high-quality/i, "official client map quality is disclosed");
@@ -139,7 +140,6 @@ try {
   assert.equal(await page.locator(".quest-tray").count(), 0, "second Escape closes the pinned quest tray");
 
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
-  await page.locator(".dungeon-section-nav").getByRole("button", { name: /Loot/ }).click();
   assert.equal(await page.locator('.dungeon-loot-column [role="group"][aria-label="Filter loot by class"]').count(), 1, "dungeon loot exposes class filters");
   assert.ok(await page.locator(".dungeon-loot-column .source-quest").count() > 0, "dungeon loot identifies quest rewards");
   assert.ok(await page.locator(".dungeon-loot-column .source-boss").count() > 0, "dungeon loot identifies boss drops");
@@ -221,7 +221,6 @@ try {
   assert.ok(tooltipBox && tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 390 && tooltipBox.y + tooltipBox.height <= 844, "mobile tooltip stays in viewport");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
-  await page.locator(".dungeon-section-nav").getByRole("button", { name: /Loot/ }).click();
   assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
   await page.getByRole("button", { name: "Route", exact: true }).click();

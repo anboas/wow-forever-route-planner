@@ -812,7 +812,6 @@ function DungeonMapPanel({ dungeon, map }) {
 }
 
 function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin, onClose, onAddRoute, onPlanNext }) {
-  const [detailView, setDetailView] = useState("map");
   const [classFilter, setClassFilter] = useState(characterClass || "all");
   const [fitMode, setFitMode] = useState("usable");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -821,7 +820,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   const [rarityFilter, setRarityFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   useEffect(() => setClassFilter(characterClass || "all"), [characterClass]);
-  useEffect(() => { setBossFilter("all"); setDetailView("map"); }, [dungeon?.id]);
+  useEffect(() => setBossFilter("all"), [dungeon?.id]);
   if (!dungeon) return null;
   const quests = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction));
   const factionLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction));
@@ -846,37 +845,29 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
     return { ...counts, [kind]: (counts[kind] || 0) + 1 };
   }, {});
   const bossCounts = bossOptions.map((boss) => ({ boss, count: factionLoot.filter((item) => { const source = itemSourceMeta(item, dungeon); return source.kind === "boss" && source.name === boss; }).length }));
-  const heroSrc = map?.floors?.[0]?.src || map?.src;
-  const heroStyle = heroSrc ? { "--dungeon-art": `url("${assetUrl(heroSrc)}")` } : undefined;
   function selectLootGroup(source, boss = "all") {
-    setDetailView("loot");
     setSourceFilter(source);
     setBossFilter(boss);
   }
   return (
-    <section className="detail-panel panel wowf-detail">
+    <section className="detail-panel panel dense-detail">
       <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>
-      <header className="dungeon-hero" style={heroStyle}>
-        <div className="dungeon-hero-shade" aria-hidden="true" />
-        <div className="dungeon-hero-copy"><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
-        <div className="dungeon-hero-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report</a></div>
-        <div className="dungeon-hero-metrics">
-          <span><small>Level</small><strong>{dungeon.level.join("–")}</strong></span>
-          <span><small>Location</small><strong>{dungeon.location || "Pending"}</strong></span>
-          <span><small>Bosses</small><strong>{dungeon.bosses.length}</strong></span>
-          <span><small>Loot</small><strong>{factionLoot.length}</strong></span>
-          <span><small>Quest XP</small><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></span>
-        </div>
+      <header className="dense-detail-header">
+        <div><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
+        <div className="detail-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report</a></div>
       </header>
-      <nav className="dungeon-section-nav" aria-label={`${dungeon.name} sections`}>
-        <button aria-pressed={detailView === "map"} onClick={() => setDetailView("map")}><span aria-hidden="true">⌖</span><b>Map</b><small>{map ? "Official floors" : "Pending"}</small></button>
-        <button aria-pressed={detailView === "quests"} onClick={() => setDetailView("quests")}><span aria-hidden="true">!</span><b>Quests</b><small>{quests.length} · {number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))} XP</small></button>
-        <button aria-pressed={detailView === "loot"} onClick={() => setDetailView("loot")}><span aria-hidden="true">▣</span><b>Loot</b><small>{factionLoot.length} items · {dungeon.bosses.length} bosses</small></button>
-      </nav>
-      <div className="detail-panel-body">
-      {detailView === "map" && <section className="detail-section"><DungeonMapPanel dungeon={dungeon} map={map} /></section>}
-      {detailView === "quests" && <section className="detail-section dungeon-quest-view"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} dungeon quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p className="inspect-hint">Open a quest for its pickup map, prerequisite route, Forever source, and reward details.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>}
-      {detailView === "loot" && <section className="detail-section dungeon-loot-workbench">
+      <div className="dense-summary-bar" aria-label={`${dungeon.name} summary`}>
+        <span><small>Loot</small><strong>{factionLoot.length}</strong></span>
+        <span><small>{humanize(faction)} quests</small><strong>{quests.length}</strong></span>
+        <span><small>Forever quest XP</small><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></span>
+        <span><small>Boss / quest loot</small><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></span>
+        <span><small>Map coverage</small><strong>{map ? `${map.floors?.length || 1} floor${(map.floors?.length || 1) === 1 ? "" : "s"}` : "Pending"}</strong></span>
+      </div>
+      <div className="dense-overview-grid">
+        <section className="dense-map"><DungeonMapPanel dungeon={dungeon} map={map} /></section>
+        <section className="dense-quests"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p>Open for pickup map, prerequisites, rewards, and Forever source.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>
+      </div>
+      <section className="dungeon-loot-workbench">
         <aside className="loot-source-nav" aria-label="Filter dungeon loot by encounter">
           <header><span>Sources</span><strong>Bosses</strong></header>
           <button aria-pressed={bossFilter === "all" && sourceFilter === "all"} onClick={() => selectLootGroup("all")}><span>All items</span><b>{factionLoot.length}</b></button>
@@ -899,8 +890,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
           <ul className="simple-list loot-detail-list">{loot.map((item, index) => <LootListEntry key={`${item.id || item.name}-${index}`} item={item} dungeon={dungeon} />)}</ul>
           {!loot.length && <p className="loot-empty-state">No items match these loot filters.</p>}
         </div>
-      </section>}
-      </div>
+      </section>
     </section>
   );
 }
