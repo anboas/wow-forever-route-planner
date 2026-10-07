@@ -13,8 +13,11 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Actual-result repair: enter the level and XP reached after a stop to mark its ready quests complete and rebuild the remaining route automatically.
 - Full WOWF.IO corpus ingestion: 413 indexed English pages, 271 normalized quest-chain records with resolved pickup/turn-in coordinates, 35 class/spec leveling guides, and 26 zone/instance records.
 - Class/spec guide matches and sourced world coordinates feed optimizer scoring and travel estimates while retaining visible provenance and review state.
-- Downloadable `ForeverRouteCompanion` 1.0 intelligence suite with a compact in-game HUD and full dashboard for the current run, character, history, party, and sync.
+- Downloadable `ForeverRouteCompanion` 1.1 intelligence suite with a compact live HUD, event timeline, post-run review, and dashboards for the current run, character, history, party, and sync.
 - Automatic local dungeon telemetry for total/combat/quest XP, time, bosses, loot, quests, deaths, rested state, and party composition, plus personal XP/hour and dungeon baselines on the website.
+- Private login-based character workspaces with owner-managed accounts, player and read-only roles, separate character state, automatic legacy-browser migration, and a sanitized shared-party presence dashboard.
+- Permanent private run URLs under `/runs/<id>/` with XP sources, boss progress, event timeline, loot, party composition, review state, breadcrumbs, and native browser history.
+- Armory-ready character identity fields are reserved in the account model so WoW Forever profiles can be linked without migrating user-owned state when an official source becomes available.
 - Two-way exchange: import character level/XP, faction, class/spec, active/completed dungeon quests, gear, hearth, flight paths, professions, readiness, party, and run history; export the planned route and wishlist back to the game.
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
 - Class, specialization, role, usable/recommended, source, slot, rarity, level, and wishlist filters with transparent rules-based fit icons.
@@ -58,6 +61,12 @@ The scheduled `Refresh source-backed data` GitHub Actions workflow runs the same
 
 The addon retains the latest 50 runs in SavedVariables and uses the in-game addon channel for lightweight party readiness. It uses local game APIs only and never uploads data automatically. Its source is checked in under `addon/ForeverRouteCompanion/`. The addon and website share one generated visual contract for palette, semantic states, control geometry, metric cards, navigation, and HUD proportions so the in-game and web experiences cannot silently drift apart.
 
+## Accounts and characters
+
+Cloudflare production requires authentication. The existing Defense Budget Intelligence owner account is migrated from the shared D1 account store without exposing or resetting its password. The owner can create administrator, player, and viewer accounts; temporary passwords must be replaced on first sign-in, and viewer writes are rejected at the API boundary. Each user can track up to 20 private characters. Only a compact active-character presence record is shared with other authenticated group members.
+
+The browser derives the password proof with PBKDF2 before sending it, sessions use secure `HttpOnly` and `SameSite=Strict` cookies, writes require same-origin requests, and repeated failed sign-ins are rate-limited. No character or party endpoint is available anonymously.
+
 ## Development
 
 ```bash
@@ -66,7 +75,7 @@ npm run verify
 npm run dev
 ```
 
-`npm run build` emits separate documents for `/route/`, `/dungeons/`, every `/dungeons/<slug>/`, `/quests/`, `/loot/`, `/gear/`, and `/404.html`. Use `npm run serve` when validating direct route loads; Vite's development server is intended only for component iteration.
+`npm run build` emits separate documents for `/route/`, `/dungeons/`, every `/dungeons/<slug>/`, `/quests/`, `/loot/`, `/gear/`, the authenticated run shell, and `/404.html`. Cloudflare rewrites `/runs/<id>/` to that shell while preserving the permanent run URL. Use `npm run serve` when validating direct route loads; Vite's development server is intended only for component iteration.
 
 ## Container
 

@@ -289,6 +289,13 @@ end
 
 local function currentRun() return initializeDB().currentRun end
 
+local function recordEvent(run, kind, label, value)
+  if not run then return end
+  run.events = run.events or {}
+  table.insert(run.events, { at = now(), kind = kind or "event", label = tostring(label or ""), value = value })
+  while #run.events > 120 do table.remove(run.events, 1) end
+end
+
 local function startRun(dungeonID, instanceName, manual)
   local db = initializeDB()
   if db.currentRun then return db.currentRun end
@@ -296,10 +303,12 @@ local function startRun(dungeonID, instanceName, manual)
   db.currentRun = {
     id = tostring(now()) .. "-" .. tostring(math.random(1000, 9999)), dungeonId = dungeonID or "unknown", dungeonName = (WFRP_DUNGEONS or {})[dungeonID] or instanceName or "Unknown dungeon",
     startedAt = now(), startLevel = character.level, startXp = character.xp, startXpMax = character.xpMax,
-    totalXp = 0, combatXp = 0, questXp = 0, deaths = 0, bosses = {}, loot = {}, quests = {}, manual = manual == true,
+    totalXp = 0, combatXp = 0, questXp = 0, deaths = 0, bosses = {}, bossEngaged = {}, loot = {}, quests = {}, events = {}, wishlistDrops = 0, manual = manual == true,
+    expectedBosses = #(WFRP_DUNGEON_BOSSES and WFRP_DUNGEON_BOSSES[dungeonID] or {}), reviewState = "recording",
     group = groupSnapshot(), restedStart = character.restedXp,
   }
   WFRP.session.lastLevel, WFRP.session.lastXp, WFRP.session.lastXpMax = character.level, character.xp, character.xpMax
+  recordEvent(db.currentRun, "start", "Run started", character.level)
   if WFRP.RefreshUI then WFRP.RefreshUI() end
   print("|cffffc44dWFRP:|r Recording " .. db.currentRun.dungeonName .. ".")
   return db.currentRun
@@ -314,7 +323,10 @@ local function stopRun(reason)
   run.endLevel, run.endXp, run.endXpMax = character.level, character.xp, character.xpMax
   run.unclassifiedXp = math.max(0, run.totalXp - run.combatXp - run.questXp)
   run.restedEnd = character.restedXp; run.reason = reason or "manual"
-  table.insert(db.runs, run); db.currentRun = nil; trimRuns(); saveCharacterSnapshot()
+  run.xpPerHour = run.duration > 0 and math.floor(run.totalXp / run.duration * 3600 + .5) or 0
+  run.status = run.expectedBosses > 0 and #run.bosses >= run.expectedBosses and "complete" or "partial"
+  run.reviewState = "pending"; recordEvent(run, "finish", run.status == "complete" and "Complete clear" or "Partial clear", run.totalXp)
+  table.insert(db.runs, run); db.pendingRunId = run.id; db.currentRun = nil; trimRuns(); saveCharacterSnapshot()
   if WFRP.RefreshUI then WFRP.RefreshUI() end
   print(string.format("|cffffc44dWFRP:|r Saved %s · %d XP · %s.", run.dungeonName, run.totalXp, SecondsToTime and SecondsToTime(run.duration) or (run.duration .. "s")))
   return run
@@ -336,18 +348,44 @@ end
 
 local function recordQuest(questID, xpReward)
   local run = currentRun(); if not run then return end
-  addUnique(run.quests, questID); run.questXp = run.questXp + math.max(0, tonumber(xpReward) or 0)
+  addUnique(run.quests, questID); run.questXp = run.questXp + math.max(0, tonumber(xpReward) or 0); recordEvent(run, "quest", ((WFRP_QUESTS or {})[questID] or {}).name or ("Quest " .. tostring(questID)), tonumber(xpReward) or 0)
 end
 
 local function recordLoot(message)
   local run = currentRun(); if not run then return end
   local link = tostring(message or ""):match("(|c%x+|Hitem:.-|h.-|h|r)") or tostring(message or ""):match("(|Hitem:.-|h.-|h)")
-  local itemID = itemIDFromLink(link); if itemID then addUnique(run.loot, itemID) end
+  local itemID = itemIDFromLink(link)
+  if itemID then
+    addUnique(run.loot, itemID)
+    local item = (WFRP_ITEMS or {})[itemID] or {}
+    recordEvent(run, "loot", item.name or ("Item " .. itemID), itemID)
+    local wishlist = {}; for _, id in ipairs(split(initializeDB().plan.wishlist or "")) do wishlist[tonumber(id) or id] = true end
+    if wishlist[itemID] then run.wishlistDrops = (run.wishlistDrops or 0) + 1; recordEvent(run, "wishlist", item.name or ("Item " .. itemID), itemID) end
+  end
 end
 
 local function recordBoss(name)
   local run = currentRun(); if not run or not name then return end
-  for _, boss in ipairs((WFRP_DUNGEON_BOSSES or {})[run.dungeonId] or {}) do if normalize(boss) == normalize(name) then addUnique(run.bosses, boss); return end end
+  for _, boss in ipairs((WFRP_DUNGEON_BOSSES or {})[run.dungeonId] or {}) do if normalize(boss) == normalize(name) then local before = #run.bosses; addUnique(run.bosses, boss); if #run.bosses > before then recordEvent(run, "boss", boss, #run.bosses) end; return end end
+end
+
+local function recordBossEngaged(name)
+  local run = currentRun(); if not run or not name then return end
+  for _, boss in ipairs((WFRP_DUNGEON_BOSSES or {})[run.dungeonId] or {}) do if normalize(boss) == normalize(name) then local before = #run.bossEngaged; addUnique(run.bossEngaged, boss); if #run.bossEngaged > before then recordEvent(run, "engage", boss, #run.bossEngaged) end; return end end
+end
+
+local function findRun(id)
+  for index, run in ipairs(initializeDB().runs) do if run.id == id then return run, index end end
+  return nil, nil
+end
+
+local function reviewRun(id, action)
+  local db = initializeDB(); local run, index = findRun(id or db.pendingRunId)
+  if not run then return false end
+  if action == "discard" then table.remove(db.runs, index); db.pendingRunId = nil
+  else run.status = action == "partial" and "partial" or run.status; run.reviewState = "saved"; db.pendingRunId = nil end
+  if WFRP.RefreshUI then WFRP.RefreshUI() end
+  return true
 end
 
 local function updateInstance()
@@ -371,7 +409,7 @@ local function telemetryPayload()
   for index = math.max(1, #db.runs - 24), #db.runs do if db.runs[index] then table.insert(recentRuns, db.runs[index]) end end
   local nextID = nextDungeon()
   return {
-    schema = SCHEMA_VERSION, addonVersion = (GetAddOnMetadata and GetAddOnMetadata(addonName, "Version")) or (C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(addonName, "Version")) or "1.0.0", dataVersion = WFRP_DATA_VERSION or WFRP_DATA_FETCHED_AT,
+    schema = SCHEMA_VERSION, addonVersion = (GetAddOnMetadata and GetAddOnMetadata(addonName, "Version")) or (C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(addonName, "Version")) or "1.1.0", dataVersion = WFRP_DATA_VERSION or WFRP_DATA_FETCHED_AT,
     exportedAt = now(), character = character, quests = { active = activeQuestIDs(), complete = completedQuestIDs() }, runs = recentRuns,
     currentRun = db.currentRun, group = groupSnapshot(), peers = db.peers, plan = db.plan, readiness = nextID and questReadiness(nextID) or nil,
   }
@@ -427,6 +465,7 @@ WFRP.Export = exportTelemetry
 WFRP.ImportPlan = importPlan
 WFRP.StartRun = function(dungeonID) local id = dungeonID; if not id or id == "" then id = nextDungeon() end; return startRun(id, nil, true) end
 WFRP.StopRun = stopRun
+WFRP.ReviewRun = reviewRun
 WFRP.SendPartyState = sendPartyState
 WFRP.ShowImport = function() showText("Paste a planner route", "WFRP1P|", true, importPlan) end
 
@@ -457,8 +496,8 @@ events:SetScript("OnEvent", function(_, event, ...)
   elseif event == "QUEST_TURNED_IN" then local questID, xpReward = ...; recordQuest(questID, xpReward); C_Timer.After(.1, updateRunXp)
   elseif event == "CHAT_MSG_COMBAT_XP_GAIN" then recordCombatXp(...)
   elseif event == "CHAT_MSG_LOOT" then recordLoot(...)
-  elseif event == "PLAYER_DEAD" then if db.currentRun then db.currentRun.deaths = db.currentRun.deaths + 1 end
-  elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then for index = 1, 5 do if UnitExists("boss" .. index) then recordBoss(UnitName("boss" .. index)) end end
+  elseif event == "PLAYER_DEAD" then if db.currentRun then db.currentRun.deaths = db.currentRun.deaths + 1; recordEvent(db.currentRun, "death", "Player death", db.currentRun.deaths) end
+  elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then for index = 1, 5 do if UnitExists("boss" .. index) then recordBossEngaged(UnitName("boss" .. index)) end end
   elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then local _, subevent, _, _, _, _, _, _, destName = CombatLogGetCurrentEventInfo(); if subevent == "UNIT_DIED" then recordBoss(destName) end
   elseif event == "TAXIMAP_OPENED" then
     local known = {}; for _, name in ipairs(db.flightPaths) do known[name] = true end

@@ -28,7 +28,7 @@ assert.deepEqual(character.professions, [{ name: "Mining", skill: 75, maximum: 1
 
 const telemetryPayload = {
   schema: 2,
-  addonVersion: "1.0.0",
+  addonVersion: "1.1.0",
   dataVersion: "forever-test",
   exportedAt: 1791374400,
   character: {
@@ -42,7 +42,9 @@ const telemetryPayload = {
   runs: [{
     id: "run-1", dungeonId: "ragefire-chasm", dungeonName: "Ragefire Chasm", duration: 900,
     totalXp: 6000, combatXp: 3000, questXp: 2500, unclassifiedXp: 500, deaths: 1,
-    bosses: ["Taragaman the Hungerer"], loot: [14145], quests: [5723], group: [{ name: "Gate Runner" }],
+    bosses: ["Taragaman the Hungerer"], bossEngaged: ["Taragaman the Hungerer"], expectedBosses: 4,
+    loot: [14145], quests: [5723], wishlistDrops: 1, status: "partial", reviewState: "saved", xpPerHour: 24000,
+    events: [{ at: 1791374500, kind: "boss", label: "Taragaman the Hungerer", value: 1 }], group: [{ name: "Gate Runner" }],
   }],
   group: [{ name: "Gate Runner", class: "WARRIOR", level: 18, leader: true }],
   peers: {}, plan: { route: "ragefire-chasm" }, readiness: { active: [5723], complete: [], missing: [5728] },
@@ -53,6 +55,9 @@ assert.equal(telemetry.type, "telemetry");
 assert.equal(telemetry.name, "Gate Runner");
 assert.equal(telemetry.runs.length, 1);
 assert.deepEqual(telemetry.runs[0].bosses, ["Taragaman the Hungerer"]);
+assert.equal(telemetry.runs[0].expectedBosses, 4);
+assert.equal(telemetry.runs[0].wishlistDrops, 1);
+assert.equal(telemetry.runs[0].events[0].kind, "boss");
 assert.equal(summarizeTelemetry(telemetry.runs).xpPerHour, 24000);
 assert.throws(() => parseCompanionString("bad payload"), /Expected a WFRP character/);
 
@@ -70,6 +75,8 @@ assert.doesNotThrow(() => luaparse.parse(addon, { luaVersion: "5.1" }), "addon c
 assert.match(addon, /WFRP2C\|payload=/, "addon exports versioned telemetry");
 assert.match(addon, /CHAT_MSG_COMBAT_XP_GAIN/, "addon records combat XP");
 assert.match(addon, /COMBAT_LOG_EVENT_UNFILTERED/, "addon records boss kills");
+assert.match(addon, /reviewState = "pending"/, "addon holds completed runs for post-run review");
+assert.match(addon, /wishlistDrops/, "addon records wishlist drops");
 const designTokens = JSON.parse(await readFile(new URL("../design/design-tokens.json", import.meta.url), "utf8"));
 const designCss = await readFile(new URL("../src/design-tokens.css", import.meta.url), "utf8");
 const theme = await readFile(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url), "utf8");
@@ -86,6 +93,7 @@ for (const [name, hex] of Object.entries(designTokens.colors)) {
 }
 assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
 const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
+assert.match(toc, /## Version: 1\.1\.0/, "addon package advertises Run Intelligence v1.1");
 assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
 const ui = await readFile(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url), "utf8");
 assert.doesNotThrow(() => luaparse.parse(ui, { luaVersion: "5.1" }), "addon UI is valid Lua 5.1");

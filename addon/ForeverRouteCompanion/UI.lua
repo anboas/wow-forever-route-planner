@@ -147,6 +147,8 @@ local function renderNow()
   local nextID, nextName = WFRP.GetNextDungeon()
   local readiness = nextID and WFRP.GetQuestReadiness(nextID) or { active = {}, complete = {}, missing = {} }
   local run = db.currentRun
+  local pending
+  if db.pendingRunId then for _, candidate in ipairs(db.runs or {}) do if candidate.id == db.pendingRunId then pending = candidate; break end end end
   sectionTitle("Command center", run and ("Recording " .. run.dungeonName) or "Your next decision, live character state, and route readiness.")
   local width = 145
   metric(content, "Level", character.level, formatNumber(character.xp) .. " / " .. formatNumber(character.xpMax) .. " XP", 0, -48, width, COLORS.gold)
@@ -170,12 +172,22 @@ local function renderNow()
 
   if run then
     local elapsed = math.max(0, time() - run.startedAt)
-    metric(content, "Run time", duration(elapsed), run.dungeonName, 0, -228, 145, COLORS.red)
+    local xpHour = elapsed > 0 and math.floor((run.totalXp or 0) / elapsed * 3600 + .5) or 0
+    metric(content, "Run time", duration(elapsed), formatNumber(xpHour) .. " XP/hour", 0, -228, 145, COLORS.red)
     metric(content, "Total XP", formatNumber(run.totalXp), formatNumber(run.combatXp) .. " combat", 153, -228, 145, COLORS.gold)
-    metric(content, "Bosses", #run.bosses, #run.loot .. " loot records", 306, -228, 145, COLORS.blue)
+    metric(content, "Bosses", #run.bosses .. "/" .. (run.expectedBosses or 0), #run.loot .. " loot · " .. (run.wishlistDrops or 0) .. " wish", 306, -228, 145, COLORS.blue)
     metric(content, "Deaths", run.deaths, #run.quests .. " quests", 459, -228, 145, run.deaths > 0 and COLORS.red or COLORS.green)
     button(content, "Stop & save run", 0, -298, 188, function() WFRP.StopRun("manual") end, true)
     button(content, "Export telemetry", 198, -298, 188, WFRP.Export)
+  elseif pending then
+    metric(content, "Result", string.upper(pending.status or "partial"), pending.dungeonName, 0, -228, 145, pending.status == "complete" and COLORS.green or COLORS.gold)
+    metric(content, "Total XP", formatNumber(pending.totalXp), formatNumber(pending.xpPerHour or 0) .. " XP/hour", 153, -228, 145, COLORS.gold)
+    metric(content, "Bosses", #pending.bosses .. "/" .. (pending.expectedBosses or 0), #pending.loot .. " loot · " .. (pending.wishlistDrops or 0) .. " wish", 306, -228, 145, COLORS.blue)
+    metric(content, "Deaths", pending.deaths, duration(pending.duration), 459, -228, 145, pending.deaths > 0 and COLORS.red or COLORS.green)
+    button(content, "Keep report", 0, -298, 140, function() WFRP.ReviewRun(pending.id, "save") end, true)
+    button(content, "Mark partial", 148, -298, 140, function() WFRP.ReviewRun(pending.id, "partial") end)
+    button(content, "Discard", 296, -298, 120, function() WFRP.ReviewRun(pending.id, "discard") end)
+    button(content, "Export", 424, -298, 120, WFRP.Export)
   else
     local intelligence = panel(content, 0, -228, 604, 112, COLORS.surface)
     font(intelligence, "RUN INTELLIGENCE", "GameFontNormalSmall", 14, -11, 180, COLORS.gold)
@@ -233,7 +245,7 @@ local function renderRuns()
   font(content, "TIME", "GameFontHighlightSmall", 232, -141, 70, COLORS.muted)
   font(content, "XP", "GameFontHighlightSmall", 310, -141, 88, COLORS.muted)
   font(content, "BOSSES", "GameFontHighlightSmall", 406, -141, 74, COLORS.muted)
-  font(content, "DEATHS", "GameFontHighlightSmall", 492, -141, 96, COLORS.muted, "RIGHT")
+  font(content, "STATUS", "GameFontHighlightSmall", 492, -141, 96, COLORS.muted, "RIGHT")
   for visible = 1, math.min(7, #db.runs) do
     local run = db.runs[#db.runs - visible + 1]
     local row = panel(content, 0, -158 - (visible - 1) * 38, 604, 32, COLORS.surface)
@@ -241,7 +253,7 @@ local function renderRuns()
     font(row, duration(run.duration), "GameFontHighlightSmall", 232, -8, 76, COLORS.muted)
     font(row, formatNumber(run.totalXp) .. " XP", "GameFontHighlightSmall", 310, -8, 92, COLORS.gold)
     font(row, #run.bosses .. " bosses", "GameFontHighlightSmall", 406, -8, 80, COLORS.blue)
-    font(row, run.deaths .. " deaths", "GameFontHighlightSmall", 492, -8, 100, run.deaths > 0 and COLORS.red or COLORS.green)
+    font(row, string.upper(run.status or "partial"), "GameFontHighlightSmall", 492, -8, 100, run.status == "complete" and COLORS.green or COLORS.gold, "RIGHT")
   end
   if #db.runs == 0 then font(content, "No runs yet. Enter a known dungeon or press Start next run from Now.", "GameFontHighlightSmall", 0, -164, 590, COLORS.muted) end
   button(content, "Export all telemetry", 0, -446, 188, WFRP.Export, true)
@@ -285,7 +297,7 @@ local function renderSync()
   local db = WFRP.GetDB()
   sectionTitle("Website exchange", "Versioned local telemetry. Nothing is uploaded automatically.")
   local card = panel(content, 0, -48, 604, 124, COLORS.surface)
-  font(card, "WFRP 1.0 INTELLIGENCE SUITE", "GameFontNormalSmall", 14, -12, 300, COLORS.gold)
+  font(card, "WFRP 1.1 RUN INTELLIGENCE", "GameFontNormalSmall", 14, -12, 300, COLORS.gold)
   font(card, "Export character + run telemetry", "GameFontNormalLarge", 14, -34, 380, COLORS.text)
   font(card, "Copy one WFRP2 string into the website to update your character, gear, route readiness, party snapshot, and run dashboard.", "GameFontHighlightSmall", 14, -60, 380, COLORS.muted)
   button(card, "Export telemetry", 414, -20, 172, WFRP.Export, true)
@@ -329,13 +341,13 @@ for index, entry in ipairs(tabs) do
 end
 
 local version = sidebar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-version:SetPoint("BOTTOM", 0, 14); version:SetText("v1.0 · local"); setColor(version, COLORS.muted)
+version:SetPoint("BOTTOM", 0, 14); version:SetText("v1.1 · local"); setColor(version, COLORS.muted)
 
 local hud = CreateFrame("Button", "ForeverRouteCompanionHUD", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 hud:SetSize(DIMS.hudWidth, DIMS.hudHeight); hud:SetPoint("TOPRIGHT", -34, -220); hud:SetClampedToScreen(true); hud:SetMovable(true); hud:RegisterForDrag("LeftButton"); hud:SetScript("OnDragStart", hud.StartMoving); hud:SetScript("OnDragStop", hud.StopMovingOrSizing); backdrop(hud, COLORS.frame, COLORS.goldDark)
 hud.accent = hud:CreateTexture(nil, "ARTWORK"); hud.accent:SetColorTexture(unpack(COLORS.gold)); hud.accent:SetPoint("TOPLEFT", 0, 0); hud.accent:SetPoint("BOTTOMLEFT", 0, 0); hud.accent:SetWidth(3)
 hud.title = hud:CreateFontString(nil, "OVERLAY", "GameFontNormal"); hud.title:SetPoint("TOPLEFT", 13, -10); setColor(hud.title, COLORS.text)
-hud.detail = hud:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); hud.detail:SetPoint("TOPLEFT", 13, -32); setColor(hud.detail, COLORS.muted)
+hud.detail = hud:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); hud.detail:SetPoint("TOPLEFT", 13, -32); hud.detail:SetWidth(DIMS.hudWidth - 88); hud.detail:SetWordWrap(false); hud.detail:SetJustifyH("LEFT"); setColor(hud.detail, COLORS.muted)
 hud.badge = hud:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"); hud.badge:SetPoint("RIGHT", -12, 0); setColor(hud.badge, COLORS.gold)
 hud.statusLine = hud:CreateTexture(nil, "ARTWORK"); hud.statusLine:SetPoint("BOTTOMLEFT", 3, 3); hud.statusLine:SetPoint("BOTTOMRIGHT", -3, 3); hud.statusLine:SetHeight(2); hud.statusLine:SetColorTexture(unpack(COLORS.gold))
 hud:SetScript("OnClick", function() frame:Show(); activeTab = "now"; render() end)
@@ -355,7 +367,8 @@ local function refreshHud()
   hud:Show()
   if run then
     hud.title:SetText("Recording · " .. run.dungeonName)
-    hud.detail:SetText(duration(time() - run.startedAt) .. " · " .. formatNumber(run.totalXp) .. " XP · " .. #run.bosses .. " bosses")
+    local elapsed = math.max(1, time() - run.startedAt)
+    hud.detail:SetText(duration(elapsed) .. " · " .. formatNumber(run.totalXp / elapsed * 3600) .. "/h · " .. #run.bosses .. "/" .. (run.expectedBosses or 0) .. " bosses · " .. run.deaths .. "d")
     hud.badge:SetText("LIVE")
     setColor(hud.badge, COLORS.red)
     hud.statusLine:SetColorTexture(unpack(COLORS.red))

@@ -1,4 +1,4 @@
-Forever Route Companion 1.0
+Forever Route Companion 1.1
 
 The in-game execution and telemetry layer for Forever Route Planner.
 
@@ -9,7 +9,8 @@ Install:
 
 What it tracks:
 - Character level, XP, rested XP, talents, gear, professions, bags, durability, money, hearth, position, and known flight paths.
-- Known dungeon entry/exit, elapsed time, total/combat/quest XP, bosses, loot, completed quests, deaths, and party snapshot.
+- Known dungeon entry/exit, event timeline, elapsed time, total/combat/quest XP, XP/hour, expected boss progress, loot, wishlist drops, completed quests, deaths, and party snapshot.
+- Post-run review with complete/partial status, keep, mark partial, or discard actions.
 - Route readiness for dungeon quests and lightweight party readiness from other WFRP users.
 - Up to 50 recent runs in SavedVariables. Nothing is uploaded automatically.
 
@@ -25,7 +26,7 @@ Commands:
 
 Sync:
 - Export WFRP2 telemetry from the addon's Sync view and import it at:
-  https://wow-forever-route-planner.pages.dev/my-gear/
+  https://wow-forever-route-planner.pages.dev/gear/
 - Export a planned route from the website and import it in game.
 
 Privacy:

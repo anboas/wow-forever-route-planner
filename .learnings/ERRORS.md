@@ -32,6 +32,100 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 - **Notes**: Explicit WASM-byte initialization successfully converted RagefireChasm.blp into a valid PNG payload.
 
 ---
+## [ERR-20261007-PARTIAL-STATE] shallow_state_hydration
+
+**Logged**: 2026-10-07T18:48:00Z
+**Priority**: high
+**Status**: resolved
+**Area**: character state
+
+### Summary
+A valid partial character state replaced nested defaults during hydration, leaving optional arrays undefined and crashing the My Gear page after a direct load.
+
+### Error
+```
+Cannot read properties of undefined (reading 'length')
+```
+
+### Context
+- Authentication, persistence, and the party API succeeded.
+- Direct-loading the saved character exposed the shallow merge in `normalizedState`.
+
+### Suggested Fix
+Normalize nested character metadata, telemetry, loot preferences, lists, and dictionaries at the persistence boundary.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, scripts/verify-auth.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T18:49:00Z
+- **Notes**: Partial, legacy, addon, and future Armory state now merge with complete nested defaults before rendering.
+
+---
+## [ERR-20261007-FIRST-CHARACTER] provisioning_race
+
+**Logged**: 2026-10-07T18:39:00Z
+**Priority**: medium
+**Status**: resolved
+**Area**: authentication
+
+### Summary
+The authenticated application shell could render before automatic first-character provisioning completed, allowing the account dialog to open and then disappear when the character switch remounted the app.
+
+### Error
+```
+Account & characters dialog disappeared during first-login provisioning.
+```
+
+### Context
+- The account and character were created correctly.
+- The defect was a transient first-login interaction race.
+
+### Suggested Fix
+Hold the secure workspace on an explicit provisioning state until the first character has been created or migrated.
+
+### Metadata
+- Reproducible: timing-dependent
+- Related Files: src/AuthContext.jsx, scripts/verify-auth.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T18:40:00Z
+- **Notes**: The provider now shows a deterministic character-provisioning state before mounting the application shell.
+
+---
+## [ERR-20261007-RUN-EVENT] browser_contract_label
+
+**Logged**: 2026-10-07T18:32:00Z
+**Priority**: low
+**Status**: resolved
+**Area**: verification
+
+### Summary
+The new run-detail contract expected a space-normalized event label, while the UI intentionally preserves the telemetry event key with a hyphen.
+
+### Error
+```
+Expected: Boss engaged
+Rendered: BOSS-ENGAGED
+```
+
+### Context
+- XP/hour, boss progress, timeline data, and loot all rendered correctly.
+- Only the verifier's label spelling was stale.
+
+### Suggested Fix
+Assert the stable telemetry label rendered by the product instead of inventing a different normalization.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/verify-site.mjs, src/App.jsx
+
+### Resolution
+- **Resolved**: 2026-10-07T18:33:00Z
+- **Notes**: The browser contract now checks `Boss-engaged`, matching the actual semantic event label.
+
+---
 
 ## [ERR-20261007-MOBILE-NAV-WISHLIST-OVERFLOW] Wishlist count widened the compact primary navigation
 
@@ -770,5 +864,67 @@ Activate the labeled Loot tab before testing nested loot interactions.
 ### Resolution
 - **Resolved**: 2026-10-06T21:34:00-04:00
 - **Notes**: The verifier now activates the visible Loot tab before checking class-filter reachability.
+
+---
+## [ERR-20261007-CSS] apply_patch
+
+**Logged**: 2026-10-07T18:08:00Z
+**Priority**: low
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+An account-workspace CSS patch assumed 1100px and 760px breakpoints, while this project uses 1180px and 900px breakpoints.
+
+### Error
+```
+apply_patch verification failed: Failed to find expected lines in src/styles.css: @media (max-width: 1100px)
+```
+
+### Context
+- The component changes were already applied; only the stylesheet patch failed.
+- The actual responsive blocks were inspected before retrying.
+
+### Suggested Fix
+Anchor responsive patches to the stylesheet's real 1180px and 900px media queries.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/styles.css
+
+### Resolution
+- **Resolved**: 2026-10-07T18:09:00Z
+- **Notes**: Rebased the patch on the existing breakpoint structure.
+
+---
+## [ERR-20261007-API] auth_api_route_prefix
+
+**Logged**: 2026-10-07T18:15:00Z
+**Priority**: high
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+The shared client request helper prefixed character requests with `/api/auth`, while character routes live at `/api/characters`.
+
+### Error
+```
+Account route not found.
+```
+
+### Context
+- Owner setup and session issuance passed.
+- The first character POST reached `/api/auth/characters` instead of `/api/characters`.
+
+### Suggested Fix
+Route character paths to the API root and keep authentication paths under `/api/auth`.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/auth-api.js, functions/api/[[path]].js
+
+### Resolution
+- **Resolved**: 2026-10-07T18:16:00Z
+- **Notes**: The client now selects the API root by resource family, and the browser contract covers first-character creation.
 
 ---

@@ -8,6 +8,8 @@ import { buildOptimizerCandidates, matchesFaction, optimizeRouteOrder, questMini
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
 import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySourceUrl, itemKey, itemPowerScore, itemSummary, lootVisibleForFaction, questSourceUrl, recommendedForProfile, reportIssueUrl, runsForConfidence, specFitScore, specProfile } from "./gear.js";
 import { parseCompanionString, serializePlannerString, summarizeTelemetry } from "./companion.js";
+import { useAuth } from "./AuthContext.jsx";
+import { authApi } from "./auth-api.js";
 
 const CLASSES = CLASS_OPTIONS.map(({ id }) => id);
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -32,6 +34,7 @@ function currentPage() {
   if (parts[0] === "quests") return { id: "quests" };
   if (parts[0] === "loot") return { id: "loot" };
   if (parts[0] === "gear") return { id: "profile" };
+  if (parts[0] === "runs" && parts[1]) return { id: "run", runId: decodeURIComponent(parts[1]) };
   return { id: "not-found" };
 }
 const DEFAULT_ROUTE = ["ragefire-chasm", "ruins-of-lordaeron", "shadowfang-keep"].map((dungeonId, index) => ({
@@ -89,19 +92,69 @@ function encodePlan(state) {
   return btoa(unescape(encodeURIComponent(JSON.stringify(plan)))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
 
-function loadState() {
+function normalizedState(saved) {
+  if (saved && Array.isArray(saved.route)) {
+    const characterClass = saved.characterClass || DEFAULT_STATE.characterClass;
+    const route = saved.route.map((entry) => ({ runs: 1, combatXpPerRun: 0, restedPercent: 0, ...entry }));
+    const characterMeta = { ...DEFAULT_STATE.characterMeta, ...(saved.characterMeta || {}), flightPaths: Array.isArray(saved.characterMeta?.flightPaths) ? saved.characterMeta.flightPaths : [] };
+    const runs = Array.isArray(saved.telemetry?.runs) ? saved.telemetry.runs.map((run, index) => ({ id: run.id || `run-${index}`, bosses: [], bossEngaged: [], loot: [], quests: [], events: [], group: [], ...run, bosses: Array.isArray(run.bosses) ? run.bosses : [], bossEngaged: Array.isArray(run.bossEngaged) ? run.bossEngaged : [], loot: Array.isArray(run.loot) ? run.loot : [], quests: Array.isArray(run.quests) ? run.quests : [], events: Array.isArray(run.events) ? run.events : [], group: Array.isArray(run.group) ? run.group : [] })) : [];
+    const telemetry = { ...DEFAULT_STATE.telemetry, ...(saved.telemetry || {}), runs, group: Array.isArray(saved.telemetry?.group) ? saved.telemetry.group : [], peers: saved.telemetry?.peers && typeof saved.telemetry.peers === "object" ? saved.telemetry.peers : {} };
+    return { ...DEFAULT_STATE, ...saved, route, questStates: saved.questStates || {}, characterMeta, telemetry, lootPreferences: { ...DEFAULT_STATE.lootPreferences, ...(saved.lootPreferences || {}) }, wishlist: Array.isArray(saved.wishlist) ? saved.wishlist : [], party: Array.isArray(saved.party) ? saved.party : [], equipped: saved.equipped && typeof saved.equipped === "object" ? saved.equipped : {}, savedRoutes: Array.isArray(saved.savedRoutes) ? saved.savedRoutes : [], characterClass, spec: saved.spec || defaultSpec(characterClass) };
+  }
+  return DEFAULT_STATE;
+}
+
+function loadState(remoteState = null) {
   try {
     const shared = decodePlan();
-    const saved = shared || JSON.parse(localStorage.getItem("forever-route-planner:v1"));
-    if (saved && Array.isArray(saved.route)) {
-      const characterClass = saved.characterClass || DEFAULT_STATE.characterClass;
-      const route = saved.route.map((entry) => ({ runs: 1, combatXpPerRun: 0, restedPercent: 0, ...entry }));
-      return { ...DEFAULT_STATE, ...saved, route, questStates: saved.questStates || {}, characterClass, spec: saved.spec || defaultSpec(characterClass) };
-    }
+    return normalizedState(shared || remoteState || JSON.parse(localStorage.getItem("forever-route-planner:v1")));
   } catch {
     // Ignore damaged local state and return the useful starter route.
   }
   return DEFAULT_STATE;
+}
+
+function AccountWorkspace({ onClose }) {
+  const auth = useAuth();
+  const [screen, setScreen] = useState("characters");
+  const [users, setUsers] = useState([]);
+  const [notice, setNotice] = useState("");
+  const [resetPasswords, setResetPasswords] = useState({});
+  const [draft, setDraft] = useState({ name: "", realm: "WoW Forever", characterClass: "warrior", faction: "horde" });
+  const [userDraft, setUserDraft] = useState({ email: "", displayName: "", role: "analyst", password: "" });
+
+  useEffect(() => {
+    if (screen === "people" && auth.user.canManageUsers && !auth.local) authApi.listUsers().then((result) => setUsers(result.users || [])).catch((error) => setNotice(error.message));
+  }, [screen, auth.user.canManageUsers, auth.local]);
+
+  async function createCharacter(event) {
+    event.preventDefault(); setNotice("");
+    try { const created = await auth.createCharacter({ ...draft, level: 1, spec: defaultSpec(draft.characterClass) }); setNotice(`${created.name} is ready.`); setDraft({ name: "", realm: "WoW Forever", characterClass: "warrior", faction: "horde" }); }
+    catch (error) { setNotice(error.message); }
+  }
+
+  async function createUser(event) {
+    event.preventDefault(); setNotice("");
+    try { const result = await authApi.createUser(userDraft); setUsers((current) => [...current, result.user]); setUserDraft({ email: "", displayName: "", role: "analyst", password: "" }); setNotice("Account created. The temporary password must be replaced at first sign-in."); }
+    catch (error) { setNotice(error.message); }
+  }
+
+  return createPortal(<div className="account-workspace-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="account-workspace" role="dialog" aria-modal="true" aria-labelledby="account-workspace-title">
+      <header><div><span className="section-kicker">Private workspace</span><h2 id="account-workspace-title">Account & characters</h2></div><button aria-label="Close account workspace" onClick={onClose}>×</button></header>
+      <nav aria-label="Account settings"><button className={screen === "characters" ? "active" : ""} onClick={() => setScreen("characters")}>Characters</button>{auth.user.canManageUsers && <button className={screen === "people" ? "active" : ""} onClick={() => setScreen("people")}>People</button>}<button className={screen === "security" ? "active" : ""} onClick={() => setScreen("security")}>Account</button></nav>
+      {screen === "characters" && <div className="account-workspace-body">
+        <div className="character-account-list">{auth.characters.map((character) => <article key={character.id} className={character.id === auth.activeCharacterId ? "active" : ""}><button onClick={() => { auth.setActiveCharacterId(character.id); onClose(); }}><strong>{character.name}</strong><span>{humanize(character.characterClass)} · level {character.level}</span><small>{character.realm} · {character.armory.status === "linked" ? "Armory linked" : "Armory ready"}</small></button>{auth.characters.length > 1 && auth.user.canWrite && <button className="danger" aria-label={`Delete ${character.name}`} onClick={() => auth.deleteCharacter(character.id).catch((error) => setNotice(error.message))}>×</button>}</article>)}</div>
+        {auth.user.canWrite && <form className="account-create-form" onSubmit={createCharacter}><h3>Add character</h3><div><label><span>Name</span><input required value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} /></label><label><span>Realm</span><input required value={draft.realm} onChange={(event) => setDraft({ ...draft, realm: event.target.value })} /></label><label><span>Class</span><select value={draft.characterClass} onChange={(event) => setDraft({ ...draft, characterClass: event.target.value })}>{CLASSES.map((entry) => <option key={entry} value={entry}>{humanize(entry)}</option>)}</select></label><label><span>Faction</span><select value={draft.faction} onChange={(event) => setDraft({ ...draft, faction: event.target.value })}><option value="horde">Horde</option><option value="alliance">Alliance</option></select></label></div><button>Add character</button><small>Armory identity is reserved and will link here when WoW Forever exposes it.</small></form>}
+      </div>}
+      {screen === "people" && <div className="account-workspace-body">
+        <div className="managed-user-list">{users.map((user) => <article key={user.id}><div><strong>{user.displayName}</strong><span>{user.email}</span><small>{user.role} · {user.activeSessions || 0} active sessions</small></div>{user.isOwner ? <b>OWNER</b> : <div className="managed-user-actions"><select aria-label={`${user.displayName} role`} value={user.roleId} onChange={async (event) => { const result = await authApi.updateUser(user.id, { role: event.target.value }); setUsers((current) => current.map((entry) => entry.id === user.id ? { ...entry, ...result.user } : entry)); }}><option value="administrator">Administrator</option><option value="analyst">Player</option><option value="viewer">Viewer</option></select><select aria-label={`${user.displayName} status`} value={user.status} onChange={async (event) => { const result = await authApi.updateUser(user.id, { status: event.target.value }); setUsers((current) => current.map((entry) => entry.id === user.id ? { ...entry, ...result.user } : entry)); }}><option value="active">Active</option><option value="suspended">Suspended</option></select><input aria-label={`${user.displayName} temporary password`} placeholder="Temporary password" minLength="12" type="password" value={resetPasswords[user.id] || ""} onChange={(event) => setResetPasswords({ ...resetPasswords, [user.id]: event.target.value })} /><button disabled={(resetPasswords[user.id] || "").length < 12} onClick={async () => { try { await authApi.resetUserPassword(user.id, resetPasswords[user.id]); setResetPasswords({ ...resetPasswords, [user.id]: "" }); setNotice(`${user.displayName}'s sessions were revoked and a temporary password is required.`); } catch (error) { setNotice(error.message); } }}>Reset</button></div>}</article>)}</div>
+        <form className="account-create-form" onSubmit={createUser}><h3>Add a player</h3><div><label><span>Name</span><input required value={userDraft.displayName} onChange={(event) => setUserDraft({ ...userDraft, displayName: event.target.value })} /></label><label><span>Email</span><input required type="email" value={userDraft.email} onChange={(event) => setUserDraft({ ...userDraft, email: event.target.value })} /></label><label><span>Role</span><select value={userDraft.role} onChange={(event) => setUserDraft({ ...userDraft, role: event.target.value })}><option value="administrator">Administrator</option><option value="analyst">Player</option><option value="viewer">Viewer</option></select></label><label><span>Temporary password</span><input required minLength="12" type="password" autoComplete="new-password" value={userDraft.password} onChange={(event) => setUserDraft({ ...userDraft, password: event.target.value })} /></label></div><button>Create account</button></form>
+      </div>}
+      {screen === "security" && <div className="account-workspace-body account-security"><div><span>Signed in as</span><strong>{auth.user.displayName}</strong><small>{auth.user.email} · {auth.user.role}</small></div><p>Character data is private to this account. Password proofs are derived in the browser. Addon exports remain local until you import them.</p><button className="danger" onClick={auth.logout}>Sign out</button></div>}
+      {notice && <p className="account-notice" role="status">{notice}</p>}
+    </section>
+  </div>, document.body);
 }
 
 const GearContext = createContext(null);
@@ -177,7 +230,7 @@ function ItemIcon({ item, compact = false }) {
   const src = itemIconUrl(item);
   return (
     <span className={`loot-icon ${compact ? "compact" : ""} ${qualityClass(item)}`}>
-      {src ? <img src={src} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : item.name.slice(0, 1)}
+      {src ? <img src={src} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : item?.name?.slice(0, 1) || "?"}
     </span>
   );
 }
@@ -1008,8 +1061,25 @@ function Breadcrumbs({ page, dungeon }) {
   const items = [{ label: "Home", href: appHref("/") }];
   if (page.id === "dungeon") items.push({ label: "Dungeons", href: appHref("/dungeons/") }, { label: dungeon?.name || "Not found" });
   else if (page.id === "planner") items.push({ label: "Route" });
+  else if (page.id === "run") items.push({ label: "My Gear", href: appHref("/gear/") }, { label: "Run detail" });
   else items.push({ label: PAGE_PATHS[page.id] ? humanize(page.id === "profile" ? "My Gear" : page.id) : "Not found" });
   return <nav className="breadcrumbs" aria-label="Breadcrumb">{items.map((item) => item.href ? <a href={item.href} key={item.label}>{item.label}</a> : <span aria-current="page" key={item.label}>{item.label}</span>)}</nav>;
+}
+
+function RunPage({ run, dungeons }) {
+  const runItems = useMemo(() => {
+    const lookup = new Map();
+    for (const dungeon of dungeons) for (const item of dungeon.loot || []) if (item.id) lookup.set(Number(item.id), item.name);
+    return lookup;
+  }, [dungeons]);
+  if (!run) return <main className="not-found"><span>404</span><h1>Run not found</h1><p>This run is not stored on the active character.</p><a href={appHref("/gear/")}>Return to My Gear</a></main>;
+  return <main className="library-shell run-page-shell">
+    <header className="library-header"><div><div className="section-kicker">Character run history</div><h1>{run.dungeonName}</h1><p>Permanent private record · {run.startedAt ? new Date(run.startedAt * 1000).toLocaleString() : "Imported addon run"}</p></div><a className="secondary button-link" href={appHref("/gear/")}>Back to dashboard</a></header>
+    <article className="run-detail run-detail-page">
+      <div className="run-detail-metrics"><span><small>Duration</small><b>{compactDuration(run.duration)}</b></span><span><small>Total XP</small><b>{number(run.totalXp)}</b></span><span><small>XP / hour</small><b>{number(run.xpPerHour || (run.duration > 0 ? run.totalXp / run.duration * 3600 : 0))}</b></span><span><small>Boss progress</small><b>{run.bosses.length}/{run.expectedBosses || "?"}</b></span><span><small>Deaths</small><b>{run.deaths}</b></span><span><small>Wishlist drops</small><b>{run.wishlistDrops || 0}</b></span></div>
+      <div className="run-detail-grid"><section><h3>XP sources</h3><div className="xp-breakdown-bar"><i style={{ width: `${run.totalXp ? run.combatXp / run.totalXp * 100 : 0}%` }} /><i style={{ width: `${run.totalXp ? run.questXp / run.totalXp * 100 : 0}%` }} /><i style={{ width: `${run.totalXp ? run.unclassifiedXp / run.totalXp * 100 : 0}%` }} /></div><ul><li>Combat <b>{number(run.combatXp)}</b></li><li>Quest <b>{number(run.questXp)}</b></li><li>Other <b>{number(run.unclassifiedXp)}</b></li></ul><h3>Bosses</h3><ol>{run.bosses.length ? run.bosses.map((boss) => <li key={boss}>{boss}</li>) : <li>No boss kills recorded</li>}</ol><h3>Party</h3><ol>{run.group?.length ? run.group.map((member, index) => <li key={`${member.name}-${index}`}>{member.name} · {humanize(String(member.class || "unknown").toLowerCase())} · level {member.level || "?"}</li>) : <li>Solo or party data unavailable</li>}</ol></section><section><h3>Run timeline</h3><div className="run-timeline">{run.events?.length ? run.events.map((event, index) => <div key={`${event.at}-${index}`} data-kind={event.kind}><time>{event.at && run.startedAt ? compactDuration(event.at - run.startedAt) : ""}</time><span><b>{humanize(event.kind)}</b>{event.label}</span>{event.value !== null && event.value !== undefined && <em>{typeof event.value === "number" ? number(event.value) : String(event.value)}</em>}</div>) : <p>Timeline events will appear after importing from addon v1.1.</p>}</div><h3>Loot received</h3><div className="run-loot-list">{run.loot.length ? run.loot.map((id) => <span key={id}><b>{runItems.get(Number(id)) || `Item ${id}`}</b><small>#{id}</small></span>) : <p>No loot recorded.</p>}</div><h3>Review state</h3><p className="run-review-state">{humanize(run.reviewState || "saved")} · {humanize(run.status || "partial")} clear{run.reason ? ` · ${run.reason}` : ""}</p></section></div>
+    </article>
+  </main>;
 }
 
 function Quests({ dungeons, faction, onPin }) {
@@ -1148,13 +1218,20 @@ function Loot({ dungeons, characterClass, characterSpec, faction }) {
 }
 
 function Profile({ dungeons }) {
+  const auth = useAuth();
   const gear = useGear();
+  const [selectedRun, setSelectedRun] = useState(null);
   const dungeonsById = useMemo(() => new Map(dungeons.map((dungeon) => [dungeon.id, dungeon])), [dungeons]);
   const equippedItems = Object.values(gear.equipped);
   const [companionText, setCompanionText] = useState("");
   const [companionNotice, setCompanionNotice] = useState("");
   const telemetry = gear.telemetry || DEFAULT_STATE.telemetry;
   const telemetrySummary = useMemo(() => summarizeTelemetry(telemetry.runs || []), [telemetry.runs]);
+  const runItems = useMemo(() => {
+    const lookup = new Map();
+    for (const dungeon of dungeons) for (const item of dungeon.loot || []) if (item.id) lookup.set(Number(item.id), item.name);
+    return lookup;
+  }, [dungeons]);
 
   function importCompanion() {
     try {
@@ -1174,9 +1251,9 @@ function Profile({ dungeons }) {
 
   return (
     <main className="library-shell profile-shell">
-      <header className="library-header"><div><div className="section-kicker">Forever intelligence suite</div><h1>Character, runs, gear & party</h1><p>The addon records what actually happened. The website turns it into leveling and gear decisions.</p></div><div className="profile-header-stack"><a className="addon-download addon-download-primary" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download addon v1.0</a><div className="profile-metrics"><span><strong>{telemetrySummary.runs}</strong> runs</span><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{Math.max(gear.party.length + 1, telemetry.group?.length || 0)}</strong> party</span></div></div></header>
+      <header className="library-header"><div><div className="section-kicker">Forever intelligence suite</div><h1>Character, runs, gear & party</h1><p>The addon records what actually happened. The website turns it into leveling and gear decisions.</p></div><div className="profile-header-stack"><a className="addon-download addon-download-primary" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download addon v1.1</a><div className="profile-metrics"><span><strong>{telemetrySummary.runs}</strong> runs</span><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{Math.max(gear.party.length + 1, telemetry.group?.length || 0)}</strong> party</span></div></div></header>
       <section className="intelligence-dashboard panel">
-        <header><div><span>Imported intelligence</span><h2>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No WFRP 1.0 telemetry imported"}</h2></div><small>{telemetry.importedAt ? `Imported ${new Date(telemetry.importedAt).toLocaleString()}` : "Install the addon, run /wfrp export, and import below."}</small></header>
+        <header><div><span>Imported intelligence</span><h2>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No telemetry imported"}</h2></div><small>{telemetry.importedAt ? `Imported ${new Date(telemetry.importedAt).toLocaleString()}` : "Install the addon, run /wfrp export, and import below."}</small></header>
         <div className="intelligence-metrics">
           <span><b>{telemetrySummary.runs}</b> recorded runs</span><span><b>{number(telemetrySummary.totalXp)}</b> dungeon XP</span><span><b>{number(telemetrySummary.xpPerHour)}</b> XP / hour</span><span><b>{compactDuration(telemetrySummary.duration)}</b> run time</span><span><b>{telemetrySummary.bosses}</b> bosses</span><span><b>{telemetrySummary.deaths}</b> deaths</span>
         </div>
@@ -1193,18 +1270,31 @@ function Profile({ dungeons }) {
           </section>
         </div>
         <div className="run-dashboard-grid">
-          <section className="run-history-card"><h3>Recent runs</h3>{telemetry.runs?.length ? <div className="run-history-table">{telemetry.runs.slice(-8).reverse().map((run) => <div key={run.id}><strong>{run.dungeonName}</strong><span>{compactDuration(run.duration)}</span><span>{number(run.totalXp)} XP</span><span>{run.bosses.length} bosses</span><span className={run.deaths ? "danger" : "success"}>{run.deaths} deaths</span></div>)}</div> : <p>No runs imported yet. The addon starts recording automatically when you enter a known Forever dungeon.</p>}</section>
+          <section className="run-history-card"><h3>Recent runs</h3>{telemetry.runs?.length ? <div className="run-history-table">{telemetry.runs.slice(-8).reverse().map((run) => <a key={run.id} href={appHref(`/runs/${encodeURIComponent(run.id)}/`)}><strong>{run.dungeonName}</strong><span>{compactDuration(run.duration)}</span><span>{number(run.totalXp)} XP</span><span>{run.bosses.length}/{run.expectedBosses || "?"} bosses</span><span className={run.status === "complete" ? "success" : run.deaths ? "danger" : "warning"}>{run.status || `${run.deaths} deaths`}</span></a>)}</div> : <p>No runs imported yet. The addon starts recording automatically when you enter a known Forever dungeon.</p>}</section>
           <section className="dungeon-baseline-card"><h3>Personal dungeon baselines</h3>{telemetrySummary.dungeons.length ? <div>{telemetrySummary.dungeons.slice(0, 7).map((dungeon) => <span key={dungeon.dungeonId}><strong>{dungeon.dungeonName}</strong><small>{dungeon.runs} run{dungeon.runs === 1 ? "" : "s"} · {Math.round(dungeon.averageMinutes)}m avg · {number(dungeon.xpPerHour)} XP/h</small></span>)}</div> : <p>Dungeon averages appear after the first telemetry import.</p>}</section>
         </div>
+        <section className="shared-party-dashboard">
+          <header><div><h3>Shared party intelligence</h3><small>Latest active-character state from every signed-in group member.</small></div><button className="secondary" onClick={() => auth.refreshParty()}>Refresh</button></header>
+          {auth.partyPresence?.length ? <div className="shared-party-grid">{auth.partyPresence.map((member) => {
+            const nextDungeon = dungeonsById.get(member.nextDungeonId);
+            return <article key={member.userId} className={member.currentRun ? "is-recording" : ""}>
+              <div><strong>{member.name || member.displayName}</strong><span>{member.currentRun ? "Recording" : "Ready"}</span></div>
+              <p>{humanize(String(member.characterClass || "unknown").toLowerCase())} · {member.spec ? humanize(member.spec) : "No spec"} · level {member.level || "?"}</p>
+              <dl><div><dt>Next</dt><dd>{member.currentRun?.dungeonName || nextDungeon?.name || "No route set"}</dd></div><div><dt>Wishlist</dt><dd>{member.wishlistCount || 0} items</dd></div><div><dt>Last result</dt><dd>{member.lastRun ? `${member.lastRun.dungeonName} · ${number(member.lastRun.totalXp)} XP` : "No run imported"}</dd></div></dl>
+              <small>Updated {member.updatedAt ? new Date(member.updatedAt).toLocaleString() : "recently"}</small>
+            </article>;
+          })}</div> : <p className="shared-party-empty">Party members appear here after they sign in, select a character, and save or import telemetry.</p>}
+        </section>
         {telemetry.group?.length > 0 && <section className="telemetry-party"><h3>Last party snapshot</h3><div>{telemetry.group.map((member, index) => <span key={`${member.name}-${index}`}><b>{member.name}</b><small>{humanize(String(member.class || "unknown").toLowerCase())} · level {member.level}{member.leader ? " · leader" : ""}</small></span>)}</div></section>}
       </section>
+      {selectedRun && createPortal(<div className="run-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedRun(null); }}><section className="run-detail" role="dialog" aria-modal="true" aria-labelledby="run-detail-title"><header><div><span className="section-kicker">{selectedRun.status || "Recorded run"}</span><h2 id="run-detail-title">{selectedRun.dungeonName}</h2><p>{selectedRun.startedAt ? new Date(selectedRun.startedAt * 1000).toLocaleString() : "Imported addon run"} · {selectedRun.group?.length || 1} players</p></div><button aria-label="Close run detail" onClick={() => setSelectedRun(null)}>×</button></header><div className="run-detail-metrics"><span><small>Duration</small><b>{compactDuration(selectedRun.duration)}</b></span><span><small>Total XP</small><b>{number(selectedRun.totalXp)}</b></span><span><small>XP / hour</small><b>{number(selectedRun.xpPerHour || selectedRun.duration > 0 ? selectedRun.totalXp / selectedRun.duration * 3600 : 0)}</b></span><span><small>Boss progress</small><b>{selectedRun.bosses.length}/{selectedRun.expectedBosses || "?"}</b></span><span><small>Deaths</small><b>{selectedRun.deaths}</b></span><span><small>Wishlist drops</small><b>{selectedRun.wishlistDrops || 0}</b></span></div><div className="run-detail-grid"><section><h3>XP sources</h3><div className="xp-breakdown-bar"><i style={{ width: `${selectedRun.totalXp ? selectedRun.combatXp / selectedRun.totalXp * 100 : 0}%` }} /><i style={{ width: `${selectedRun.totalXp ? selectedRun.questXp / selectedRun.totalXp * 100 : 0}%` }} /><i style={{ width: `${selectedRun.totalXp ? selectedRun.unclassifiedXp / selectedRun.totalXp * 100 : 0}%` }} /></div><ul><li>Combat <b>{number(selectedRun.combatXp)}</b></li><li>Quest <b>{number(selectedRun.questXp)}</b></li><li>Other <b>{number(selectedRun.unclassifiedXp)}</b></li></ul><h3>Bosses</h3><ol>{selectedRun.bosses.length ? selectedRun.bosses.map((boss) => <li key={boss}>{boss}</li>) : <li>No boss kills recorded</li>}</ol></section><section><h3>Run timeline</h3><div className="run-timeline">{selectedRun.events?.length ? selectedRun.events.map((event, index) => <div key={`${event.at}-${index}`} data-kind={event.kind}><time>{event.at && selectedRun.startedAt ? compactDuration(event.at - selectedRun.startedAt) : ""}</time><span><b>{humanize(event.kind)}</b>{event.label}</span>{event.value !== null && event.value !== undefined && <em>{typeof event.value === "number" ? number(event.value) : String(event.value)}</em>}</div>) : <p>Timeline events will appear after importing from addon v1.1.</p>}</div><h3>Loot received</h3><div className="run-loot-list">{selectedRun.loot.length ? selectedRun.loot.map((id) => <span key={id}><b>{runItems.get(Number(id)) || `Item ${id}`}</b><small>#{id}</small></span>) : <p>No loot recorded.</p>}</div></section></div></section></div>, document.body)}
       <div className="profile-grid">
         <section className="profile-panel panel"><header><div><span>Current loadout</span><h2>{humanize(gear.characterClass)} · {specProfile(gear.characterClass, gear.spec).label}</h2></div><small>Equip items from any loot row</small></header><div className="loadout-grid">{equippedItems.length ? equippedItems.map((item) => <div className="loadout-slot" key={item.slot}><span>{item.slot}</span><div><ItemIcon item={item} compact /><strong className={qualityClass(item)}>{item.name}</strong></div><button onClick={() => gear.clearEquipped(item.slot)} aria-label={`Clear equipped ${item.slot}`}>×</button></div>) : <p className="empty-copy">No gear equipped yet. Use ⇄ on an item to establish comparison baselines.</p>}</div></section>
         <section className="profile-panel panel"><header><div><span>Party roster</span><h2>Who wants each drop?</h2></div><button onClick={gear.addPartyMember} disabled={gear.party.length >= 4}>Add member</button></header><div className="party-editor">{gear.party.map((member) => <div className="party-member" key={member.id}><input aria-label="Party member name" value={member.name} onChange={(event) => gear.updatePartyMember(member.id, { name: event.target.value })} /><select aria-label={`${member.name} class`} value={member.characterClass} onChange={(event) => gear.updatePartyMember(member.id, { characterClass: event.target.value, spec: defaultSpec(event.target.value) })}>{CLASSES.map((entry) => <option key={entry}>{humanize(entry)}</option>)}</select><select aria-label={`${member.name} specialization`} value={member.spec} onChange={(event) => gear.updatePartyMember(member.id, { spec: event.target.value })}>{(CLASS_SPECS[member.characterClass] || []).map((entry) => <option value={entry.id} key={entry.id}>{entry.label} · {entry.role}</option>)}</select><button onClick={() => gear.removePartyMember(member.id)} aria-label={`Remove ${member.name}`}>×</button></div>)}{!gear.party.length && <p className="empty-copy">Add up to four party members. Item tooltips will show who has a strong rules-based fit.</p>}</div></section>
       </div>
       <section className="wishlist-panel panel"><header><div><span>Loot goals</span><h2>Wishlist</h2></div><strong>{gear.wishlist.length} tracked</strong></header>{gear.wishlist.length ? <div className="wishlist-grid">{gear.wishlist.map((item) => { const dungeon = dungeonsById.get(item.dungeonId); const equipped = item.slot ? gear.equipped[item.slot] : null; const comparison = compareItems(item, equipped, gear.characterClass, gear.spec); const partyFit = gear.party.filter((member) => recommendedForProfile(item, member.characterClass, member.spec)); return <div className="wishlist-card" key={item.key}><div><ItemIcon item={item} /><span><strong className={qualityClass(item)}>{item.name}</strong><small>{item.dungeonName || "Dungeon pending"} · {item.slot || item.type || "Item"}</small></span></div><div className="wishlist-card-meta"><span>{equipped ? `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)} vs equipped` : "No equipped comparison"}</span><span>{partyFit.length ? `Party: ${partyFit.map((member) => member.name).join(", ")}` : "No party conflict"}</span></div><ItemActions item={item} dungeon={dungeon} /></div>; })}</div> : <p className="profile-empty">Star items in dungeon details, grouped loot, quest rewards, or the full archive.</p>}</section>
       <section className="companion-panel panel">
-        <header><div><span>Companion exchange</span><h2>Install, record, import, adapt.</h2></div><a className="addon-download" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download WFRP 1.0</a></header>
+        <header><div><span>Companion exchange</span><h2>Install, record, import, adapt.</h2></div><a className="addon-download" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download WFRP 1.1</a></header>
         <div className="companion-grid">
           <div className="companion-copy"><strong>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No character imported"}</strong><p>Install the addon, open it with <code>/wfrp</code>, then use <strong>Sync → Export telemetry</strong>. Paste the WFRP2 text here to update character state, equipped gear, quests, party, and run dashboards. Export the planned route back to the game when ready.</p><ol><li>Download and extract into <code>Interface/AddOns</code>.</li><li>Play normally; known dungeon runs record automatically.</li><li>Run <code>/wfrp export</code> and import below.</li></ol>{gear.characterMeta.importedAt && <small>Last imported {new Date(gear.characterMeta.importedAt).toLocaleString()} · Addon {telemetry.addonVersion || "legacy"} · Hearth: {gear.characterMeta.bindLocation || "unknown"} · {gear.characterMeta.flightPaths.length} flight paths</small>}</div>
           <textarea aria-label="Companion exchange text" value={companionText} onChange={(event) => setCompanionText(event.target.value)} placeholder="Paste WFRP2C telemetry here, or export a WFRP1P route for the addon." spellCheck="false" />
@@ -1218,9 +1308,12 @@ function Profile({ dungeons }) {
 }
 
 export default function App() {
+  const auth = useAuth();
   const page = useMemo(currentPage, []);
-  const [state, setState] = useState(loadState);
+  const [state, setState] = useState(() => loadState(auth.activeCharacter?.state));
+  const [accountOpen, setAccountOpen] = useState(false);
   const [pinnedQuest, setPinnedQuest] = useState(null);
+  const saveTimer = useRef(null);
   const dungeons = snapshot.dungeons;
   const dungeonsById = useMemo(() => new Map(dungeons.map((dungeon) => [dungeon.id, dungeon])), [dungeons]);
   const itemLookup = useMemo(() => {
@@ -1253,6 +1346,14 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("forever-route-planner:v1", JSON.stringify(state));
+    if (auth.local || !auth.activeCharacter || !auth.user.canWrite) return undefined;
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      auth.saveCharacterState(state, auth.activeCharacter.revision).catch((error) => {
+        console.error("Character sync failed", error.message);
+      });
+    }, 900);
+    return () => window.clearTimeout(saveTimer.current);
   }, [state]);
 
   function toggleWishlist(item, dungeon) {
@@ -1390,11 +1491,13 @@ export default function App() {
       <header className="topbar">
         <a className="brand" href={appHref("/")}><span className="brand-mark" aria-hidden="true">F</span><span><strong>Forever Intelligence</strong><small>Character · leveling · gear · group telemetry</small></span></a>
         <nav aria-label="Primary navigation">{[["planner", "◆", "Route"], ["dungeons", "▦", "Dungeons"], ["quests", "?", "Quests"], ["loot", "▥", "Loot"], ["profile", "♟", "My Gear"]].map(([id, icon, label]) => {
-          const active = page.id === id || id === "dungeons" && page.id === "dungeon";
+          const active = page.id === id || id === "dungeons" && page.id === "dungeon" || id === "profile" && page.id === "run";
           return <a key={id} className={active ? "active" : ""} aria-current={active ? "page" : undefined} href={appHref(PAGE_PATHS[id])}><span className="nav-icon" aria-hidden="true">{icon}</span>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</a>;
         })}</nav>
-        <div className="data-stamp"><span className="status-dot" /><span><strong>LIVE DATA</strong><small>{new Date(snapshot.fetchedAt).toLocaleDateString()}</small></span></div>
+        <div className="account-cluster"><button className="character-switcher" onClick={() => setAccountOpen(true)}><span className="status-dot" /><span><strong>{auth.activeCharacter?.name || "Character"}</strong><small>{auth.activeCharacter ? `${humanize(auth.activeCharacter.characterClass)} · level ${auth.activeCharacter.level}` : auth.local ? "Local development" : "Add character"}</small></span><b>⌄</b></button><div className="data-stamp"><span className="status-dot" /><span><strong>{auth.local ? "LOCAL" : "SYNCED"}</strong><small>{new Date(snapshot.fetchedAt).toLocaleDateString()}</small></span></div></div>
       </header>
+
+      {accountOpen && <AccountWorkspace onClose={() => setAccountOpen(false)} />}
 
       <Breadcrumbs page={page} dungeon={page.id === "dungeon" ? dungeonsById.get(page.dungeonId) : null} />
       {page.id === "planner" && <Planner state={state} setState={setState} dungeons={dungeons} dungeonsById={dungeonsById} onPin={setPinnedQuest} onNavigate={(id) => window.location.assign(appHref(PAGE_PATHS[id]))} />}
@@ -1403,6 +1506,7 @@ export default function App() {
       {page.id === "quests" && <Quests dungeons={dungeons} faction={state.faction} onPin={setPinnedQuest} />}
       {page.id === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}
       {page.id === "profile" && <Profile dungeons={dungeons} />}
+      {page.id === "run" && <RunPage run={state.telemetry.runs.find((run) => run.id === page.runId)} dungeons={dungeons} />}
       {(page.id === "not-found" || page.id === "dungeon" && !dungeonsById.has(page.dungeonId)) && <main className="not-found"><span>404</span><h1>Page not found</h1><p>This route or dungeon does not exist.</p><a href={appHref("/dungeons/")}>Browse dungeons</a></main>}
 
       <QuestTray selection={pinnedQuest} onClose={() => setPinnedQuest(null)} itemLookup={itemLookup} questLookup={questLookup} onSelect={setPinnedQuest} />

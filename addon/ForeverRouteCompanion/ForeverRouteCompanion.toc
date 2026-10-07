@@ -2,7 +2,7 @@
 ## Title: Forever Route Companion
 ## Notes: Forever character, dungeon, gear, route, and party intelligence.
 ## Author: Adam Boas / Moltbot
-## Version: 1.0.0
+## Version: 1.1.0
 ## SavedVariables: ForeverRouteCompanionDB
 
 Data.lua

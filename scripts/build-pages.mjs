@@ -12,6 +12,7 @@ const pages = [
   { path: "quests", title: "WoW Forever Dungeon Quests", description: "Browse WoW Forever dungeon quests, prerequisites, pickup locations, rewards, and XP." },
   { path: "loot", title: "WoW Forever Dungeon Loot", description: "Filter WoW Forever dungeon loot by boss, class, slot, source, rarity, and level." },
   { path: "gear", title: "My Gear and Wishlist", description: "Manage your WoW Forever gear, wishlist, party, and companion addon exchange." },
+  { path: "runs", title: "Character Run History", description: "Review private WoW Forever dungeon run telemetry, XP, bosses, loot, and party evidence." },
   ...snapshot.dungeons.map((dungeon) => ({
     path: `dungeons/${dungeon.id}`,
     title: `${dungeon.name} | WoW Forever Dungeon`,
@@ -33,6 +34,7 @@ for (const page of pages) {
 }
 
 await writeFile(join(dist, "404.html"), documentFor({ title: "Page not found", description: "This Forever Route Planner page does not exist.", path: "not-found" }));
+await writeFile(join(dist, "_redirects"), "/runs/* /runs/index.html 200\n");
 await writeFile(join(dist, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["", ...pages.map((page) => page.path)].map((path) => `  <url><loc>https://wow-forever-route-planner.pages.dev/${path}${path ? "/" : ""}</loc></url>`).join("\n")}\n</urlset>\n`);
 
 process.stdout.write(`Generated ${pages.length + 2} static HTML documents.\n`);
