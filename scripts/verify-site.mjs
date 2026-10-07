@@ -74,7 +74,8 @@ try {
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
   assert.equal(await page.locator(".dungeon-card").count(), 34);
   await page.getByRole("button", { name: /Ragefire Chasm/ }).click();
-  assert.ok(await page.locator(".detail-panel .inspectable-entry").count() > 0, "dungeon detail exposes quests and loot");
+  assert.equal(await page.locator(".dungeon-section-nav button").count(), 3, "dungeon detail exposes compact Map, Quests, and Loot workspaces");
+  assert.match(await page.locator(".dungeon-hero").innerText(), /Ragefire Chasm[\s\S]*Quest XP[\s\S]*5,680/i, "dungeon hero exposes WOWF-style essential metadata");
   assert.equal(await page.locator(".dungeon-map-panel img").count(), 1, "Ragefire Chasm exposes a verified instance map");
   assert.equal(await page.locator('.dungeon-map-panel a[title="Open full-resolution map"]').count(), 1, "map can be opened at source resolution");
   assert.match(await page.locator(".dungeon-map-panel .map-quality").innerText(), /1002×668|high-quality/i, "official client map quality is disclosed");
@@ -138,17 +139,18 @@ try {
   assert.equal(await page.locator(".quest-tray").count(), 0, "second Escape closes the pinned quest tray");
 
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  await page.locator(".dungeon-section-nav").getByRole("button", { name: /Loot/ }).click();
   assert.equal(await page.locator('.dungeon-loot-column [role="group"][aria-label="Filter loot by class"]').count(), 1, "dungeon loot exposes class filters");
   assert.ok(await page.locator(".dungeon-loot-column .source-quest").count() > 0, "dungeon loot identifies quest rewards");
   assert.ok(await page.locator(".dungeon-loot-column .source-boss").count() > 0, "dungeon loot identifies boss drops");
-  const bossFilter = page.getByRole("combobox", { name: "Filter dungeon loot by boss", exact: true });
-  const bossValues = await bossFilter.locator("option").evaluateAll((options) => options.map((option) => option.value).filter((value) => value !== "all"));
-  assert.ok(bossValues.length > 1, "dungeon loot exposes specific boss choices");
+  const bossButtons = page.locator(".loot-source-nav button[data-boss]");
+  assert.ok(await bossButtons.count() > 1, "dungeon loot exposes specific boss choices in the encounter rail");
   const allBossLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
-  await bossFilter.selectOption(bossValues[0]);
+  await bossButtons.first().click();
   const selectedBossLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
   assert.ok(selectedBossLootCount > 0 && selectedBossLootCount < allBossLootCount, "specific boss filter narrows dungeon loot");
-  await bossFilter.selectOption("all");
+  await page.locator(".loot-source-nav button").filter({ hasText: "All items" }).click();
+  assert.equal(await page.locator(".dungeon-loot-facts").count(), await page.locator(".dungeon-loot-column .inspectable-entry").count(), "every dungeon loot row exposes compact item facts");
   const warriorLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
   await page.locator(".dungeon-loot-column").getByRole("button", { name: "Priest", exact: true }).click();
   const priestLootCount = await page.locator(".dungeon-loot-column .inspectable-entry").count();
@@ -219,6 +221,7 @@ try {
   assert.ok(tooltipBox && tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 390 && tooltipBox.y + tooltipBox.height <= 844, "mobile tooltip stays in viewport");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Dungeons", exact: true }).click();
+  await page.locator(".dungeon-section-nav").getByRole("button", { name: /Loot/ }).click();
   assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
   await page.getByRole("button", { name: "Route", exact: true }).click();

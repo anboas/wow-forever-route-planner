@@ -506,3 +506,131 @@ Assert the compact collapsed state first, activate the named expand control, the
 - **Notes**: Updated the browser gate to verify collapsed-by-default behavior and explicitly expand the first stop before quest interaction. Mobile dock controls include their visible glyphs in accessible names, so scoped role selectors match the action label without requiring an icon-free exact name.
 
 ---
+
+## [ERR-20261006-DUNGEON-SNAPSHOT-PATH] Schema probe used a removed snapshot filename
+
+**Logged**: 2026-10-06T21:22:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+A read-only dungeon schema probe imported `src/data/dungeons.json`, but the app consumes `src/data/wow-forever.json`.
+
+### Error
+```
+ERR_MODULE_NOT_FOUND: Cannot find module src/data/dungeons.json
+```
+
+### Context
+- The generated dataset was consolidated into `wow-forever.json` earlier in the project.
+- No file or external state changed.
+
+### Suggested Fix
+Resolve generated imports from `src/App.jsx` before probing data filenames.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, src/data/wow-forever.json
+
+### Resolution
+- **Resolved**: 2026-10-06T21:23:00-04:00
+- **Notes**: Read the active import from `src/App.jsx` and continued against `wow-forever.json`.
+
+---
+
+## [ERR-20261006-DUNGEON-LOOT-TAB-SELECTOR] Visual probe used an ambiguous Loot button selector
+
+**Logged**: 2026-10-06T21:29:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The WOWF-inspired dungeon subnavigation introduced a second valid Loot button, so a regex role selector matched the global view, dungeon tab, and dungeon cards.
+
+### Error
+```
+strict mode violation: getByRole('button', { name: /Loot/ }) resolved to 18 elements
+```
+
+### Context
+- The UI compiled successfully.
+- The failure was isolated to a one-off screenshot harness.
+
+### Suggested Fix
+Scope subnavigation checks to `.dungeon-section-nav` and use the exact accessible tab name.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/App.jsx, scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T21:30:00-04:00
+- **Notes**: Scoped the visual probe to `.dungeon-section-nav`.
+
+---
+
+## [ERR-20261006-HERO-XP-ASSERTION-CASE] Browser assertion ignored CSS-transformed metadata casing
+
+**Logged**: 2026-10-06T21:32:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The dungeon hero rendered the expected `QUEST XP 5,680`, but the new assertion required title case.
+
+### Error
+```
+AssertionError: dungeon hero exposes WOWF-style essential metadata
+```
+
+### Context
+- CSS intentionally transforms metadata labels to uppercase.
+- The application content and layout were correct.
+
+### Suggested Fix
+Keep accessibility-text assertions case-insensitive when casing is purely presentational.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/verify-site.mjs, src/styles.css
+
+### Resolution
+- **Resolved**: 2026-10-06T21:32:00-04:00
+- **Notes**: Updated the semantic assertion with the case-insensitive flag.
+
+---
+
+## [ERR-20261006-MOBILE-DUNGEON-TAB-STATE] Browser check skipped the default dungeon Map tab
+
+**Logged**: 2026-10-06T21:34:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The mobile verifier returned to the Dungeons view and immediately looked for Loot controls even though the selected dungeon correctly reopened on Map.
+
+### Error
+```
+mobile dungeon detail keeps every class filter reachable: 0 !== 10
+```
+
+### Context
+- Global-view navigation remounts the dungeon detail.
+- The documented default subview is Map.
+
+### Suggested Fix
+Activate the labeled Loot tab before testing nested loot interactions.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/verify-site.mjs, src/App.jsx
+
+### Resolution
+- **Resolved**: 2026-10-06T21:34:00-04:00
+- **Notes**: The verifier now activates the visible Loot tab before checking class-filter reachability.
+
+---

@@ -779,9 +779,14 @@ function LootListEntry({ item, dungeon }) {
     <li className="inspectable-entry">
       <TooltipTrigger className="simple-list-trigger" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item, dungeon)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
         <div className="mini-loot-name"><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><span className="loot-source-line"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a data-no-activate href={sourceHref} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{source.name} ↗</a></span></div></div>
+        <div className="dungeon-loot-facts" aria-label={`${item.name} item facts`}>
+          <span><small>iLvl</small>{item.itemLevel || "—"}</span>
+          <span><small>Req</small>{item.requiredLevel || "—"}</span>
+          <span><small>Slot</small>{item.slot || "—"}</span>
+          <span><small>Type</small>{item.type || "—"}</span>
+        </div>
         <ClassChips item={item} bestOnly limit={3} />
         <ItemActions item={item} dungeon={dungeon} compact />
-        <b>{item.itemLevel ? `iLvl ${item.itemLevel}` : item.requiredLevel ? `Req ${item.requiredLevel}` : "—"}</b>
       </TooltipTrigger>
     </li>
   );
@@ -807,6 +812,7 @@ function DungeonMapPanel({ dungeon, map }) {
 }
 
 function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin, onClose, onAddRoute, onPlanNext }) {
+  const [detailView, setDetailView] = useState("map");
   const [classFilter, setClassFilter] = useState(characterClass || "all");
   const [fitMode, setFitMode] = useState("usable");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -815,7 +821,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   const [rarityFilter, setRarityFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");
   useEffect(() => setClassFilter(characterClass || "all"), [characterClass]);
-  useEffect(() => setBossFilter("all"), [dungeon?.id]);
+  useEffect(() => { setBossFilter("all"); setDetailView("map"); }, [dungeon?.id]);
   if (!dungeon) return null;
   const quests = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction));
   const factionLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction));
@@ -839,36 +845,62 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
     const kind = itemSourceMeta(item, dungeon).kind;
     return { ...counts, [kind]: (counts[kind] || 0) + 1 };
   }, {});
+  const bossCounts = bossOptions.map((boss) => ({ boss, count: factionLoot.filter((item) => { const source = itemSourceMeta(item, dungeon); return source.kind === "boss" && source.name === boss; }).length }));
+  const heroSrc = map?.floors?.[0]?.src || map?.src;
+  const heroStyle = heroSrc ? { "--dungeon-art": `url("${assetUrl(heroSrc)}")` } : undefined;
+  function selectLootGroup(source, boss = "all") {
+    setDetailView("loot");
+    setSourceFilter(source);
+    setBossFilter(boss);
+  }
   return (
-    <section className="detail-panel panel">
+    <section className="detail-panel panel wowf-detail">
       <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>
-      <div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div>
-      <div className="detail-title-row"><div><h2>{dungeon.name}</h2><p className="detail-lead">Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified in the detailed source"}</p></div><div className="detail-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report data</a></div></div>
-      <div className="summary-grid compact">
-        <div className="summary-card"><span>Faction-visible loot</span><strong>{factionLoot.length}</strong></div>
-        <div className="summary-card"><span>{humanize(faction)} quests</span><strong>{quests.length}</strong></div>
-        <div className="summary-card"><span>Forever quest XP</span><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></div>
-        <div className="summary-card"><span>Boss / quest loot</span><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></div>
-        <div className="summary-card"><span>Mapped / detailed</span><strong>{map ? "Map ready" : `${verified} quests`}</strong></div>
-      </div>
-      <DungeonMapPanel dungeon={dungeon} map={map} />
-      <p className="inspect-hint">Hover or focus for the full in-game-style card. Pin quests for pickup maps and pre-quest routes; click items for their WoW Forever source.</p>
-      <div className="detail-columns">
-        <div><h3>{humanize(faction)} quests <span>{quests.length}</span></h3><ul className="simple-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></div>
+      <header className="dungeon-hero" style={heroStyle}>
+        <div className="dungeon-hero-shade" aria-hidden="true" />
+        <div className="dungeon-hero-copy"><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
+        <div className="dungeon-hero-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report</a></div>
+        <div className="dungeon-hero-metrics">
+          <span><small>Level</small><strong>{dungeon.level.join("–")}</strong></span>
+          <span><small>Location</small><strong>{dungeon.location || "Pending"}</strong></span>
+          <span><small>Bosses</small><strong>{dungeon.bosses.length}</strong></span>
+          <span><small>Loot</small><strong>{factionLoot.length}</strong></span>
+          <span><small>Quest XP</small><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></span>
+        </div>
+      </header>
+      <nav className="dungeon-section-nav" aria-label={`${dungeon.name} sections`}>
+        <button aria-pressed={detailView === "map"} onClick={() => setDetailView("map")}><span aria-hidden="true">⌖</span><b>Map</b><small>{map ? "Official floors" : "Pending"}</small></button>
+        <button aria-pressed={detailView === "quests"} onClick={() => setDetailView("quests")}><span aria-hidden="true">!</span><b>Quests</b><small>{quests.length} · {number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))} XP</small></button>
+        <button aria-pressed={detailView === "loot"} onClick={() => setDetailView("loot")}><span aria-hidden="true">▣</span><b>Loot</b><small>{factionLoot.length} items · {dungeon.bosses.length} bosses</small></button>
+      </nav>
+      <div className="detail-panel-body">
+      {detailView === "map" && <section className="detail-section"><DungeonMapPanel dungeon={dungeon} map={map} /></section>}
+      {detailView === "quests" && <section className="detail-section dungeon-quest-view"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} dungeon quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p className="inspect-hint">Open a quest for its pickup map, prerequisite route, Forever source, and reward details.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>}
+      {detailView === "loot" && <section className="detail-section dungeon-loot-workbench">
+        <aside className="loot-source-nav" aria-label="Filter dungeon loot by encounter">
+          <header><span>Sources</span><strong>Bosses</strong></header>
+          <button aria-pressed={bossFilter === "all" && sourceFilter === "all"} onClick={() => selectLootGroup("all")}><span>All items</span><b>{factionLoot.length}</b></button>
+          {bossCounts.map(({ boss, count }, index) => <button key={boss} data-boss={boss} aria-pressed={bossFilter === boss} onClick={() => selectLootGroup("all", boss)}><em>{String(index + 1).padStart(2, "0")}</em><span>{boss}</span><b>{count}</b></button>)}
+          <div className="loot-source-nav-divider">Other sources</div>
+          <button aria-pressed={sourceFilter === "quest"} onClick={() => selectLootGroup("quest")}><em>!</em><span>Quest rewards</span><b>{sourceCounts.quest || 0}</b></button>
+          {!!sourceCounts.drop && <button aria-pressed={sourceFilter === "drop"} onClick={() => selectLootGroup("drop")}><em>◆</em><span>Boss / mob</span><b>{sourceCounts.drop}</b></button>}
+          {!!sourceCounts.trash && <button aria-pressed={sourceFilter === "trash"} onClick={() => selectLootGroup("trash")}><em>◇</em><span>Trash</span><b>{sourceCounts.trash}</b></button>}
+        </aside>
         <div className="dungeon-loot-column">
-          <h3>All loot <span>{loot.length} of {factionLoot.length}</span></h3>
+          <header className="dungeon-loot-heading"><div><span className="section-kicker">Dungeon loot</span><h3>{bossFilter !== "all" ? bossFilter : sourceFilter === "quest" ? "Quest rewards" : "All items"}</h3></div><strong>{loot.length} of {factionLoot.length} items</strong></header>
           <div className="dungeon-loot-controls">
             <div className="detail-filter-label"><strong>Loot controls</strong><span>{classFilter === "all" ? "Every class" : `${humanize(classFilter)} · ${specProfile(classFilter, selectedSpec).label}`}</span></div>
             <ClassFilterStrip value={classFilter} onChange={setClassFilter} compact />
             <div className="detail-fit-row"><FitMode value={fitMode} onChange={setFitMode} /><SourceFilter value={sourceFilter} onChange={setSourceFilter} /></div>
-            <div className="detail-quick-filters"><select aria-label="Filter dungeon loot by boss" value={bossFilter} onChange={(event) => setBossFilter(event.target.value)}><option value="all">All bosses</option>{bossOptions.map((boss) => <option value={boss} key={boss}>{boss}</option>)}</select><select aria-label="Filter dungeon loot by slot" value={slotFilter} onChange={(event) => setSlotFilter(event.target.value)}><option value="all">All slots</option>{slots.map((slot) => <option key={slot}>{slot}</option>)}</select><select aria-label="Filter dungeon loot by rarity" value={rarityFilter} onChange={(event) => setRarityFilter(event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select aria-label="Filter dungeon loot by level" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="all">Any level</option>{[20,30,40,50,60].map((level) => <option value={level} key={level}>Up to level {level}</option>)}</select></div>
+            <div className="detail-quick-filters"><select aria-label="Filter dungeon loot by slot" value={slotFilter} onChange={(event) => setSlotFilter(event.target.value)}><option value="all">All slots</option>{slots.map((slot) => <option key={slot}>{slot}</option>)}</select><select aria-label="Filter dungeon loot by rarity" value={rarityFilter} onChange={(event) => setRarityFilter(event.target.value)}><option value="all">All rarities</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="epic">Epic</option></select><select aria-label="Filter dungeon loot by level" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}><option value="all">Any level</option>{[20,30,40,50,60].map((level) => <option value={level} key={level}>Up to level {level}</option>)}</select></div>
             <div className="source-legend" aria-label="Loot source legend"><span><em className="source-badge source-quest">Quest {sourceCounts.quest || 0}</em></span><span><em className="source-badge source-boss">Boss {sourceCounts.boss || 0}</em></span><span><em className="source-badge source-drop">Boss / mob {sourceCounts.drop || 0}</em></span><span><em className="source-badge source-trash">Trash {sourceCounts.trash || 0}</em></span></div>
           </div>
+          <div className="dungeon-loot-table-head" aria-hidden="true"><span>Item</span><span>Item details</span><span>Best for</span><span>Actions</span></div>
           <ul className="simple-list loot-detail-list">{loot.map((item, index) => <LootListEntry key={`${item.id || item.name}-${index}`} item={item} dungeon={dungeon} />)}</ul>
-          {!loot.length && <p className="loot-empty-state">No items in this dungeon match the selected class.</p>}
+          {!loot.length && <p className="loot-empty-state">No items match these loot filters.</p>}
         </div>
+      </section>}
       </div>
-      <div className="boss-section"><h3>Bosses / sources</h3><ul className="boss-grid">{dungeon.bosses.length ? dungeon.bosses.map((boss) => <li key={boss.name}><div><a href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><strong>{boss.name} ↗</strong></a><span>{boss.level ? `Level ${boss.level}` : "Level pending"}</span></div><b>{boss.lootCount} items</b></li>) : <li><span>No verified boss breakdown yet.</span></li>}</ul></div>
     </section>
   );
 }
