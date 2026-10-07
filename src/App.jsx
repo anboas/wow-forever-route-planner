@@ -7,7 +7,7 @@ import { clampCharacter, formatCharacter, progressPercent, XP_TO_NEXT } from "./
 import { buildOptimizerCandidates, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
 import { CLASS_SPECS, compareItems, defaultSpec, dropChancePercent, entitySourceUrl, itemKey, itemPowerScore, itemSummary, lootVisibleForFaction, questSourceUrl, recommendedForProfile, reportIssueUrl, runsForConfidence, specFitScore, specProfile } from "./gear.js";
-import { parseCompanionString, serializePlannerString } from "./companion.js";
+import { parseCompanionString, serializePlannerString, summarizeTelemetry } from "./companion.js";
 
 const CLASSES = CLASS_OPTIONS.map(({ id }) => id);
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -57,6 +57,7 @@ const DEFAULT_STATE = {
   equipped: {},
   party: [],
   characterMeta: { name: "", realm: "", bindLocation: "", flightPaths: [], professions: [], importedAt: null },
+  telemetry: { addonVersion: "", dataVersion: "", importedAt: null, exportedAt: null, restedXp: 0, money: 0, freeBagSlots: 0, durability: 100, zone: "", subzone: "", runs: [], currentRun: null, group: [], peers: {}, readiness: null },
   savedRoutes: [],
   lootPreferences: { query: "", dungeonId: "all", slot: "all", rarity: "all", classFilter: null, fitMode: "usable", sourceFilter: "all", wishlistOnly: false, sort: "fit", viewMode: "boss" },
 };
@@ -115,6 +116,17 @@ function uid() {
 
 function number(value) {
   return new Intl.NumberFormat("en-US").format(Math.round(value || 0));
+}
+
+function compactDuration(seconds) {
+  const value = Math.max(0, Number(seconds) || 0);
+  if (value >= 3600) return `${Math.floor(value / 3600)}h ${Math.floor(value % 3600 / 60)}m`;
+  return `${Math.floor(value / 60)}m ${Math.round(value % 60)}s`;
+}
+
+function coinText(copper) {
+  const value = Math.max(0, Number(copper) || 0);
+  return `${Math.floor(value / 10000)}g ${Math.floor(value % 10000 / 100)}s`;
 }
 
 function qualityClass(item) {
@@ -1141,6 +1153,8 @@ function Profile({ dungeons }) {
   const equippedItems = Object.values(gear.equipped);
   const [companionText, setCompanionText] = useState("");
   const [companionNotice, setCompanionNotice] = useState("");
+  const telemetry = gear.telemetry || DEFAULT_STATE.telemetry;
+  const telemetrySummary = useMemo(() => summarizeTelemetry(telemetry.runs || []), [telemetry.runs]);
 
   function importCompanion() {
     try {
@@ -1160,17 +1174,40 @@ function Profile({ dungeons }) {
 
   return (
     <main className="library-shell profile-shell">
-      <header className="library-header"><div><div className="section-kicker">Character workspace</div><h1>Loadout, wishlist & party</h1><p>Persistent gear goals feed the loot browser and route optimizer.</p></div><div className="profile-metrics"><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{equippedItems.length}</strong> equipped</span><span><strong>{gear.party.length + 1}</strong> party</span></div></header>
+      <header className="library-header"><div><div className="section-kicker">Forever intelligence suite</div><h1>Character, runs, gear & party</h1><p>The addon records what actually happened. The website turns it into leveling and gear decisions.</p></div><div className="profile-header-stack"><a className="addon-download addon-download-primary" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download addon v1.0</a><div className="profile-metrics"><span><strong>{telemetrySummary.runs}</strong> runs</span><span><strong>{gear.wishlist.length}</strong> wishlist</span><span><strong>{Math.max(gear.party.length + 1, telemetry.group?.length || 0)}</strong> party</span></div></div></header>
+      <section className="intelligence-dashboard panel">
+        <header><div><span>Imported intelligence</span><h2>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No WFRP 1.0 telemetry imported"}</h2></div><small>{telemetry.importedAt ? `Imported ${new Date(telemetry.importedAt).toLocaleString()}` : "Install the addon, run /wfrp export, and import below."}</small></header>
+        <div className="intelligence-metrics">
+          <span><b>{telemetrySummary.runs}</b> recorded runs</span><span><b>{number(telemetrySummary.totalXp)}</b> dungeon XP</span><span><b>{number(telemetrySummary.xpPerHour)}</b> XP / hour</span><span><b>{compactDuration(telemetrySummary.duration)}</b> run time</span><span><b>{telemetrySummary.bosses}</b> bosses</span><span><b>{telemetrySummary.deaths}</b> deaths</span>
+        </div>
+        <div className="intelligence-grid">
+          <section className="character-live-card">
+            <h3>Live character snapshot</h3>
+            <div><span>Level / XP<strong>{gear.characterMeta.name ? `Level ${gear.level} · ${number(gear.xp)} XP` : "Awaiting import"}</strong></span><span>Class / spec<strong>{gear.characterClass ? `${humanize(gear.characterClass)} · ${specProfile(gear.characterClass, gear.spec).label}` : "Unknown"}</strong></span><span>Location<strong>{[telemetry.zone, telemetry.subzone].filter(Boolean).join(" · ") || "Unknown"}</strong></span><span>Preparation<strong>{telemetry.freeBagSlots} bag slots · {telemetry.durability}% durability · {number(telemetry.restedXp)} rested</strong></span><span>Currency<strong>{coinText(telemetry.money)}</strong></span></div>
+          </section>
+          <section className="xp-breakdown-card">
+            <h3>Observed XP breakdown</h3>
+            <div className="xp-breakdown-bar" aria-label={`${number(telemetrySummary.combatXp)} combat XP, ${number(telemetrySummary.questXp)} quest XP, ${number(telemetrySummary.unclassifiedXp)} unclassified XP`}><i style={{ width: `${telemetrySummary.totalXp ? telemetrySummary.combatXp / telemetrySummary.totalXp * 100 : 0}%` }} /><i style={{ width: `${telemetrySummary.totalXp ? telemetrySummary.questXp / telemetrySummary.totalXp * 100 : 0}%` }} /><i style={{ width: `${telemetrySummary.totalXp ? telemetrySummary.unclassifiedXp / telemetrySummary.totalXp * 100 : 0}%` }} /></div>
+            <div className="xp-breakdown-legend"><span>Combat <b>{number(telemetrySummary.combatXp)}</b></span><span>Quest <b>{number(telemetrySummary.questXp)}</b></span><span>Other <b>{number(telemetrySummary.unclassifiedXp)}</b></span></div>
+            <small>Personal observations override generic combat-XP estimates when enough samples exist.</small>
+          </section>
+        </div>
+        <div className="run-dashboard-grid">
+          <section className="run-history-card"><h3>Recent runs</h3>{telemetry.runs?.length ? <div className="run-history-table">{telemetry.runs.slice(-8).reverse().map((run) => <div key={run.id}><strong>{run.dungeonName}</strong><span>{compactDuration(run.duration)}</span><span>{number(run.totalXp)} XP</span><span>{run.bosses.length} bosses</span><span className={run.deaths ? "danger" : "success"}>{run.deaths} deaths</span></div>)}</div> : <p>No runs imported yet. The addon starts recording automatically when you enter a known Forever dungeon.</p>}</section>
+          <section className="dungeon-baseline-card"><h3>Personal dungeon baselines</h3>{telemetrySummary.dungeons.length ? <div>{telemetrySummary.dungeons.slice(0, 7).map((dungeon) => <span key={dungeon.dungeonId}><strong>{dungeon.dungeonName}</strong><small>{dungeon.runs} run{dungeon.runs === 1 ? "" : "s"} · {Math.round(dungeon.averageMinutes)}m avg · {number(dungeon.xpPerHour)} XP/h</small></span>)}</div> : <p>Dungeon averages appear after the first telemetry import.</p>}</section>
+        </div>
+        {telemetry.group?.length > 0 && <section className="telemetry-party"><h3>Last party snapshot</h3><div>{telemetry.group.map((member, index) => <span key={`${member.name}-${index}`}><b>{member.name}</b><small>{humanize(String(member.class || "unknown").toLowerCase())} · level {member.level}{member.leader ? " · leader" : ""}</small></span>)}</div></section>}
+      </section>
       <div className="profile-grid">
         <section className="profile-panel panel"><header><div><span>Current loadout</span><h2>{humanize(gear.characterClass)} · {specProfile(gear.characterClass, gear.spec).label}</h2></div><small>Equip items from any loot row</small></header><div className="loadout-grid">{equippedItems.length ? equippedItems.map((item) => <div className="loadout-slot" key={item.slot}><span>{item.slot}</span><div><ItemIcon item={item} compact /><strong className={qualityClass(item)}>{item.name}</strong></div><button onClick={() => gear.clearEquipped(item.slot)} aria-label={`Clear equipped ${item.slot}`}>×</button></div>) : <p className="empty-copy">No gear equipped yet. Use ⇄ on an item to establish comparison baselines.</p>}</div></section>
         <section className="profile-panel panel"><header><div><span>Party roster</span><h2>Who wants each drop?</h2></div><button onClick={gear.addPartyMember} disabled={gear.party.length >= 4}>Add member</button></header><div className="party-editor">{gear.party.map((member) => <div className="party-member" key={member.id}><input aria-label="Party member name" value={member.name} onChange={(event) => gear.updatePartyMember(member.id, { name: event.target.value })} /><select aria-label={`${member.name} class`} value={member.characterClass} onChange={(event) => gear.updatePartyMember(member.id, { characterClass: event.target.value, spec: defaultSpec(event.target.value) })}>{CLASSES.map((entry) => <option key={entry}>{humanize(entry)}</option>)}</select><select aria-label={`${member.name} specialization`} value={member.spec} onChange={(event) => gear.updatePartyMember(member.id, { spec: event.target.value })}>{(CLASS_SPECS[member.characterClass] || []).map((entry) => <option value={entry.id} key={entry.id}>{entry.label} · {entry.role}</option>)}</select><button onClick={() => gear.removePartyMember(member.id)} aria-label={`Remove ${member.name}`}>×</button></div>)}{!gear.party.length && <p className="empty-copy">Add up to four party members. Item tooltips will show who has a strong rules-based fit.</p>}</div></section>
       </div>
       <section className="wishlist-panel panel"><header><div><span>Loot goals</span><h2>Wishlist</h2></div><strong>{gear.wishlist.length} tracked</strong></header>{gear.wishlist.length ? <div className="wishlist-grid">{gear.wishlist.map((item) => { const dungeon = dungeonsById.get(item.dungeonId); const equipped = item.slot ? gear.equipped[item.slot] : null; const comparison = compareItems(item, equipped, gear.characterClass, gear.spec); const partyFit = gear.party.filter((member) => recommendedForProfile(item, member.characterClass, member.spec)); return <div className="wishlist-card" key={item.key}><div><ItemIcon item={item} /><span><strong className={qualityClass(item)}>{item.name}</strong><small>{item.dungeonName || "Dungeon pending"} · {item.slot || item.type || "Item"}</small></span></div><div className="wishlist-card-meta"><span>{equipped ? `${comparison.delta >= 0 ? "+" : ""}${comparison.delta.toFixed(1)} vs equipped` : "No equipped comparison"}</span><span>{partyFit.length ? `Party: ${partyFit.map((member) => member.name).join(", ")}` : "No party conflict"}</span></div><ItemActions item={item} dungeon={dungeon} /></div>; })}</div> : <p className="profile-empty">Star items in dungeon details, grouped loot, quest rewards, or the full archive.</p>}</section>
       <section className="companion-panel panel">
-        <header><div><span>Companion integration</span><h2>Import your character. Export your route.</h2></div><a className="addon-download" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download addon</a></header>
+        <header><div><span>Companion exchange</span><h2>Install, record, import, adapt.</h2></div><a className="addon-download" href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download WFRP 1.0</a></header>
         <div className="companion-grid">
-          <div className="companion-copy"><strong>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No character imported"}</strong><p>In game, run <code>/wfrp export</code>, copy the text, and paste it here. The import updates level, XP, faction, class, active/completed dungeon quests, equipped gear, hearth, flight paths, and professions.</p>{gear.characterMeta.importedAt && <small>Last imported {new Date(gear.characterMeta.importedAt).toLocaleString()} · Hearth: {gear.characterMeta.bindLocation || "unknown"} · {gear.characterMeta.flightPaths.length} known flight paths</small>}</div>
-          <textarea aria-label="Companion exchange text" value={companionText} onChange={(event) => setCompanionText(event.target.value)} placeholder="Paste WFRP1C character text here, or export a WFRP1P route for the addon." spellCheck="false" />
+          <div className="companion-copy"><strong>{gear.characterMeta.name ? `${gear.characterMeta.name} · ${gear.characterMeta.realm}` : "No character imported"}</strong><p>Install the addon, open it with <code>/wfrp</code>, then use <strong>Sync → Export telemetry</strong>. Paste the WFRP2 text here to update character state, equipped gear, quests, party, and run dashboards. Export the planned route back to the game when ready.</p><ol><li>Download and extract into <code>Interface/AddOns</code>.</li><li>Play normally; known dungeon runs record automatically.</li><li>Run <code>/wfrp export</code> and import below.</li></ol>{gear.characterMeta.importedAt && <small>Last imported {new Date(gear.characterMeta.importedAt).toLocaleString()} · Addon {telemetry.addonVersion || "legacy"} · Hearth: {gear.characterMeta.bindLocation || "unknown"} · {gear.characterMeta.flightPaths.length} flight paths</small>}</div>
+          <textarea aria-label="Companion exchange text" value={companionText} onChange={(event) => setCompanionText(event.target.value)} placeholder="Paste WFRP2C telemetry here, or export a WFRP1P route for the addon." spellCheck="false" />
         </div>
         <div className="companion-actions"><button onClick={importCompanion} disabled={!companionText.trim()}>Import character / plan</button><button className="secondary" onClick={exportPlanner}>Copy route for addon</button><a href="https://github.com/anboas/wow-forever-route-planner/tree/main/addon/ForeverRouteCompanion" target="_blank" rel="noreferrer">Source & install guide ↗</a>{companionNotice && <span role="status">{companionNotice}</span>}</div>
       </section>
@@ -1282,7 +1319,9 @@ export default function App() {
         }
       }
       const characterClass = CLASSES.includes(payload.characterClass) ? payload.characterClass : current.characterClass;
-      result = `Imported ${payload.name || "character"}: ${payload.activeQuestIds.length} active quests, ${payload.completedQuestIds.length} completed dungeon quests, and ${matchedGear}/${payload.gear.length} recognized gear items.`;
+      result = payload.type === "telemetry"
+        ? `Imported ${payload.name || "character"}: ${payload.runs.length} runs, ${payload.group.length} party members, ${payload.activeQuestIds.length} active quests, and ${matchedGear}/${payload.gear.length} recognized gear items.`
+        : `Imported ${payload.name || "character"}: ${payload.activeQuestIds.length} active quests, ${payload.completedQuestIds.length} completed dungeon quests, and ${matchedGear}/${payload.gear.length} recognized gear items.`;
       return {
         ...current,
         level: payload.level || current.level,
@@ -1300,18 +1339,39 @@ export default function App() {
           professions: payload.professions,
           importedAt: new Date().toISOString(),
         },
+        telemetry: payload.type === "telemetry" ? {
+          addonVersion: payload.addonVersion,
+          dataVersion: payload.dataVersion,
+          importedAt: new Date().toISOString(),
+          exportedAt: payload.exportedAt,
+          restedXp: payload.restedXp,
+          money: payload.money,
+          freeBagSlots: payload.freeBagSlots,
+          durability: payload.durability,
+          hearthReadyAt: payload.hearthReadyAt,
+          zone: payload.zone,
+          subzone: payload.subzone,
+          runs: payload.runs,
+          currentRun: payload.currentRun,
+          group: payload.group,
+          peers: payload.peers,
+          readiness: payload.readiness,
+        } : current.telemetry,
       };
     });
     return result;
   }
 
   const gear = {
+    level: state.level,
+    xp: state.xp,
     characterClass: state.characterClass,
     spec: state.spec,
     wishlist: state.wishlist,
     equipped: state.equipped,
     party: state.party,
     characterMeta: state.characterMeta,
+    telemetry: state.telemetry,
     lootPreferences: state.lootPreferences,
     updateLootPreferences: (values) => setState((current) => ({ ...current, lootPreferences: { ...current.lootPreferences, ...values } })),
     isWishlisted: (item, dungeon) => state.wishlist.some((entry) => entry.key === itemKey(item, dungeon?.id)),
@@ -1346,7 +1406,7 @@ export default function App() {
 
       <footer className="site-footer">
         <div><strong>Coverage</strong><span>{dungeons.length} dungeons · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0))} loot entries · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0))} quest groups</span></div>
-        <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map</a><a href="https://wago.tools/api/builds" target="_blank" rel="noreferrer">Forever client maps</a><a href={snapshot.xpPolicy.sourceUrl} target="_blank" rel="noreferrer">Forever XP policy</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">Level curve reference</a></div>
+        <div className="source-links"><a href={assetUrl("addons/ForeverRouteCompanion.zip")} download>Download WFRP addon</a>{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map</a><a href="https://wago.tools/api/builds" target="_blank" rel="noreferrer">Forever client maps</a><a href={snapshot.xpPolicy.sourceUrl} target="_blank" rel="noreferrer">Forever XP policy</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">Level curve reference</a></div>
         <p>Unofficial fan-made planning tool. Forever beta data changes quickly; partial values are labeled and excluded from projections. Class-fit icons are transparent rules-based suggestions, not source claims.</p>
       </footer>
     </div></GearContext.Provider>

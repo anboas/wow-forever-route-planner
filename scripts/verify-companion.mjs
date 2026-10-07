@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
-import { parseCompanionString, serializePlannerString } from "../src/companion.js";
+import luaparse from "luaparse";
+import { parseCompanionString, serializePlannerString, summarizeTelemetry } from "../src/companion.js";
 
 const plan = serializePlannerString({
   route: [{ dungeonId: "ragefire-chasm" }, { dungeonId: "shadowfang-keep" }],
@@ -24,12 +25,52 @@ assert.equal(character.characterClass, "warrior");
 assert.deepEqual(character.activeQuestIds, ["1", "2"]);
 assert.deepEqual(character.gear, [{ slot: "Head", itemId: 123 }, { slot: "Chest", itemId: 456 }]);
 assert.deepEqual(character.professions, [{ name: "Mining", skill: 75, maximum: 150 }]);
-assert.throws(() => parseCompanionString("bad payload"), /Expected a WFRP1/);
+
+const telemetryPayload = {
+  schema: 2,
+  addonVersion: "1.0.0",
+  dataVersion: "forever-test",
+  exportedAt: 1791374400,
+  character: {
+    name: "Gate Runner", realm: "Forever", level: 18, xp: 420, xpMax: 12000, restedXp: 300,
+    faction: "Horde", class: "WARRIOR", spec: "Arms", talents: [{ name: "Arms", points: 9 }],
+    gear: [{ slot: "Head", itemId: 123, name: "Test Helm" }], professions: [{ name: "Mining", skill: 75, maximum: 150 }],
+    bindLocation: "Orgrimmar", flightPaths: ["Crossroads"], money: 12345, freeBagSlots: 11, durability: 88,
+    zone: "Orgrimmar", subzone: "Valley of Strength",
+  },
+  quests: { active: [1, 2], complete: [3, 4] },
+  runs: [{
+    id: "run-1", dungeonId: "ragefire-chasm", dungeonName: "Ragefire Chasm", duration: 900,
+    totalXp: 6000, combatXp: 3000, questXp: 2500, unclassifiedXp: 500, deaths: 1,
+    bosses: ["Taragaman the Hungerer"], loot: [14145], quests: [5723], group: [{ name: "Gate Runner" }],
+  }],
+  group: [{ name: "Gate Runner", class: "WARRIOR", level: 18, leader: true }],
+  peers: {}, plan: { route: "ragefire-chasm" }, readiness: { active: [5723], complete: [], missing: [5728] },
+};
+const telemetryString = `WFRP2C|payload=${encodeURIComponent(JSON.stringify(telemetryPayload)).replaceAll("%20", "+")}`;
+const telemetry = parseCompanionString(telemetryString);
+assert.equal(telemetry.type, "telemetry");
+assert.equal(telemetry.name, "Gate Runner");
+assert.equal(telemetry.runs.length, 1);
+assert.deepEqual(telemetry.runs[0].bosses, ["Taragaman the Hungerer"]);
+assert.equal(summarizeTelemetry(telemetry.runs).xpPerHour, 24000);
+assert.throws(() => parseCompanionString("bad payload"), /Expected a WFRP character/);
 
 await access(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url));
 await access(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.lua", import.meta.url));
+await access(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url));
 await access(new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url));
 const data = await readFile(new URL("../addon/ForeverRouteCompanion/Data.lua", import.meta.url), "utf8");
 assert.ok((data.match(/\[\d+\]=true/g) || []).length >= 100, "expected the generated dungeon quest ID catalog");
+assert.match(data, /WFRP_DUNGEON_BOSSES=/, "generated addon data includes boss catalogs");
+assert.match(data, /WFRP_ITEMS=/, "generated addon data includes item intelligence");
+const addon = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.lua", import.meta.url), "utf8");
+assert.doesNotThrow(() => luaparse.parse(addon, { luaVersion: "5.1" }), "addon core is valid Lua 5.1");
+assert.match(addon, /WFRP2C\|payload=/, "addon exports versioned telemetry");
+assert.match(addon, /CHAT_MSG_COMBAT_XP_GAIN/, "addon records combat XP");
+assert.match(addon, /COMBAT_LOG_EVENT_UNFILTERED/, "addon records boss kills");
+const ui = await readFile(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url), "utf8");
+assert.doesNotThrow(() => luaparse.parse(ui, { luaVersion: "5.1" }), "addon UI is valid Lua 5.1");
+for (const tab of ["NOW", "CHARACTER", "RUNS", "GROUP", "SYNC"]) assert.match(ui, new RegExp(`"${tab}"`), `addon UI includes ${tab} view`);
 
 process.stdout.write("Companion exchange verification passed.\n");

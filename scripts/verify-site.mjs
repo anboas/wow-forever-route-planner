@@ -236,11 +236,15 @@ try {
   await page.getByRole("button", { name: "Add member", exact: true }).click();
   assert.equal(await page.locator(".party-member").count(), 1, "party roster supports additional members");
   assert.match(await page.locator(".integration-health").innerText(), /271[\s\S]*35[\s\S]*26/, "full-corpus health is visible");
-  assert.match(await page.locator(".addon-download").getAttribute("href"), /ForeverRouteCompanion\.zip$/);
+  assert.match(await page.locator(".addon-download-primary").getAttribute("href"), /ForeverRouteCompanion\.zip$/);
   const companionText = page.getByRole("textbox", { name: "Companion exchange text" });
-  await companionText.fill("WFRP1C|name=Gate+Runner|realm=Forever|level=18|xp=420|xpmax=12000|faction=Horde|class=WARRIOR|active=1,2|complete=3,4|gear=Head:123|bind=Orgrimmar|flights=Crossroads,Thunder+Bluff|professions=Mining:75:150");
+  const telemetryPayload = { schema: 2, addonVersion: "1.0.0", dataVersion: "browser-gate", exportedAt: 1791374400, character: { name: "Gate Runner", realm: "Forever", level: 18, xp: 420, xpMax: 12000, restedXp: 300, faction: "Horde", class: "WARRIOR", spec: "Arms", gear: [{ slot: "Head", itemId: 123 }], bindLocation: "Orgrimmar", flightPaths: ["Crossroads", "Thunder Bluff"], professions: [{ name: "Mining", skill: 75, maximum: 150 }], money: 12345, freeBagSlots: 11, durability: 88, zone: "Orgrimmar", subzone: "Valley of Strength" }, quests: { active: [1, 2], complete: [3, 4] }, runs: [{ id: "run-1", dungeonId: "ragefire-chasm", dungeonName: "Ragefire Chasm", duration: 900, totalXp: 6000, combatXp: 3000, questXp: 2500, unclassifiedXp: 500, deaths: 1, bosses: ["Taragaman the Hungerer"], loot: [14145], quests: [5723], group: [] }], group: [{ name: "Gate Runner", class: "WARRIOR", level: 18, leader: true }], peers: {}, plan: {}, readiness: { active: [5723], complete: [], missing: [5728] } };
+  await companionText.fill(`WFRP2C|payload=${encodeURIComponent(JSON.stringify(telemetryPayload)).replaceAll("%20", "+")}`);
   await page.getByRole("button", { name: "Import character / plan", exact: true }).click();
-  assert.match(await page.locator(".companion-panel").innerText(), /Gate Runner · Forever[\s\S]*2 active quests[\s\S]*2 completed dungeon quests/);
+  assert.match(await page.locator(".companion-panel").innerText(), /Gate Runner · Forever[\s\S]*Addon 1\.0\.0/);
+  assert.match(await page.locator(".intelligence-dashboard").innerText(), /1\s+recorded runs[\s\S]*6,000\s+dungeon XP[\s\S]*24,000\s+XP \/ hour[\s\S]*Ragefire Chasm/i);
+  assert.match(await page.locator(".character-live-card").innerText(), /Level 18 · 420 XP[\s\S]*Orgrimmar · Valley of Strength[\s\S]*11 bag slots · 88% durability/);
+  assert.equal(await page.locator(".telemetry-party span").count(), 1, "telemetry renders the imported party snapshot");
   await page.getByRole("button", { name: "Copy route for addon", exact: true }).click();
   assert.match(await companionText.inputValue(), /^WFRP1P\|/);
 

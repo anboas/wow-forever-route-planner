@@ -33,6 +33,79 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 
 ---
 
+## [ERR-20261007-STYLE-RESEARCH-FALLBACK] Perplexity styling research lacked a configured protected key
+
+**Logged**: 2026-10-07T08:39:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: research
+
+### Summary
+The current-addon style review could not use Perplexity because no API key is configured.
+
+### Resolution
+Used direct public maintainer pages for BetterBags and AdiBags instead. The implemented design follows the evidenced patterns that matter here: clean section grids, task tabs, intelligent defaults, compact discoverable controls, and a small persistent launcher/HUD.
+
+---
+
+## [ERR-20261007-CHROMIUM-PATH] Visual probe assumed the wrong Chromium executable path
+
+**Logged**: 2026-10-07T08:39:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The one-off screenshot probe used `/usr/bin/chromium`; this host exposes Chromium at `/usr/bin/chromium-browser`.
+
+### Resolution
+Reran the same visual proof with the discovered executable. Desktop and 390px captures completed successfully.
+
+---
+
+## [ERR-20261007-ADDON-DOWNLOAD-SELECTOR] Browser gate used a singular selector after adding a prominent download CTA
+
+**Logged**: 2026-10-07T08:35:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The intelligence page intentionally contains primary and integration-panel addon downloads, but the legacy browser assertion selected the shared class in strict mode.
+
+### Error
+```
+strict mode violation: locator('.addon-download') resolved to 2 elements
+```
+
+### Resolution
+Scoped the package-link assertion to `.addon-download-primary`; interaction coverage still verifies the surrounding companion panel independently.
+
+The subsequent metric assertion was also made case-insensitive and whitespace-tolerant because browser `innerText` preserves the CSS-transformed block layout between numeric values and labels.
+
+---
+
+## [ERR-20261007-COMPANION-ASSERTION-PROTOCOL] Companion verifier expected only the legacy WFRP1 error text
+
+**Logged**: 2026-10-07T08:25:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tests
+
+### Summary
+The expanded parser correctly accepts WFRP2 telemetry and broadened its invalid-input message, while the verifier still required the former WFRP1-only wording.
+
+### Error
+```
+AssertionError: expected /Expected a WFRP1/
+```
+
+### Resolution
+- Updated the assertion to the protocol-neutral message.
+- Added an end-to-end WFRP2 payload, telemetry summary, generated-data, UI-view, and event-recorder checks so the new contract is covered directly.
+
+---
+
 ## [ERR-20261006-GH-CODE-SEARCH-METHOD] GitHub code search used the write request method
 
 **Logged**: 2026-10-06T20:00:00-04:00

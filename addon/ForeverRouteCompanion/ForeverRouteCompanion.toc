@@ -1,9 +1,10 @@
 ## Interface: 11508
 ## Title: Forever Route Companion
-## Notes: Two-way character and route exchange for the Forever Route Planner.
+## Notes: Forever character, dungeon, gear, route, and party intelligence.
 ## Author: Adam Boas / Moltbot
-## Version: 0.2.0
+## Version: 1.0.0
 ## SavedVariables: ForeverRouteCompanionDB
 
 Data.lua
 ForeverRouteCompanion.lua
+UI.lua
