@@ -1389,7 +1389,10 @@ export default function App() {
     <GearContext.Provider value={gear}><div className="app-shell">
       <header className="topbar">
         <a className="brand" href={appHref("/")}><span className="brand-mark" aria-hidden="true">F</span><span><strong>Forever Intelligence</strong><small>Character · leveling · gear · group telemetry</small></span></a>
-        <nav aria-label="Primary navigation">{[["planner", "◆", "Route"], ["dungeons", "▦", "Dungeons"], ["quests", "?", "Quests"], ["loot", "▥", "Loot"], ["profile", "♟", "My Gear"]].map(([id, icon, label]) => <a key={id} className={(page.id === id || id === "dungeons" && page.id === "dungeon") ? "active" : ""} href={appHref(PAGE_PATHS[id])}><span className="nav-icon" aria-hidden="true">{icon}</span>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</a>)}</nav>
+        <nav aria-label="Primary navigation">{[["planner", "◆", "Route"], ["dungeons", "▦", "Dungeons"], ["quests", "?", "Quests"], ["loot", "▥", "Loot"], ["profile", "♟", "My Gear"]].map(([id, icon, label]) => {
+          const active = page.id === id || id === "dungeons" && page.id === "dungeon";
+          return <a key={id} className={active ? "active" : ""} aria-current={active ? "page" : undefined} href={appHref(PAGE_PATHS[id])}><span className="nav-icon" aria-hidden="true">{icon}</span>{label}{id === "profile" && state.wishlist.length > 0 && <span className="nav-count">{state.wishlist.length}</span>}</a>;
+        })}</nav>
         <div className="data-stamp"><span className="status-dot" /><span><strong>LIVE DATA</strong><small>{new Date(snapshot.fetchedAt).toLocaleDateString()}</small></span></div>
       </header>
 

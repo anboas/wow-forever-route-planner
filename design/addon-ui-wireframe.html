@@ -11,7 +11,7 @@
     .frame { fill: #0c121d; stroke: #526073; stroke-width: 2; }
     .surface { fill: #121b29; stroke: #354257; stroke-width: 1.5; }
     .surface2 { fill: #172233; stroke: #40506a; stroke-width: 1.5; }
-    .active { fill: #2c2412; stroke: #e9ad3b; stroke-width: 2; }
+    .active { fill: #172233; stroke: #40506a; stroke-width: 1.5; }
     .telemetry { fill: #101b2d; stroke: #4b9bff; stroke-width: 2; }
     .ready { fill: #10241a; stroke: #4fc97b; stroke-width: 2; }
     .warn { fill: #281418; stroke: #f16a6a; stroke-width: 2; }
@@ -35,7 +35,7 @@
 <svg viewBox="0 0 1900 1320" role="img" aria-label="Actual addon layout wireframe for Forever Route Companion">
   <rect x="0" y="0" width="1900" height="1320" fill="#0a0e15"/>
   <text x="54" y="56" class="h1">Forever Route Companion 1.0</text>
-  <text x="54" y="84" class="small">Actual addon layout wireframe • main frame 760×520 • live HUD 344×58</text>
+  <text x="54" y="84" class="small">Actual addon layout wireframe • targeted interface refinement • main frame 760×520 • live HUD 344×58</text>
   <g transform="translate(1450,42)">
     <rect x="0" y="0" width="390" height="50" rx="6" class="surface"/>
     <circle cx="22" cy="25" r="5" fill="#e9ad3b"/><text x="36" y="30" class="small">gold = action</text>
@@ -51,13 +51,13 @@
     <text x="22" y="38" class="gold" style="font-size:30px;font-weight:900">F</text>
     <text x="60" y="32" class="h2">FOREVER INTELLIGENCE</text>
     <text x="60" y="52" class="small">Character · leveling · gear · group telemetry</text>
-    <text x="830" y="35" class="small green">● LOCAL ONLY</text>
+    <rect x="817" y="14" width="105" height="30" rx="4" class="ready"/><text x="831" y="34" class="small green">● LOCAL ONLY</text>
     <rect x="930" y="15" width="24" height="24" rx="3" class="surface2"/><text x="938" y="33" class="small">×</text>
 
     <!-- left rail 116/760 proportion -->
     <rect x="15" y="72" width="148" height="575" rx="5" fill="#0e1622" stroke="#354257" stroke-width="1.5"/>
     <g transform="translate(25,84)">
-      <rect x="0" y="0" width="128" height="48" rx="4" class="active"/><text x="14" y="29" class="t gold">◆  NOW</text>
+      <rect x="0" y="0" width="128" height="48" rx="4" class="active"/><rect x="0" y="0" width="4" height="48" fill="#e9ad3b"/><text x="14" y="29" class="t gold">◆  NOW</text>
       <rect x="0" y="60" width="128" height="48" rx="4" class="surface"/><text x="14" y="89" class="small">♟  CHARACTER</text>
       <rect x="0" y="120" width="128" height="48" rx="4" class="surface"/><text x="14" y="149" class="small">▥  RUNS</text>
       <rect x="0" y="180" width="128" height="48" rx="4" class="surface"/><text x="14" y="209" class="small">♣  GROUP</text>
@@ -82,7 +82,9 @@
       <rect x="0" y="158" width="766" height="142" rx="5" class="surface"/>
       <text x="17" y="184" class="label">NEXT RUN</text>
       <text x="17" y="216" class="h2">Scarlet Monastery</text>
-      <text x="17" y="242" class="small"><tspan class="green">4 active</tspan> · 1 complete · <tspan class="red">2 missing</tspan></text>
+      <rect x="17" y="226" width="104" height="28" rx="3" class="ready"/><text x="35" y="245" class="small green">4 ACTIVE</text>
+      <rect x="129" y="226" width="102" height="28" rx="3" class="telemetry"/><text x="151" y="245" class="small blue">1 DONE</text>
+      <rect x="239" y="226" width="112" height="28" rx="3" class="warn"/><text x="258" y="245" class="small red">2 MISSING</text>
       <text x="17" y="266" class="tiny">Hearth: Stormwind • recommended level 26–32</text>
       <rect x="548" y="178" width="198" height="38" rx="4" class="telemetry"/><text x="584" y="202" class="t">Import route</text>
       <rect x="548" y="228" width="198" height="38" rx="4" class="surface2"/><text x="574" y="252" class="t">Share with party</text>
@@ -112,6 +114,7 @@
     <text x="20" y="34" class="h2">Scarlet Monastery</text>
     <text x="20" y="62" class="small">2 quests missing · run recording armed</text>
     <rect x="414" y="18" width="86" height="50" rx="4" class="active"/><text x="438" y="48" class="label">NEXT</text>
+    <rect x="5" y="82" width="510" height="3" fill="#e9ad3b"/>
   </g>
 
   <!-- SECONDARY SCREEN CONTACT SHEET -->
@@ -122,7 +125,7 @@
     <g>
       <rect x="0" y="0" width="780" height="264" rx="7" class="frame"/>
       <rect x="0" y="0" width="126" height="264" rx="7" fill="#0e1622" stroke="#354257"/>
-      <rect x="8" y="50" width="110" height="36" rx="4" class="active"/><text x="18" y="73" class="small gold">CHARACTER</text>
+      <rect x="8" y="50" width="110" height="36" rx="4" class="active"/><rect x="8" y="50" width="3" height="36" fill="#e9ad3b"/><text x="18" y="73" class="small gold">CHARACTER</text>
       <text x="146" y="32" class="h2">Thalion · Dreamscythe</text><text x="146" y="53" class="small">PALADIN · HOLY · Scarlet Monastery</text>
       <g transform="translate(146,70)">
         <rect x="0" y="0" width="142" height="58" rx="4" class="surface"/><text x="12" y="20" class="label">LEVEL</text><text x="12" y="46" class="value">28</text>
@@ -143,7 +146,7 @@
     <g transform="translate(0,282)">
       <rect x="0" y="0" width="780" height="264" rx="7" class="frame"/>
       <rect x="0" y="0" width="126" height="264" rx="7" fill="#0e1622" stroke="#354257"/>
-      <rect x="8" y="92" width="110" height="36" rx="4" class="active"/><text x="34" y="115" class="small gold">RUNS</text>
+      <rect x="8" y="92" width="110" height="36" rx="4" class="active"/><rect x="8" y="92" width="3" height="36" fill="#e9ad3b"/><text x="34" y="115" class="small gold">RUNS</text>
       <text x="146" y="32" class="h2">Run history</text><text x="146" y="53" class="small">Newest first · stored locally</text>
       <g transform="translate(146,70)">
         <rect x="0" y="0" width="142" height="58" rx="4" class="surface"/><text x="12" y="20" class="label">RUNS</text><text x="12" y="46" class="value">12</text>
@@ -151,8 +154,9 @@
         <rect x="304" y="0" width="142" height="58" rx="4" class="surface"/><text x="316" y="20" class="label">TIME</text><text x="316" y="46" class="value">8h 14m</text>
         <rect x="456" y="0" width="142" height="58" rx="4" class="surface"/><text x="468" y="20" class="label">DEATHS</text><text x="468" y="46" class="value">7</text>
         <text x="0" y="86" class="label">RECENT RUNS</text>
-        <rect x="0" y="97" width="598" height="34" rx="3" class="surface"/><text x="10" y="119" class="small">Scarlet Monastery</text><text x="260" y="119" class="small">42m</text><text x="340" y="119" class="small gold">48,200 XP</text><text x="455" y="119" class="small blue">6 bosses</text>
-        <rect x="0" y="139" width="598" height="34" rx="3" class="surface"/><text x="10" y="161" class="small">Razorfen Kraul</text><text x="260" y="161" class="small">36m</text><text x="340" y="161" class="small gold">37,480 XP</text><text x="455" y="161" class="small blue">5 bosses</text>
+        <text x="10" y="104" class="tiny">DUNGEON</text><text x="260" y="104" class="tiny">TIME</text><text x="340" y="104" class="tiny">XP</text><text x="455" y="104" class="tiny">BOSSES</text><text x="548" y="104" class="tiny">DEATHS</text>
+        <rect x="0" y="112" width="598" height="30" rx="3" class="surface"/><text x="10" y="132" class="small">Scarlet Monastery</text><text x="260" y="132" class="small">42m</text><text x="340" y="132" class="small gold">48,200</text><text x="455" y="132" class="small blue">6</text><text x="555" y="132" class="small">1</text>
+        <rect x="0" y="148" width="598" height="30" rx="3" class="surface"/><text x="10" y="168" class="small">Razorfen Kraul</text><text x="260" y="168" class="small">36m</text><text x="340" y="168" class="small gold">37,480</text><text x="455" y="168" class="small blue">5</text><text x="555" y="168" class="small green">0</text>
       </g>
     </g>
 
@@ -160,14 +164,15 @@
     <g transform="translate(0,564)">
       <rect x="0" y="0" width="780" height="264" rx="7" class="frame"/>
       <rect x="0" y="0" width="126" height="264" rx="7" fill="#0e1622" stroke="#354257"/>
-      <rect x="8" y="134" width="110" height="36" rx="4" class="active"/><text x="26" y="157" class="small gold">GROUP</text>
+      <rect x="8" y="134" width="110" height="36" rx="4" class="active"/><rect x="8" y="134" width="3" height="36" fill="#e9ad3b"/><text x="26" y="157" class="small gold">GROUP</text>
       <text x="146" y="32" class="h2">Party intelligence</text><text x="146" y="53" class="small">Readiness for the people you always run with</text>
       <g transform="translate(146,74)">
         <text x="0" y="0" class="label">CURRENT PARTY</text>
-        <rect x="0" y="12" width="598" height="36" rx="3" class="surface"/><text x="10" y="35" class="small">Thalion</text><text x="185" y="35" class="small">Paladin · 28</text><text x="510" y="35" class="small green">LEADER</text>
-        <rect x="0" y="56" width="598" height="36" rx="3" class="surface"/><text x="10" y="79" class="small">Melysse</text><text x="185" y="79" class="small">Priest · 28</text><text x="510" y="79" class="small green">ONLINE</text>
-        <text x="0" y="119" class="label">WFRP PEERS</text>
-        <rect x="0" y="131" width="598" height="44" rx="3" class="surface"/><text x="10" y="157" class="small">Melysse</text><text x="140" y="157" class="small blue">Scarlet Monastery</text><text x="420" y="157" class="small red">2 missing · 3 wish</text>
+        <text x="10" y="19" class="tiny">NAME</text><text x="185" y="19" class="tiny">CLASS / LEVEL</text><text x="510" y="19" class="tiny">STATUS</text>
+        <rect x="0" y="27" width="598" height="32" rx="3" class="surface"/><text x="10" y="48" class="small">Thalion</text><text x="185" y="48" class="small">Paladin · 28</text><text x="510" y="48" class="small green">LEADER</text>
+        <rect x="0" y="66" width="598" height="32" rx="3" class="surface"/><text x="10" y="87" class="small">Melysse</text><text x="185" y="87" class="small">Priest · 28</text><text x="510" y="87" class="small green">ONLINE</text>
+        <text x="0" y="121" class="label">WFRP PEERS</text>
+        <rect x="0" y="133" width="598" height="40" rx="3" class="surface"/><text x="10" y="158" class="small">Melysse</text><text x="140" y="158" class="small blue">Scarlet Monastery</text><text x="420" y="158" class="small red">2 missing · 3 wish</text>
       </g>
     </g>
 
@@ -175,7 +180,7 @@
     <g transform="translate(0,846)">
       <rect x="0" y="0" width="780" height="264" rx="7" class="frame"/>
       <rect x="0" y="0" width="126" height="264" rx="7" fill="#0e1622" stroke="#354257"/>
-      <rect x="8" y="176" width="110" height="36" rx="4" class="active"/><text x="34" y="199" class="small gold">SYNC</text>
+      <rect x="8" y="176" width="110" height="36" rx="4" class="active"/><rect x="8" y="176" width="3" height="36" fill="#e9ad3b"/><text x="34" y="199" class="small gold">SYNC</text>
       <text x="146" y="32" class="h2">Website exchange</text><text x="146" y="53" class="small">Versioned local telemetry · nothing uploads automatically</text>
       <rect x="146" y="72" width="598" height="105" rx="5" class="surface"/>
       <text x="164" y="98" class="label">WFRP 1.0 INTELLIGENCE SUITE</text>
@@ -183,12 +188,17 @@
       <text x="164" y="151" class="small">One WFRP2 string updates the web dashboard.</text>
       <rect x="548" y="94" width="176" height="36" rx="4" class="active"/><text x="571" y="117" class="small gold">Export telemetry</text>
       <rect x="548" y="136" width="176" height="36" rx="4" class="surface2"/><text x="577" y="159" class="small">Import web route</text>
-      <text x="146" y="205" class="label green">PRIVACY</text><text x="214" y="205" class="small">SavedVariables until explicitly exported</text>
-      <text x="146" y="231" class="tiny mono">/wfrp · /wfrp export · /wfrp import · /wfrp next · /wfrp share</text>
+      <g transform="translate(146,187)">
+        <rect x="0" y="0" width="142" height="52" rx="4" class="surface"/><text x="10" y="17" class="tiny">RUNS</text><text x="10" y="39" class="h2 blue">12</text>
+        <rect x="152" y="0" width="142" height="52" rx="4" class="surface"/><text x="162" y="17" class="tiny">FLIGHT PATHS</text><text x="162" y="39" class="h2 green">18</text>
+        <rect x="304" y="0" width="142" height="52" rx="4" class="surface"/><text x="314" y="17" class="tiny">ROUTE STOPS</text><text x="314" y="39" class="h2 gold">6</text>
+        <rect x="456" y="0" width="142" height="52" rx="4" class="surface"/><text x="466" y="17" class="tiny">DATASET</text><text x="466" y="39" class="h2 green">LIVE</text>
+      </g>
+      <text x="146" y="254" class="tiny green">LOCAL ONLY · SavedVariables until explicitly exported</text>
     </g>
   </g>
 
-  <text x="54" y="1280" class="tiny">Wireframe reflects the current Lua implementation: exact screen hierarchy and relative proportions, not an aspirational redesign.</text>
+  <text x="54" y="1280" class="tiny">Wireframe reflects the current Lua implementation after the targeted refinement: exact hierarchy and relative proportions, not an aspirational redesign.</text>
 </svg>
 </body>
 </html>
