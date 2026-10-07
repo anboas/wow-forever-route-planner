@@ -34,7 +34,7 @@ for (const page of pages) {
 }
 
 await writeFile(join(dist, "404.html"), documentFor({ title: "Page not found", description: "This Forever Route Planner page does not exist.", path: "not-found" }));
-await writeFile(join(dist, "_redirects"), "/runs/* /runs/index.html 200\n");
+await writeFile(join(dist, "_redirects"), "/runs/* /runs/ 200\n");
 await writeFile(join(dist, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["", ...pages.map((page) => page.path)].map((path) => `  <url><loc>https://wow-forever-route-planner.pages.dev/${path}${path ? "/" : ""}</loc></url>`).join("\n")}\n</urlset>\n`);
 
 process.stdout.write(`Generated ${pages.length + 2} static HTML documents.\n`);

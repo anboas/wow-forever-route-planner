@@ -32,6 +32,37 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 - **Notes**: Explicit WASM-byte initialization successfully converted RagefireChasm.blp into a valid PNG payload.
 
 ---
+## [ERR-20261007-RUN-REWRITE] pages_redirect_target
+
+**Logged**: 2026-10-07T19:19:00Z
+**Priority**: high
+**Status**: resolved
+**Area**: deployment
+
+### Summary
+Cloudflare Pages uploaded the run redirect rule but returned 404 for nested run URLs when the rewrite target named `index.html` directly.
+
+### Error
+```
+GET /runs/public-proof-id/ -> 404
+```
+
+### Context
+- `/runs/index.html` existed and deployment uploaded `_redirects`.
+- The permanent run route required the directory target for Pages index resolution.
+
+### Suggested Fix
+Rewrite `/runs/*` to `/runs/` with status 200, preserving the original URL while allowing Pages to resolve the directory index.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/build-pages.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T19:20:00Z
+- **Notes**: The build now emits `/runs/* /runs/ 200` and production proof checks the nested route directly.
+
+---
 ## [ERR-20261007-PARTIAL-STATE] shallow_state_hydration
 
 **Logged**: 2026-10-07T18:48:00Z
