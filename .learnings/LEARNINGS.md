@@ -27,6 +27,34 @@ Keep the existing flat dashboard design language. Present map, quests, encounter
 
 ---
 
+## [LRN-20261006-FILTER-PROXIMITY] correction
+
+**Logged**: 2026-10-06T22:32:00-04:00
+**Priority**: high
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+Do not move a primary filter away from the results it controls merely to fill otherwise unused layout space.
+
+### Details
+The map-canvas correction moved the boss loot filter into the map/quest sidebar. This filled the sidebar, but on dungeons with few bosses the controls stretched into oversized rows, and the filter was visually disconnected from the loot table below. The layout improved its space-usage metric while making the actual loot-filtering workflow harder.
+
+### Suggested Action
+Keep a compact, horizontal boss filter immediately above dungeon loot results. Use the map sidebar only for contextual quest and encounter information. Regression tests should assert filter/result proximity, compact control height, visible counts, and boss-filter behavior at ultrawide and mobile sizes.
+
+### Metadata
+- Source: user_feedback
+- Related Files: src/App.jsx, src/styles.css, scripts/verify-site.mjs
+- Tags: filters, proximity, loot, density, workflow
+- See Also: LRN-20261006-MAP-CANVAS-UTILITY
+
+### Resolution
+- **Resolved**: 2026-10-06T22:39:00-04:00
+- **Notes**: Replaced the stretched sidebar control with a 47px horizontal boss strip directly above loot controls/results, kept the sidebar encounter list read-only and compact, and added browser assertions for proximity, height, counts, filtering, and mobile overflow.
+
+---
+
 ## [LRN-20261006-MAP-CANVAS-UTILITY] correction
 
 **Logged**: 2026-10-06T22:08:00-04:00
@@ -51,6 +79,33 @@ Exclude `client-overhead` assets from navigable floor controls when a sourced ro
 
 ### Resolution
 - **Resolved**: 2026-10-06T22:28:00-04:00
-- **Notes**: Removed exterior terrain mosaics from navigable dungeon floors, replaced the full-height metadata rail with a 42px caption, compressed title/metrics/actions into one 64px command bar, and moved the encounter filter beside the quest ledger. Browser gates now measure command-bar height, caption height, full-width map occupancy, and the Ruins route-map default.
+- **Notes**: Removed exterior terrain mosaics from navigable dungeon floors, replaced the full-height metadata rail with a 42px caption, compressed title/metrics/actions into one 64px command bar, and kept a compact read-only encounter index beside the quest ledger. Browser gates now measure command-bar height, caption height, full-width map occupancy, and the Ruins route-map default.
+
+---
+
+## [LRN-20261006-PLAYWRIGHT-CORE] error
+
+**Logged**: 2026-10-06T22:38:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tooling
+
+### Summary
+Use the repository's installed `playwright-core` package for ad hoc visual probes, not `playwright`.
+
+### Details
+The project browser gate imports `playwright-core`, but an ad hoc screenshot command imported `playwright` and failed before launching Chromium because that package is not installed.
+
+### Suggested Action
+Mirror `scripts/verify-site.mjs`: import `playwright-core`, discover `/usr/bin/chromium-browser`, and pass `--no-sandbox` for local visual review.
+
+### Metadata
+- Source: tool_error
+- Related Files: scripts/verify-site.mjs, scripts/capture-screenshots.mjs
+- Tags: playwright, visual-review, tooling
+
+### Resolution
+- **Resolved**: 2026-10-06T22:38:00-04:00
+- **Notes**: Re-ran the 1920px visual proof with `playwright-core`; the boss strip measured 47px high, exposed all boss choices and counts, and produced zero horizontal overflow.
 
 ---

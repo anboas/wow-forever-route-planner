@@ -949,20 +949,13 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
         <section className="dense-map"><DungeonMapPanel dungeon={dungeon} map={map} /></section>
         <aside className="dense-side-stack">
           <section className="dense-quests"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p>Open for pickup map, prerequisites, rewards, and Forever source.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>
-          <nav className="loot-source-nav" aria-label="Filter dungeon loot by encounter">
-            <header><span>Loot sources</span><strong>Jump to a boss</strong></header>
-            <button aria-pressed={bossFilter === "all" && sourceFilter === "all"} onClick={() => selectLootGroup("all")}><span>All items</span><b>{factionLoot.length}</b></button>
-            {bossCounts.map(({ boss, count }, index) => <button key={boss} data-boss={boss} aria-pressed={bossFilter === boss} onClick={() => selectLootGroup("all", boss)}><em>{String(index + 1).padStart(2, "0")}</em><span>{boss}</span><b>{count}</b></button>)}
-            <div className="loot-source-nav-divider">Other sources</div>
-            <button aria-pressed={sourceFilter === "quest"} onClick={() => selectLootGroup("quest")}><em>!</em><span>Quest rewards</span><b>{sourceCounts.quest || 0}</b></button>
-            {!!sourceCounts.drop && <button aria-pressed={sourceFilter === "drop"} onClick={() => selectLootGroup("drop")}><em>◆</em><span>Boss / mob</span><b>{sourceCounts.drop}</b></button>}
-            {!!sourceCounts.trash && <button aria-pressed={sourceFilter === "trash"} onClick={() => selectLootGroup("trash")}><em>◇</em><span>Trash</span><b>{sourceCounts.trash}</b></button>}
-          </nav>
+          <section className="encounter-summary" aria-label={`${dungeon.name} encounter index`}><header><span className="section-kicker">Encounter index</span><h3>{bossCounts.length} bosses</h3></header><ol>{bossCounts.map(({ boss, count }, index) => <li key={boss}><em>{String(index + 1).padStart(2, "0")}</em><a href={entitySourceUrl({ name: boss }, dungeon)} target="_blank" rel="noreferrer">{boss} ↗</a><b>{count} item{count === 1 ? "" : "s"}</b></li>)}</ol><footer><span>Quest rewards <b>{sourceCounts.quest || 0}</b></span><span>Other drops <b>{(sourceCounts.drop || 0) + (sourceCounts.trash || 0)}</b></span></footer></section>
         </aside>
       </div>
       <section className="dungeon-loot-workbench">
         <div className="dungeon-loot-column">
           <header className="dungeon-loot-heading"><div><span className="section-kicker">Dungeon loot</span><h3>{bossFilter !== "all" ? bossFilter : sourceFilter === "quest" ? "Quest rewards" : "All items"}</h3></div><strong>{loot.length} of {factionLoot.length} items</strong></header>
+          <nav className="boss-filter-strip" aria-label="Filter dungeon loot by boss"><span>Boss</span><button aria-pressed={bossFilter === "all"} onClick={() => selectLootGroup("all")}>All <b>{factionLoot.filter((item) => itemSourceMeta(item, dungeon).kind === "boss").length}</b></button>{bossCounts.map(({ boss, count }, index) => <button key={boss} data-boss={boss} aria-pressed={bossFilter === boss} onClick={() => selectLootGroup("all", boss)}><em>{String(index + 1).padStart(2, "0")}</em>{boss}<b>{count}</b></button>)}</nav>
           <div className="dungeon-loot-controls">
             <div className="detail-filter-label"><strong>Loot controls</strong><span>{classFilter === "all" ? "Every class" : `${humanize(classFilter)} · ${specProfile(classFilter, selectedSpec).label}`}</span></div>
             <ClassFilterStrip value={classFilter} onChange={setClassFilter} compact />
