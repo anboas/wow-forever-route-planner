@@ -272,7 +272,15 @@ try {
   await page.getByRole("link", { name: "Dungeons", exact: true }).click();
   await page.getByRole("link", { name: /Ragefire Chasm/ }).click();
   assert.equal(await page.locator(".dungeon-loot-column .class-filter-strip.compact button").count(), 10, "mobile dungeon detail keeps every class filter reachable");
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile dungeon detail overflow");
+  const mobileDungeonWidth = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+    offenders: [...document.querySelectorAll("*")]
+      .map((element) => ({ selector: `${element.tagName.toLowerCase()}.${String(element.className || "").trim().replaceAll(" ", ".")}`, right: Math.round(element.getBoundingClientRect().right), text: String(element.textContent || "").trim().slice(0, 36), href: element.getAttribute?.("href") || "" }))
+      .filter(({ right }) => right > document.documentElement.clientWidth)
+      .slice(0, 6),
+  }));
+  assert.ok(mobileDungeonWidth.scrollWidth <= mobileDungeonWidth.clientWidth, `mobile dungeon detail overflow: ${mobileDungeonWidth.scrollWidth}px > ${mobileDungeonWidth.clientWidth}px; ${JSON.stringify(mobileDungeonWidth.offenders)}`);
   await page.getByRole("link", { name: "Route", exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true, "mobile overflow");
   assert.equal(await page.locator(".route-step").count(), 3);

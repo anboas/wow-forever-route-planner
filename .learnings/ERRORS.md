@@ -33,6 +33,39 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 
 ---
 
+## [ERR-20261007-MOBILE-NAV-WISHLIST-OVERFLOW] Wishlist count widened the compact primary navigation
+
+**Logged**: 2026-10-07T10:30:32-04:00
+**Priority**: medium
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+The addon-language navigation passed on a clean 390px profile but overflowed after the browser contract added one wishlist item.
+
+### Error
+```
+mobile dungeon detail overflow: 408px > 390px
+```
+
+### Context
+- The primary navigation contains five equal-width links at mobile widths.
+- The `My Gear` wishlist badge participated in the link's intrinsic width after stateful browser interactions.
+- A clean screenshot without wishlist state did not reproduce the contract failure.
+
+### Suggested Fix
+Keep state badges out of mobile flex sizing and make browser overflow failures report measured widths and offending elements.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/styles.css, scripts/verify-site.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T10:30:32-04:00
+- **Notes**: Positioned the mobile wishlist badge absolutely, removed its layout width, and upgraded the regression assertion with page-width and offender diagnostics. Rebuilt production assets before rerunning the browser gate.
+
+---
+
 ## [ERR-20261007-WIREFRAME-PLAYWRIGHT] Project-local Playwright assumption blocked PNG export
 
 **Logged**: 2026-10-07T09:04:00-04:00
