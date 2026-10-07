@@ -725,6 +725,23 @@ function LootListEntry({ item, dungeon }) {
   );
 }
 
+function DungeonMapPanel({ dungeon, map }) {
+  const [floorIndex, setFloorIndex] = useState(0);
+  useEffect(() => setFloorIndex(0), [dungeon.id]);
+  const floors = map?.floors || (map ? [{ name: "Instance map", src: map.src }] : []);
+  const floor = floors[Math.min(floorIndex, Math.max(0, floors.length - 1))];
+  const isSchematic = map?.kind === "route-schematic";
+  return (
+    <div className={`dungeon-map-panel ${isSchematic ? "map-schematic" : ""}`}>
+      <div className="dungeon-map-stage">
+        {map ? <img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${isSchematic ? "route schematic" : "instance map"}`} /> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
+        {floors.length > 1 && <div className="map-floor-tabs" aria-label={`${dungeon.name} map floors`}>{floors.map((entry, index) => <button key={entry.name} aria-pressed={index === floorIndex} onClick={() => setFloorIndex(index)}>{entry.name}</button>)}</div>}
+      </div>
+      <div><span>{isSchematic ? "Sourced route schematic" : "Instance map"}</span><strong>{dungeon.name}</strong>{map ? <a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a> : <a href={dungeon.lootSourceUrl} target="_blank" rel="noreferrer">Watch source coverage ↗</a>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
+    </div>
+  );
+}
+
 function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin, onClose, onAddRoute, onPlanNext }) {
   const [classFilter, setClassFilter] = useState(characterClass || "all");
   const [fitMode, setFitMode] = useState("usable");
@@ -767,10 +784,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
         <div className="summary-card"><span>Detailed quests</span><strong>{verified}</strong></div>
         <div className="summary-card"><span>Snapshot</span><strong>{new Date(snapshot.fetchedAt).toLocaleDateString()}</strong></div>
       </div>
-      <div className="dungeon-map-panel">
-        {map ? <img src={assetUrl(map.src)} alt={`${dungeon.name} instance map`} /> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public instance map is available yet.</small></div>}
-        <div><span>Instance map</span><strong>{dungeon.name}</strong>{map ? <a href={map.sourceUrl} target="_blank" rel="noreferrer">AtlasLootClassic · {map.license} ↗</a> : <a href={dungeon.lootSourceUrl} target="_blank" rel="noreferrer">Watch source coverage ↗</a>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>Source order only. Coordinates remain unclaimed unless the map source provides them.</small></div></div>
-      </div>
+      <DungeonMapPanel dungeon={dungeon} map={map} />
       <p className="inspect-hint">Hover or focus for the full in-game-style card. Click quests to pin them; click items to open Wowhead.</p>
       <div className="detail-columns">
         <div><h3>{humanize(faction)} quests <span>{quests.length}</span></h3><ul className="simple-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></div>
@@ -804,7 +818,7 @@ function Dungeons({ dungeons, faction, characterClass, characterSpec, onPin, sel
     <main className="library-shell">
       <header className="library-header"><div><div className="section-kicker">Dungeon atlas</div><h1>All Forever dungeons</h1><p>{dungeons.length} instances with quest and loot coverage.</p></div><div className="library-filters"><input type="search" placeholder="Search dungeon or zone" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={band} onChange={(event) => setBand(event.target.value)}><option value="all">All levels</option>{[10, 20, 30, 40, 50].map((value) => <option key={value} value={value}>Levels {value}–{value + 9}</option>)}</select></div></header>
       <DungeonDetail dungeon={selected} faction={faction} characterClass={characterClass} characterSpec={characterSpec} onPin={onPin} onClose={() => setSelected(null)} onAddRoute={onAddRoute} onPlanNext={onPlanNext} />
-      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; const visibleLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction)); const counts = visibleLoot.reduce((result, item) => { const kind = itemSourceMeta(item, dungeon).kind; return { ...result, [kind]: (result[kind] || 0) + 1 }; }, {}); return <button className="dungeon-card" key={dungeon.id} onClick={() => setSelected(dungeon)}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} quests</span><span>{counts.boss || 0} boss</span><span>{counts.quest || 0} quest rewards</span><span>{dungeonMaps[dungeon.id] ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></button>; })}</div>
+      <div className="dungeon-grid">{filtered.map((dungeon) => { const questCount = dungeon.quests.filter((quest) => matchesFaction(quest.faction, faction)).length; const visibleLoot = dungeon.loot.filter((item) => lootVisibleForFaction(item, dungeon, faction)); const counts = visibleLoot.reduce((result, item) => { const kind = itemSourceMeta(item, dungeon).kind; return { ...result, [kind]: (result[kind] || 0) + 1 }; }, {}); const map = dungeonMaps[dungeon.id]; return <button className="dungeon-card" key={dungeon.id} onClick={() => setSelected(dungeon)}><span className="dungeon-level">{dungeon.level[0]}–{dungeon.level[1]}</span>{dungeon.kind === "new" && <span className="new-badge">NEW</span>}<h2>{dungeon.name}</h2><p>{dungeon.location || "Location details pending"}</p><div><span>{questCount} quests</span><span>{counts.boss || 0} boss</span><span>{counts.quest || 0} quest rewards</span><span>{map?.kind === "route-schematic" ? "Route map" : map ? "Map" : "Map pending"}</span></div><small>{dungeon.dataCoverage === "detailed" ? "Detailed beta data" : "Loot catalog coverage"}</small></button>; })}</div>
     </main>
   );
 }

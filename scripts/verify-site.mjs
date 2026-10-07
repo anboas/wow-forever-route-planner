@@ -78,6 +78,18 @@ try {
   assert.equal(await page.getByRole("button", { name: "Add to route", exact: true }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Plan next", exact: true }).count(), 1);
   assert.ok(await page.locator(".encounter-order a").count() >= 4, "map panel exposes a sourced encounter index");
+  await page.getByRole("button", { name: "Close dungeon details", exact: true }).click();
+  await page.getByPlaceholder("Search dungeon or zone").fill("Hall of Thanes");
+  await page.getByRole("button", { name: /Hall of Thanes/ }).click();
+  assert.equal(await page.locator(".dungeon-map-panel.map-schematic img").count(), 1, "Hall of Thanes exposes a coordinate-derived route schematic");
+  assert.match(await page.locator(".dungeon-map-panel").innerText(), /Sourced route schematic[\s\S]*no third-party map artwork copied/i);
+  assert.match(await page.locator(".dungeon-map-panel img").getAttribute("alt"), /route schematic/i);
+  await page.getByRole("button", { name: "Close dungeon details", exact: true }).click();
+  await page.getByPlaceholder("Search dungeon or zone").fill("City of Dalaran");
+  await page.getByRole("button", { name: /City of Dalaran/ }).click();
+  assert.equal(await page.locator(".map-floor-tabs button").count(), 2, "City of Dalaran exposes both sourced floors");
+  await page.getByRole("button", { name: "City of Dalaran", exact: true }).click();
+  assert.equal(await page.getByRole("button", { name: "City of Dalaran", exact: true }).getAttribute("aria-pressed"), "true");
 
   await page.getByRole("button", { name: "Quests", exact: true }).click();
   const expectedHordeQuests = snapshot.dungeons.flatMap((dungeon) => dungeon.quests).filter((quest) => !quest.faction || quest.faction === "both" || quest.faction === "horde").length;

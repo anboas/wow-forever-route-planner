@@ -13,12 +13,26 @@ const loot = snapshot.dungeons.flatMap((dungeon) => dungeon.loot);
 assert.equal(loot.filter((item) => item.icon).length, loot.length, "every loot record should carry an icon slug");
 
 const maps = JSON.parse(await readFile(new URL("../src/data/dungeon-maps.json", import.meta.url), "utf8"));
-assert.ok(Object.keys(maps).length >= 25, "expected the available Classic instance map set");
-for (const map of Object.values(maps)) {
-  assert.equal(map.license, "GPL-2.0");
-  assert.ok(map.sourceUrl.startsWith("https://github.com/Hoizame/AtlasLootClassic_Maps/"));
-  await access(new URL(`../public/${map.src}`, import.meta.url));
+assert.ok(Object.keys(maps).length >= 29, "expected Classic maps plus sourced Forever route schematics");
+for (const [dungeonId, map] of Object.entries(maps)) {
+  assert.ok(["instance-map", "route-schematic"].includes(map.kind), `${dungeonId} needs an explicit map kind`);
+  if (map.kind === "instance-map") {
+    assert.equal(map.license, "GPL-2.0");
+    assert.ok(map.sourceUrl.startsWith("https://github.com/Hoizame/AtlasLootClassic_Maps/"));
+    await access(new URL(`../public/${map.src}`, import.meta.url));
+  } else {
+    assert.ok(map.sourceUrl.startsWith("https://github.com/nwh-gaming-ab/NaowhForever/"));
+    assert.match(map.attribution, /no third-party map artwork copied/i);
+    assert.ok(map.floors.length >= 1);
+    for (const floor of map.floors) {
+      assert.ok(floor.name && floor.pinCount >= 1);
+      await access(new URL(`../public/${floor.src}`, import.meta.url));
+    }
+  }
 }
+for (const dungeonId of ["hall-of-thanes", "ruins-of-lordaeron", "excavation-site", "dalaran"]) assert.equal(maps[dungeonId].kind, "route-schematic", `expected sourced schematic for ${dungeonId}`);
+assert.equal(maps.dalaran.floors.length, 2, "City of Dalaran should expose both sourced floors");
+for (const dungeonId of ["the-drowned-city", "krol-dok-stronghold", "alcaz-prison", "blackmaw-hold", "shaper-s-terrace"]) assert.equal(maps[dungeonId], undefined, `${dungeonId} should remain pending until interior coordinates are public`);
 
 for (const dungeon of snapshot.dungeons) {
   assert.ok(dungeon.id && dungeon.name);

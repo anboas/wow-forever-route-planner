@@ -20,7 +20,7 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - WoW/Wowhead-inspired item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct Wowhead item/search links.
 - Faction-aware quest and reward archives that omit opposing-faction records entirely.
 - Wishlist, equipped-slot comparisons, party-interest profiles, normalized drop chances, and estimated runs for 50%, 75%, and 90% acquisition confidence.
-- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, and 25 source-licensed Classic instance maps.
+- Per-dungeon drill-downs expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, 25 source-licensed Classic instance maps, and sourced route schematics for the four Forever dungeons with public interior coordinates.
 - Named route presets, shareable planner/filter URLs, source freshness labels, deep source links, and prefilled data-report links.
 - Compact responsive workspace with persistent planner, filters, gear, wishlist, party, preset, and collapsed-group state in local storage.
 
@@ -33,9 +33,10 @@ The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → S
 - [Warcraft Tavern](https://www.warcrafttavern.com/forever/guides/dungeons/): dungeon ranges, locations, and the quest-centered XP model.
 - [Wowhead Classic](https://www.wowhead.com/classic): stable public item deep links/search targets and Blizzard-style icon delivery.
 - [AtlasLootClassic Maps](https://github.com/Hoizame/AtlasLootClassic_Maps): GPL-2.0 Classic instance maps converted from BLP to checked-in PNG assets.
+- [NaowhForever dungeon map pins](https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua): factual entrance, floor, boss-order, and normalized pin coordinates for Hall of Thanes, Ruins of Lordaeron, Excavation Site: Wetlands, and City of Dalaran. The app generates its own not-to-scale SVG route schematics and does not copy the addon's all-rights-reserved map artwork.
 - [Warcraft Wiki](https://warcraft.wiki.gg/wiki/Experience_to_level): Classic XP curve reference.
 
-Run `npm run sync:all` to rebuild every checked-in integration. `sync:context` atomically normalizes the WOWF.IO sitemap corpus; `sync:data` merges dungeon/loot sources with quest chains, class/spec guide recommendations, and world positions; `sync:maps` deterministically rebuilds the licensed PNG map set; `sync:addon` regenerates the addon quest catalog and downloadable ZIP. Validation fails closed before a generated snapshot replaces the prior version. Beta values can change; unverified quest XP remains excluded from route totals.
+Run `npm run sync:all` to rebuild every checked-in integration. `sync:context` atomically normalizes the WOWF.IO sitemap corpus; `sync:data` merges dungeon/loot sources with quest chains, class/spec guide recommendations, and world positions; `sync:maps` deterministically rebuilds the licensed PNG map set plus original coordinate-derived Forever route schematics; `sync:addon` regenerates the addon quest catalog and downloadable ZIP. Validation fails closed before a generated snapshot replaces the prior version. Beta values can change; unverified quest XP remains excluded from route totals.
 
 The scheduled `Refresh source-backed data` GitHub Actions workflow runs the same pipeline daily, validates every non-browser data/planner contract plus the Cloudflare production build, publishes a health summary, and opens a review pull request only when checked source artifacts changed. Production is never mutated directly by the refresh job.
 

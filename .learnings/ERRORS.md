@@ -33,6 +33,72 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 
 ---
 
+## [ERR-20261006-GH-CODE-SEARCH-METHOD] GitHub code search used the write request method
+
+**Logged**: 2026-10-06T20:00:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: config
+
+### Summary
+`gh api search/code` returned 404 because `-f` switched the request to POST instead of sending a GET query.
+
+### Error
+```
+HTTP 404: Not Found
+```
+
+### Context
+- The probe was looking for public map assets for Forever-original dungeons.
+- GitHub's code-search endpoint accepts a GET request with query parameters.
+
+### Suggested Fix
+Use `gh api --method GET search/code -f q=...`, or `gh search code`, for repository-wide public code searches.
+
+### Metadata
+- Reproducible: yes
+- Related Files: none
+
+### Resolution
+- **Resolved**: 2026-10-06T20:00:00-04:00
+- **Notes**: Corrected the request method before continuing source discovery.
+
+---
+
+## [ERR-20261006-FOREVER-MAP-SOURCE-LIMITS] Map research sources blocked or exhausted auxiliary probes
+
+**Logged**: 2026-10-06T20:05:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: config
+
+### Summary
+Icy Veins returned a bot-protection 403, GitHub code search reached its API quota, and the native image viewer could not render generated SVG files directly.
+
+### Error
+```
+Icy Veins: HTTP 403
+GitHub search: API rate limit exceeded
+view_image: invalid or unsupported image data
+```
+
+### Context
+- These were auxiliary discovery and visual-review paths for Forever dungeon maps.
+- WOWF.IO, Wago Tools, raw GitHub files, and repository Playwright remained available.
+
+### Suggested Fix
+Use checked raw source URLs for deterministic adapters, browser-render SVGs before visual inspection, and reserve GitHub code search for bounded discovery.
+
+### Metadata
+- Reproducible: yes
+- Related Files: scripts/sync-maps.mjs
+
+### Resolution
+- **Resolved**: 2026-10-06T20:05:00-04:00
+- **Notes**: Built original SVG route schematics from NaowhForever's raw coordinate data and reviewed them through the app's Playwright render path.
+
+---
+
 ## [ERR-20261006-PUBLIC-NETWORKIDLE] Public browser proof waited indefinitely for network idle
 
 **Logged**: 2026-10-06T18:20:00-04:00
