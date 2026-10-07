@@ -828,7 +828,9 @@ function DungeonMapPanel({ dungeon, map }) {
     resetMap();
   }, [dungeon.id]);
   useEffect(() => resetMap(), [floorIndex]);
-  const floors = map?.floors || (map ? [{ name: "Instance map", src: map.src }] : []);
+  const sourceFloors = map?.floors || (map ? [{ name: "Instance map", src: map.src }] : []);
+  const usefulFloors = sourceFloors.filter((entry) => entry.kind !== "client-overhead");
+  const floors = usefulFloors.length ? usefulFloors : sourceFloors;
   const floor = floors[Math.min(floorIndex, Math.max(0, floors.length - 1))];
   const floorKind = floor?.kind || map?.kind;
   const isSchematic = floorKind === "route-schematic";
@@ -886,7 +888,7 @@ function DungeonMapPanel({ dungeon, map }) {
         {map && <div className="map-controls" role="group" aria-label="Map controls"><button onClick={() => zoomBy(-.25)} aria-label="Zoom map out">−</button><output ref={zoomLabelRef} aria-live="polite">100%</output><button onClick={() => zoomBy(.25)} aria-label="Zoom map in">+</button><button onClick={resetMap}>Reset</button><button onClick={toggleFullscreen} aria-label="View map fullscreen">Fullscreen</button></div>}
         {floors.length > 1 && <div className="map-floor-tabs" aria-label={`${dungeon.name} map floors`}>{floors.map((entry, index) => <button key={entry.name} aria-pressed={index === floorIndex} onClick={() => setFloorIndex(index)}>{entry.name}</button>)}</div>}
       </div>
-      <div><span>{mapLabel}</span><strong>{dungeon.name}</strong>{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a>{map.clientSourceUrl && <a href={map.clientSourceUrl} target="_blank" rel="noreferrer">Forever client build ↗</a>}</> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch Forever coverage ↗</a>}{(floor?.quality || map?.quality) && <small className="map-quality">{floor?.quality || map?.quality}</small>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
+      <footer className="map-caption" title={floor?.quality || map?.quality || "Verified map source"}><div><span>{mapLabel}</span><strong>{floor?.name || dungeon.name}</strong></div><nav aria-label="Map sources">{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">Source ↗</a></> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch coverage ↗</a>}</nav></footer>
     </div>
   );
 }
@@ -932,31 +934,33 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
   return (
     <section className="detail-panel panel dense-detail">
       {onClose && <button className="detail-close" onClick={onClose} aria-label="Close dungeon details">×</button>}
-      <header className="dense-detail-header">
-        <div><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
+      <header className="dungeon-command-bar">
+        <div className="dense-detail-title"><div className="section-kicker">{dungeon.kind === "new" ? "Forever dungeon" : "Classic dungeon"}</div><h2>{dungeon.name}</h2><p>Levels {dungeon.level.join("–")} · {dungeon.location || "Location not yet verified"}</p></div>
+        <div className="dense-summary-bar" aria-label={`${dungeon.name} summary`}>
+          <span><small>Loot</small><strong>{factionLoot.length}</strong></span>
+          <span><small>{humanize(faction)} quests</small><strong>{quests.length}</strong></span>
+          <span><small>Forever quest XP</small><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></span>
+          <span><small>Boss / quest loot</small><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></span>
+          <span><small>Map coverage</small><strong>{map ? `${(map.floors || []).filter((entry) => entry.kind !== "client-overhead").length || 1} floor${((map.floors || []).filter((entry) => entry.kind !== "client-overhead").length || 1) === 1 ? "" : "s"}` : "Pending"}</strong></span>
+        </div>
         <div className="detail-actions"><button onClick={() => onAddRoute(dungeon.id)}>Add to route</button><button onClick={() => onPlanNext(dungeon.id)}>Plan next</button><a href={reportIssueUrl({ dungeon })} target="_blank" rel="noreferrer">Report</a></div>
       </header>
-      <div className="dense-summary-bar" aria-label={`${dungeon.name} summary`}>
-        <span><small>Loot</small><strong>{factionLoot.length}</strong></span>
-        <span><small>{humanize(faction)} quests</small><strong>{quests.length}</strong></span>
-        <span><small>Forever quest XP</small><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></span>
-        <span><small>Boss / quest loot</small><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></span>
-        <span><small>Map coverage</small><strong>{map ? `${map.floors?.length || 1} floor${(map.floors?.length || 1) === 1 ? "" : "s"}` : "Pending"}</strong></span>
-      </div>
       <div className="dense-overview-grid">
         <section className="dense-map"><DungeonMapPanel dungeon={dungeon} map={map} /></section>
-        <section className="dense-quests"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p>Open for pickup map, prerequisites, rewards, and Forever source.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>
+        <aside className="dense-side-stack">
+          <section className="dense-quests"><header><div><span className="section-kicker">Quest ledger</span><h3>{humanize(faction)} quests</h3></div><strong>{verified} detailed · {quests.length} visible</strong></header><p>Open for pickup map, prerequisites, rewards, and Forever source.</p><ul className="simple-list dungeon-quest-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></section>
+          <nav className="loot-source-nav" aria-label="Filter dungeon loot by encounter">
+            <header><span>Loot sources</span><strong>Jump to a boss</strong></header>
+            <button aria-pressed={bossFilter === "all" && sourceFilter === "all"} onClick={() => selectLootGroup("all")}><span>All items</span><b>{factionLoot.length}</b></button>
+            {bossCounts.map(({ boss, count }, index) => <button key={boss} data-boss={boss} aria-pressed={bossFilter === boss} onClick={() => selectLootGroup("all", boss)}><em>{String(index + 1).padStart(2, "0")}</em><span>{boss}</span><b>{count}</b></button>)}
+            <div className="loot-source-nav-divider">Other sources</div>
+            <button aria-pressed={sourceFilter === "quest"} onClick={() => selectLootGroup("quest")}><em>!</em><span>Quest rewards</span><b>{sourceCounts.quest || 0}</b></button>
+            {!!sourceCounts.drop && <button aria-pressed={sourceFilter === "drop"} onClick={() => selectLootGroup("drop")}><em>◆</em><span>Boss / mob</span><b>{sourceCounts.drop}</b></button>}
+            {!!sourceCounts.trash && <button aria-pressed={sourceFilter === "trash"} onClick={() => selectLootGroup("trash")}><em>◇</em><span>Trash</span><b>{sourceCounts.trash}</b></button>}
+          </nav>
+        </aside>
       </div>
       <section className="dungeon-loot-workbench">
-        <aside className="loot-source-nav" aria-label="Filter dungeon loot by encounter">
-          <header><span>Sources</span><strong>Bosses</strong></header>
-          <button aria-pressed={bossFilter === "all" && sourceFilter === "all"} onClick={() => selectLootGroup("all")}><span>All items</span><b>{factionLoot.length}</b></button>
-          {bossCounts.map(({ boss, count }, index) => <button key={boss} data-boss={boss} aria-pressed={bossFilter === boss} onClick={() => selectLootGroup("all", boss)}><em>{String(index + 1).padStart(2, "0")}</em><span>{boss}</span><b>{count}</b></button>)}
-          <div className="loot-source-nav-divider">Other sources</div>
-          <button aria-pressed={sourceFilter === "quest"} onClick={() => selectLootGroup("quest")}><em>!</em><span>Quest rewards</span><b>{sourceCounts.quest || 0}</b></button>
-          {!!sourceCounts.drop && <button aria-pressed={sourceFilter === "drop"} onClick={() => selectLootGroup("drop")}><em>◆</em><span>Boss / mob</span><b>{sourceCounts.drop}</b></button>}
-          {!!sourceCounts.trash && <button aria-pressed={sourceFilter === "trash"} onClick={() => selectLootGroup("trash")}><em>◇</em><span>Trash</span><b>{sourceCounts.trash}</b></button>}
-        </aside>
         <div className="dungeon-loot-column">
           <header className="dungeon-loot-heading"><div><span className="section-kicker">Dungeon loot</span><h3>{bossFilter !== "all" ? bossFilter : sourceFilter === "quest" ? "Quest rewards" : "All items"}</h3></div><strong>{loot.length} of {factionLoot.length} items</strong></header>
           <div className="dungeon-loot-controls">
