@@ -17,7 +17,7 @@ Public, responsive WoW Forever dungeon companion for planning quest-driven level
 - Searchable dungeon, quest, and uncapped loot libraries with explicit detailed/partial beta coverage states.
 - Class, specialization, role, usable/recommended, source, slot, rarity, level, and wishlist filters with transparent rules-based fit icons.
 - Dungeon-to-boss loot browsing with explicit Boss, Quest reward, Mob, Trash, and Unknown source labels and remembered collapsible groups.
-- WoW/Wowhead-inspired item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct Wowhead item/search links.
+- WoW-style item and quest cards positioned by the pointer, keyboard focus support, persistent quest trays, hoverable reward items, and direct WoW Forever item/quest links.
 - Faction-aware quest and reward archives that omit opposing-faction records entirely.
 - Wishlist, equipped-slot comparisons, party-interest profiles, normalized drop chances, and estimated runs for 50%, 75%, and 90% acquisition confidence.
 - Per-dungeon drill-downs expose every associated quest, drop, boss/source record, prerequisite checklist, source-ordered encounter index, 25 source-licensed Classic instance maps, and sourced route schematics for the four Forever dungeons with public interior coordinates.
@@ -31,7 +31,8 @@ The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → S
 - [WOWF.IO](https://wowf.io/sitemap.xml): complete published English quest, zone, leveling-guide, dungeon, and beta-client compilation. Every retained context record carries source URL, source update time, retrieval time, and review state.
 - [wowtbc.gg](https://wowtbc.gg/warcraftforever/loot-tables/dungeons/): full dungeon and loot catalog cross-check.
 - [Warcraft Tavern](https://www.warcrafttavern.com/forever/guides/dungeons/): dungeon ranges, locations, and the quest-centered XP model.
-- [Wowhead Classic](https://www.wowhead.com/classic): stable public item deep links/search targets and Blizzard-style icon delivery.
+- [WOWF.IO dungeon and quest pages](https://wowf.io/en/dungeons): Forever-native item anchors, quest pages, zone links, and item icon delivery.
+- [NaowhForever quest chains](https://github.com/nwh-gaming-ab/NaowhForever): explicit prerequisites, quest giver coordinates, and Forever quest metadata.
 - [AtlasLootClassic Maps](https://github.com/Hoizame/AtlasLootClassic_Maps): GPL-2.0 Classic instance maps converted from BLP to checked-in PNG assets.
 - [NaowhForever dungeon map pins](https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua): factual entrance, floor, boss-order, and normalized pin coordinates for Hall of Thanes, Ruins of Lordaeron, Excavation Site: Wetlands, and City of Dalaran. The app generates its own not-to-scale SVG route schematics and does not copy the addon's all-rights-reserved map artwork.
 - [Warcraft Wiki](https://warcraft.wiki.gg/wiki/Experience_to_level): Classic XP curve reference.

@@ -145,6 +145,7 @@ for (const [dungeonId, filename] of Object.entries(maps)) {
     source: "AtlasLootClassic Maps",
     sourceUrl: `${sourceRepo}/blob/master/${filename}`,
     license: "GPL-2.0",
+    quality: "Native 512×512 source texture",
   };
   process.stdout.write(`Mapped ${dungeonId} from ${filename}\n`);
 }
@@ -178,6 +179,7 @@ for (const [dungeonId, config] of Object.entries(foreverSchematics)) {
     source: "NaowhForever dungeon map pins",
     sourceUrl: foreverMapSourceUrl,
     attribution: "Original Route Planner schematic generated from sourced in-game entrance and boss coordinates; no third-party map artwork copied.",
+    quality: "Resolution-independent SVG",
     note: "Pins and encounter sequence are source-backed. Connector lines are schematic and do not claim walkable geometry.",
   };
   process.stdout.write(`Generated ${floors.length} sourced route schematic(s) for ${dungeonId}\n`);

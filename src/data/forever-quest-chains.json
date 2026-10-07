@@ -1,0 +1,5237 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-10-07T00:14:15.216Z",
+  "source": {
+    "name": "NaowhForever quest chains",
+    "url": "https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/QuestChains.lua",
+    "rawUrl": "https://raw.githubusercontent.com/nwh-gaming-ab/NaowhForever/main/NaowhForever_DungeonJournal/Data/QuestChains.lua"
+  },
+  "health": {
+    "prerequisiteQuests": 139,
+    "referencedQuests": 442,
+    "namedQuests": 329,
+    "locatedQuests": 331
+  },
+  "quests": [
+    {
+      "id": 17,
+      "name": "Quest 17",
+      "minLevel": 38,
+      "prerequisiteSteps": [
+        2500
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Tharil'zun",
+      "minLevel": 18,
+      "prerequisiteSteps": [
+        [
+          20,
+          98386,
+          98387
+        ]
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Blackrock Menace",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 26,
+      "name": "A Lesson to Learn",
+      "start": {
+        "uiMapId": 1457,
+        "zone": "Darnassus",
+        "x": 35.2,
+        "y": 8,
+        "giver": "Mathrengyl Bearwalker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 27,
+      "name": "A Lesson to Learn",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 76.4,
+        "y": 27.6,
+        "giver": "Turak Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 28,
+      "name": "Trial of the Lake",
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 56.2,
+        "y": 30.4,
+        "giver": "Dendrite Starblaze"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 29,
+      "name": "Trial of the Lake",
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 56.2,
+        "y": 30.4,
+        "giver": "Dendrite Starblaze"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 30,
+      "name": "Trial of the Sea Lion",
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 36.4,
+        "y": 40.2,
+        "giver": "Tajarri"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 31,
+      "name": "Aquatic Form",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 56.2,
+        "y": 30.4,
+        "giver": "Dendrite Starblaze"
+      },
+      "prerequisiteSteps": [
+        27,
+        28,
+        30
+      ]
+    },
+    {
+      "id": 65,
+      "name": "The Defias Brotherhood",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 56.2,
+        "y": 47.6,
+        "giver": "Gryan Stoutmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 124,
+      "name": "A Baying of Gnolls",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 126,
+      "name": "Howling in the Hills",
+      "minLevel": 15,
+      "prerequisiteSteps": [
+        124
+      ]
+    },
+    {
+      "id": 132,
+      "name": "The Defias Brotherhood",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 135,
+      "name": "The Defias Brotherhood",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 56.2,
+        "y": 47.6,
+        "giver": "Gryan Stoutmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 141,
+      "name": "The Defias Brotherhood",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 78.6,
+        "y": 70.9,
+        "giver": "Master Mathias Shaw"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 142,
+      "name": "The Defias Brotherhood",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 56.2,
+        "y": 47.6,
+        "giver": "Gryan Stoutmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 155,
+      "name": "The Defias Brotherhood",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 55.6,
+        "y": 47.4,
+        "giver": "The Defias Traitor"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 166,
+      "name": "Quest 166",
+      "minLevel": 14,
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 56.2,
+        "y": 47.6,
+        "giver": "Gryan Stoutmantle"
+      },
+      "prerequisiteSteps": [
+        65,
+        132,
+        135,
+        141,
+        142,
+        155
+      ]
+    },
+    {
+      "id": 173,
+      "name": "Worgen in the Woods",
+      "start": {
+        "uiMapId": 1431,
+        "zone": "Duskwood",
+        "x": 75.2,
+        "y": 48,
+        "giver": "Calor"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 214,
+      "name": "Quest 214",
+      "minLevel": 14,
+      "prerequisiteSteps": [
+        65,
+        132,
+        135,
+        141,
+        142,
+        155
+      ]
+    },
+    {
+      "id": 221,
+      "name": "Worgen in the Woods",
+      "start": {
+        "uiMapId": 1431,
+        "zone": "Duskwood",
+        "x": 75.2,
+        "y": 48,
+        "giver": "Calor"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 222,
+      "name": "Worgen in the Woods",
+      "start": {
+        "uiMapId": 1431,
+        "zone": "Duskwood",
+        "x": 75.2,
+        "y": 48,
+        "giver": "Calor"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 223,
+      "name": "Worgen in the Woods",
+      "minLevel": 23,
+      "start": {
+        "uiMapId": 1431,
+        "zone": "Duskwood",
+        "x": 75.2,
+        "y": 48,
+        "giver": "Calor"
+      },
+      "prerequisiteSteps": [
+        173,
+        221,
+        222
+      ]
+    },
+    {
+      "id": 261,
+      "name": "Down the Scarlet Path",
+      "start": {
+        "uiMapId": 1443,
+        "zone": "Desolace",
+        "x": 66.4,
+        "y": 7.8,
+        "giver": "Brother Anton"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 272,
+      "name": "Trial of the Sea Lion",
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 36.4,
+        "y": 40.2,
+        "giver": "Tajarri"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 275,
+      "name": "Blisters on the Land",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 56.2,
+        "y": 40.4,
+        "giver": "Rethiel the Greenwarden"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 276,
+      "name": "Tramping Paws",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 56.2,
+        "y": 40.4,
+        "giver": "Rethiel the Greenwarden"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 277,
+      "name": "Fire Taboo",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 56.2,
+        "y": 40.4,
+        "giver": "Rethiel the Greenwarden"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 279,
+      "name": "Claws from the Deep",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 8.4,
+        "y": 58.6,
+        "giver": "Karl Boran"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 281,
+      "name": "Reclaiming Goods",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 8.4,
+        "y": 58.6,
+        "giver": "Karl Boran"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 284,
+      "name": "The Search Continues",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 13.5,
+        "y": 41.5,
+        "giver": "Damaged Crate"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 285,
+      "name": "Search More Hovels",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 13.6,
+        "y": 38.1,
+        "giver": "Sealed Barrel"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 286,
+      "name": "Return the Statuette",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 13.9,
+        "y": 34.9,
+        "giver": "Half-buried Barrel"
+      },
+      "prerequisiteSteps": [
+        279,
+        281,
+        284,
+        285
+      ]
+    },
+    {
+      "id": 294,
+      "name": "Ormer's Revenge",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38,
+        "y": 51.2,
+        "giver": "Ormer Ironbraid"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 295,
+      "name": "Ormer's Revenge",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38,
+        "y": 51.2,
+        "giver": "Ormer Ironbraid"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 296,
+      "name": "Ormer's Revenge",
+      "minLevel": 22,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38,
+        "y": 51.2,
+        "giver": "Ormer Ironbraid"
+      },
+      "prerequisiteSteps": [
+        294,
+        295
+      ]
+    },
+    {
+      "id": 299,
+      "name": "Uncovering the Past",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38.8,
+        "y": 52.2,
+        "giver": "Prospector Whelgar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 303,
+      "name": "The Dark Iron War",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 49.6,
+        "y": 18.2,
+        "giver": "Motley Garmason"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 373,
+      "name": "Quest 373",
+      "minLevel": 16,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 378,
+      "name": "Quest 378",
+      "minLevel": 22,
+      "prerequisiteSteps": [
+        303
+      ]
+    },
+    {
+      "id": 389,
+      "name": "Bazil Thredd",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 57.6,
+        "y": 47.8,
+        "giver": "Baros Alexston"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 391,
+      "name": "Quest 391",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 51.5,
+        "y": 69.4,
+        "giver": "Warden Thelwater"
+      },
+      "prerequisiteSteps": [
+        373,
+        389
+      ]
+    },
+    {
+      "id": 394,
+      "name": "The Head of the Beast",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 66.2,
+        "y": 74.4,
+        "giver": "Elling Trias"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 395,
+      "name": "Brotherhood's End",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 78.6,
+        "y": 70.9,
+        "giver": "Master Mathias Shaw"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 396,
+      "name": "An Audience with the King",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 57.6,
+        "y": 47.8,
+        "giver": "Baros Alexston"
+      },
+      "prerequisiteSteps": [
+        434,
+        394,
+        395
+      ]
+    },
+    {
+      "id": 434,
+      "name": "The Attack!",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 73.4,
+        "y": 35.7,
+        "giver": "Tyrion"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 440,
+      "name": "The Engraved Ring",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 43.4,
+        "y": 40.8,
+        "giver": "High Executor Hadrec"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 441,
+      "name": "Raleigh and the Undercity",
+      "start": {
+        "uiMapId": 1420,
+        "zone": "Tirisfal Glades",
+        "x": 61.2,
+        "y": 50.8,
+        "giver": "Magistrate Sevren"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 442,
+      "name": "Assault on Fenris Isle",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 43.4,
+        "y": 40.8,
+        "giver": "High Executor Hadrec"
+      },
+      "prerequisiteSteps": [
+        446,
+        448
+      ]
+    },
+    {
+      "id": 446,
+      "name": "Thule Ravenclaw",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 84.2,
+        "y": 17.4,
+        "giver": "Bethor Iceshard"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 448,
+      "name": "Report to Hadrec",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 42.8,
+        "y": 40.8,
+        "giver": "Apothecary Renferrel"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 463,
+      "name": "The Greenwarden",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 10.8,
+        "y": 59.6,
+        "giver": "First Mate Fitzsimmons"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 469,
+      "name": "Daily Delivery",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 49.8,
+        "y": 39.4,
+        "giver": "Einar Stonegrip"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 471,
+      "name": "Apprentice's Duties",
+      "minLevel": 18,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 8.6,
+        "y": 55.6,
+        "giver": "James Halloran"
+      },
+      "prerequisiteSteps": [
+        469,
+        484
+      ]
+    },
+    {
+      "id": 475,
+      "name": "A Troubling Breeze",
+      "start": {
+        "uiMapId": 1438,
+        "zone": "Teldrassil",
+        "x": 56,
+        "y": 57.4,
+        "giver": "Athridas Bearmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 476,
+      "name": "Gnarlpine Corruption",
+      "start": {
+        "uiMapId": 1438,
+        "zone": "Teldrassil",
+        "x": 66.2,
+        "y": 58.6,
+        "giver": "Gaerolas Talvethren"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 477,
+      "name": "Border Crossings",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 44,
+        "y": 41,
+        "giver": "Shadow Priest Allister"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 478,
+      "name": "Maps and Runes",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 49.9,
+        "y": 60.2,
+        "giver": "Dalaran Crate"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 481,
+      "name": "Dalar's Analysis",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 44,
+        "y": 41,
+        "giver": "Shadow Priest Allister"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 482,
+      "name": "Dalaran's Intentions",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 44.2,
+        "y": 39.8,
+        "giver": "Dalar Dawnweaver"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 483,
+      "name": "The Relics of Wakening",
+      "start": {
+        "uiMapId": 1438,
+        "zone": "Teldrassil",
+        "x": 56,
+        "y": 57.4,
+        "giver": "Athridas Bearmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 484,
+      "name": "Young Crocolisk Skins",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 8.6,
+        "y": 55.6,
+        "giver": "James Halloran"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 486,
+      "name": "Ursal the Mauler",
+      "minLevel": 4,
+      "start": {
+        "uiMapId": 1438,
+        "zone": "Teldrassil",
+        "x": 56,
+        "y": 57.4,
+        "giver": "Athridas Bearmantle"
+      },
+      "prerequisiteSteps": [
+        475,
+        476,
+        483
+      ]
+    },
+    {
+      "id": 509,
+      "name": "Elixir of Agony",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 61.4,
+        "y": 19.2,
+        "giver": "Apothecary Lydon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 513,
+      "name": "Elixir of Agony",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 61.4,
+        "y": 19.2,
+        "giver": "Apothecary Lydon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 515,
+      "name": "Elixir of Agony",
+      "minLevel": 24,
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 48.4,
+        "y": 69.4,
+        "giver": "Master Apothecary Faranell"
+      },
+      "prerequisiteSteps": [
+        509,
+        513
+      ]
+    },
+    {
+      "id": 527,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 528,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 529,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 530,
+      "name": "A Husband's Revenge",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 62,
+        "y": 43,
+        "giver": "Raleigh Andrean"
+      },
+      "prerequisiteSteps": [
+        440,
+        441
+      ]
+    },
+    {
+      "id": 532,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 539,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 541,
+      "name": "Battle of Hillsbrad",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 550,
+      "name": "Battle of Hillsbrad",
+      "minLevel": 19,
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": [
+        527,
+        528,
+        529,
+        532,
+        539,
+        541
+      ]
+    },
+    {
+      "id": 704,
+      "name": "Quest 704",
+      "minLevel": 30,
+      "start": {
+        "uiMapId": 1432,
+        "zone": "Loch Modan",
+        "x": 65.8,
+        "y": 65.6,
+        "giver": "Prospector Ironband"
+      },
+      "prerequisiteSteps": [
+        707,
+        738,
+        739
+      ]
+    },
+    {
+      "id": 707,
+      "name": "Ironband Wants You!",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 74.4,
+        "y": 12,
+        "giver": "Prospector Stormpike"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 720,
+      "name": "A Sign of Hope",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 53,
+        "y": 34.1,
+        "giver": "Crumpled Map"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 721,
+      "name": "A Sign of Hope",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 53.4,
+        "y": 43.2,
+        "giver": "Prospector Ryedol"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 722,
+      "name": "Amulet of Secrets",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 723,
+      "name": "Prospect of Faith",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 724,
+      "name": "Prospect of Faith",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 53.4,
+        "y": 43.2,
+        "giver": "Prospector Ryedol"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 731,
+      "name": "The Absent Minded Prospector",
+      "start": {
+        "uiMapId": 1439,
+        "zone": "Darkshore",
+        "x": 35.8,
+        "y": 83.6,
+        "giver": "Prospector Remtravel"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 738,
+      "name": "Find Agmond",
+      "start": {
+        "uiMapId": 1432,
+        "zone": "Loch Modan",
+        "x": 65.8,
+        "y": 65.6,
+        "giver": "Prospector Ironband"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 739,
+      "name": "Murdaloc",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 50.9,
+        "y": 62.2,
+        "giver": "Battered Dwarven Skeleton"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 741,
+      "name": "The Absent Minded Prospector",
+      "minLevel": 15,
+      "start": {
+        "uiMapId": 1439,
+        "zone": "Darkshore",
+        "x": 37.4,
+        "y": 41.8,
+        "giver": "Archaeologist Hollee"
+      },
+      "prerequisiteSteps": [
+        731
+      ]
+    },
+    {
+      "id": 824,
+      "name": "Je'neu of the Earthen Ring",
+      "minLevel": 23,
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 73.6,
+        "y": 60,
+        "giver": "Mastok Wrilehiss"
+      },
+      "prerequisiteSteps": [
+        1918
+      ]
+    },
+    {
+      "id": 843,
+      "name": "Gann's Reclamation",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 46,
+        "y": 75.4,
+        "giver": "Gann Stonespire"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 844,
+      "name": "Plainstrider Menace",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 845,
+      "name": "The Zhevra",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 846,
+      "name": "Revenge of Gann",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 46,
+        "y": 75.4,
+        "giver": "Gann Stonespire"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 849,
+      "name": "Revenge of Gann",
+      "minLevel": 17,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 46,
+        "y": 75.4,
+        "giver": "Gann Stonespire"
+      },
+      "prerequisiteSteps": [
+        843,
+        846
+      ]
+    },
+    {
+      "id": 851,
+      "name": "Verog the Dervish",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 45.4,
+        "y": 28.4,
+        "giver": "Regthar Deathgate"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 852,
+      "name": "Hezrul Bloodmark",
+      "minLevel": 11,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 45.4,
+        "y": 28.4,
+        "giver": "Regthar Deathgate"
+      },
+      "prerequisiteSteps": [
+        851
+      ]
+    },
+    {
+      "id": 860,
+      "name": "Sergra Darkthorn",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 61.4,
+        "y": 80.6,
+        "giver": "Melor Stonehoof"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 865,
+      "name": "Raptor Horns",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 62.4,
+        "y": 37.6,
+        "giver": "Mebok Mizzyrix"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 870,
+      "name": "The Forgotten Pools",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31.8,
+        "giver": "Tonga Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 873,
+      "name": "Isha Awak",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 65.8,
+        "y": 43.8,
+        "giver": "Mahren Skyseer"
+      },
+      "prerequisiteSteps": [
+        860,
+        844,
+        845,
+        903,
+        881,
+        905,
+        3261,
+        882,
+        907,
+        913,
+        874
+      ]
+    },
+    {
+      "id": 874,
+      "name": "Mahren Skyseer",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.8,
+        "y": 59,
+        "giver": "Jorn Skyseer"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 877,
+      "name": "The Stagnant Oasis",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31.8,
+        "giver": "Tonga Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 879,
+      "name": "Betrayal from Within",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.6,
+        "y": 59.2,
+        "giver": "Mangletooth"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 880,
+      "name": "Altered Beings",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31.8,
+        "giver": "Tonga Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 881,
+      "name": "Echeyakee",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 882,
+      "name": "Ishamuhale",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.8,
+        "y": 59,
+        "giver": "Jorn Skyseer"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 903,
+      "name": "Prowlers of the Barrens",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 905,
+      "name": "The Angry Scytheclaws",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 906,
+      "name": "Betrayal from Within",
+      "minLevel": 17,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.6,
+        "y": 59.2,
+        "giver": "Mangletooth"
+      },
+      "prerequisiteSteps": [
+        879
+      ]
+    },
+    {
+      "id": 907,
+      "name": "Enraged Thunder Lizards",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.8,
+        "y": 59,
+        "giver": "Jorn Skyseer"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 913,
+      "name": "Cry of the Thunderhawk",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 44.8,
+        "y": 59,
+        "giver": "Jorn Skyseer"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 914,
+      "name": "Quest 914",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 75.6,
+        "y": 31.2,
+        "giver": "Nara Wildmane"
+      },
+      "prerequisiteSteps": [
+        870,
+        877,
+        880,
+        1489,
+        1490
+      ]
+    },
+    {
+      "id": 973,
+      "name": "The Tower of Althalaxx",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 26.2,
+        "y": 38.6,
+        "giver": "Delgren the Purifier"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 981,
+      "name": "The Tower of Althalaxx",
+      "minLevel": 13,
+      "start": {
+        "uiMapId": 1439,
+        "zone": "Darkshore",
+        "x": 55,
+        "y": 24.8,
+        "giver": "Balthule Shadowstrike"
+      },
+      "prerequisiteSteps": [
+        973,
+        1140,
+        1167,
+        1143
+      ]
+    },
+    {
+      "id": 1024,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 36.6,
+        "y": 49.6,
+        "giver": "Raene Wolfrunner"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1026,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 53.4,
+        "y": 46.2,
+        "giver": "Shael'dryn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1027,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 53.4,
+        "y": 46.2,
+        "giver": "Shael'dryn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1028,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 53.4,
+        "y": 46.2,
+        "giver": "Shael'dryn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1029,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 53.4,
+        "y": 46.2,
+        "giver": "Shael'dryn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1030,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 36.6,
+        "y": 49.6,
+        "giver": "Raene Wolfrunner"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1045,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 50.8,
+        "y": 75,
+        "giver": "Krolg"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1046,
+      "name": "Raene's Cleansing",
+      "minLevel": 18,
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 50.8,
+        "y": 75,
+        "giver": "Krolg"
+      },
+      "prerequisiteSteps": [
+        1024,
+        1026,
+        1027,
+        1028,
+        1055,
+        1029,
+        1030,
+        1045
+      ]
+    },
+    {
+      "id": 1052,
+      "name": "Down the Scarlet Path",
+      "start": {
+        "uiMapId": 1443,
+        "zone": "Desolace",
+        "x": 66.4,
+        "y": 7.8,
+        "giver": "Brother Anton"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1053,
+      "name": "Quest 1053",
+      "minLevel": 34,
+      "prerequisiteSteps": [
+        6141,
+        261,
+        1052
+      ]
+    },
+    {
+      "id": 1055,
+      "name": "Raene's Cleansing",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 56.4,
+        "y": 49.2,
+        "giver": "Hidden Shrine"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1057,
+      "name": "Reclaiming the Charred Vale",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 37,
+        "y": 8,
+        "giver": "Keeper Albagorm"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1059,
+      "name": "Reclaiming the Charred Vale",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 37,
+        "y": 8,
+        "giver": "Keeper Albagorm"
+      },
+      "prerequisiteSteps": [
+        1057
+      ]
+    },
+    {
+      "id": 1081,
+      "name": "Reception from Tyrande",
+      "minLevel": 17,
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 34.8,
+        "y": 49.8,
+        "giver": "Sentinel Thenysil"
+      },
+      "prerequisiteSteps": [
+        1082
+      ]
+    },
+    {
+      "id": 1082,
+      "name": "Update for Sentinel Thenysil",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 59.8,
+        "y": 66.8,
+        "giver": "Kaela Shadowspear"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1087,
+      "name": "Cenarius' Legacy",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 46,
+        "y": 60.4,
+        "giver": "Braelyn Firehand"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1088,
+      "name": "Ordanus",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 46,
+        "y": 60.4,
+        "giver": "Braelyn Firehand"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1089,
+      "name": "The Den",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 46,
+        "y": 60.4,
+        "giver": "Braelyn Firehand"
+      },
+      "prerequisiteSteps": [
+        1087,
+        1088
+      ]
+    },
+    {
+      "id": 1090,
+      "name": "Gerenzo's Orders",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 71.8,
+        "y": 60,
+        "giver": "Piznik"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1092,
+      "name": "Gerenzo's Orders",
+      "minLevel": 17,
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 71.8,
+        "y": 60,
+        "giver": "Piznik"
+      },
+      "prerequisiteSteps": [
+        1090
+      ]
+    },
+    {
+      "id": 1093,
+      "name": "Super Reaper 6000",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 59,
+        "y": 62.4,
+        "giver": "Ziz Fizziks"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1094,
+      "name": "Further Instructions",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 59,
+        "y": 62.4,
+        "giver": "Ziz Fizziks"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1095,
+      "name": "Further Instructions",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 63,
+        "y": 37.2,
+        "giver": "Sputtervalve"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1096,
+      "name": "Gerenzo Wrenchwhistle",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 59,
+        "y": 62.4,
+        "giver": "Ziz Fizziks"
+      },
+      "prerequisiteSteps": [
+        1483,
+        1093,
+        1094,
+        1095
+      ]
+    },
+    {
+      "id": 1100,
+      "name": "Lonebrow's Journal",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1101,
+      "name": "Quest 1101",
+      "minLevel": 29,
+      "start": {
+        "uiMapId": 1444,
+        "zone": "Feralas",
+        "x": 89.6,
+        "y": 46.4,
+        "giver": "Falfindel Waywarder"
+      },
+      "prerequisiteSteps": [
+        1100
+      ]
+    },
+    {
+      "id": 1109,
+      "name": "Quest 1109",
+      "minLevel": 30,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1113,
+      "name": "Quest 1113",
+      "minLevel": 30,
+      "prerequisiteSteps": [
+        1109
+      ]
+    },
+    {
+      "id": 1139,
+      "name": "Quest 1139",
+      "minLevel": 35,
+      "prerequisiteSteps": [
+        720,
+        721,
+        722,
+        723,
+        724
+      ]
+    },
+    {
+      "id": 1140,
+      "name": "The Tower of Althalaxx",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 26.2,
+        "y": 38.6,
+        "giver": "Delgren the Purifier"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1143,
+      "name": "The Tower of Althalaxx",
+      "start": {
+        "uiMapId": 1439,
+        "zone": "Darkshore",
+        "x": 55,
+        "y": 24.8,
+        "giver": "Balthule Shadowstrike"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1149,
+      "name": "Test of Faith",
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 53.8,
+        "y": 41.6,
+        "giver": "Dorn Plainstalker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1150,
+      "name": "Test of Endurance",
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 53.8,
+        "y": 41.6,
+        "giver": "Dorn Plainstalker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1151,
+      "name": "Test of Strength",
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 53.8,
+        "y": 41.6,
+        "giver": "Dorn Plainstalker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1152,
+      "name": "Test of Lore",
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 53.8,
+        "y": 41.6,
+        "giver": "Dorn Plainstalker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1154,
+      "name": "Test of Lore",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 78.6,
+        "y": 45.6,
+        "giver": "Braug Dimspirit"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1159,
+      "name": "Test of Lore",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 78.6,
+        "y": 45.6,
+        "giver": "Braug Dimspirit"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1160,
+      "name": "Quest 1160",
+      "minLevel": 25,
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 57.8,
+        "y": 65,
+        "giver": "Parqual Fintallas"
+      },
+      "prerequisiteSteps": [
+        1149,
+        1150,
+        1151,
+        1152,
+        1154,
+        6627,
+        1159
+      ]
+    },
+    {
+      "id": 1167,
+      "name": "The Tower of Althalaxx",
+      "start": {
+        "uiMapId": 1440,
+        "zone": "Ashenvale",
+        "x": 26.2,
+        "y": 38.6,
+        "giver": "Delgren the Purifier"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1195,
+      "name": "The Sacred Flame",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 54.6,
+        "y": 51.2,
+        "giver": "Zangen Stonehoof"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1196,
+      "name": "The Sacred Flame",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 54.6,
+        "y": 51.2,
+        "giver": "Zangen Stonehoof"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1197,
+      "name": "The Sacred Flame",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 46,
+        "y": 51.6,
+        "giver": "Rau Cliffrunner"
+      },
+      "prerequisiteSteps": [
+        1195,
+        1196
+      ]
+    },
+    {
+      "id": 1198,
+      "name": "Quest 1198",
+      "minLevel": 18,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1200,
+      "name": "Quest 1200",
+      "minLevel": 18,
+      "prerequisiteSteps": [
+        1198
+      ]
+    },
+    {
+      "id": 1275,
+      "name": "Quest 1275",
+      "minLevel": 18,
+      "prerequisiteSteps": [
+        3765
+      ]
+    },
+    {
+      "id": 1424,
+      "name": "Pool of Tears",
+      "start": {
+        "uiMapId": 1435,
+        "zone": "Swamp of Sorrows",
+        "x": 48,
+        "y": 55,
+        "giver": "Fel'zerul"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1429,
+      "name": "The Atal'ai Exile",
+      "start": {
+        "uiMapId": 1435,
+        "zone": "Swamp of Sorrows",
+        "x": 48,
+        "y": 55,
+        "giver": "Fel'zerul"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1444,
+      "name": "Return to Fel'Zerul",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 33.6,
+        "y": 75.2,
+        "giver": "Atal'ai Exile"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1445,
+      "name": "Quest 1445",
+      "minLevel": 38,
+      "start": {
+        "uiMapId": 1435,
+        "zone": "Swamp of Sorrows",
+        "x": 48,
+        "y": 55,
+        "giver": "Fel'zerul"
+      },
+      "prerequisiteSteps": [
+        1424,
+        1429,
+        1444
+      ]
+    },
+    {
+      "id": 1448,
+      "name": "In Search of The Temple",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 69.5,
+        "y": 40.5,
+        "giver": "Brohann Caskbelly"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1449,
+      "name": "To The Hinterlands",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 69.5,
+        "y": 40.5,
+        "giver": "Brohann Caskbelly"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1450,
+      "name": "Gryphon Master Talonaxe",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 11.8,
+        "y": 46.8,
+        "giver": "Falstad Wildhammer"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1451,
+      "name": "Rhapsody Shindigger",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 9.8,
+        "y": 44.4,
+        "giver": "Gryphon Master Talonaxe"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1452,
+      "name": "Rhapsody's Kalimdor Kocktail",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 26.8,
+        "y": 48.4,
+        "giver": "Rhapsody Shindigger"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1469,
+      "name": "Rhapsody's Tale",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 26.8,
+        "y": 48.4,
+        "giver": "Rhapsody Shindigger"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1475,
+      "name": "Quest 1475",
+      "minLevel": 38,
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 69.5,
+        "y": 40.5,
+        "giver": "Brohann Caskbelly"
+      },
+      "prerequisiteSteps": [
+        1448,
+        1449,
+        1450,
+        1451,
+        1452,
+        1469
+      ]
+    },
+    {
+      "id": 1483,
+      "name": "Ziz Fizziks",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 63,
+        "y": 37.2,
+        "giver": "Sputtervalve"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1489,
+      "name": "Hamuul Runetotem",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31.8,
+        "giver": "Tonga Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1490,
+      "name": "Nara Wildmane",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 78.4,
+        "y": 28.4,
+        "giver": "Arch Druid Hamuul Runetotem"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1491,
+      "name": "Quest 1491",
+      "minLevel": 13,
+      "prerequisiteSteps": [
+        865
+      ]
+    },
+    {
+      "id": 1522,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 37.8,
+        "y": 37.4,
+        "giver": "Searn Firewarder"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1523,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 25.2,
+        "y": 21,
+        "giver": "Xanis Flameweaver"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1524,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 55.8,
+        "y": 20,
+        "giver": "Kranal Fiss"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1525,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 38.6,
+        "y": 58.8,
+        "giver": "Telf Joolam"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1526,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 38.6,
+        "y": 58.8,
+        "giver": "Telf Joolam"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1527,
+      "name": "Call of Fire",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 38.9,
+        "y": 58.2,
+        "giver": "Brazier of the Dormant Flame"
+      },
+      "prerequisiteSteps": [
+        [
+          1522,
+          1523,
+          2983,
+          2984
+        ],
+        1524,
+        1525,
+        1526
+      ]
+    },
+    {
+      "id": 1651,
+      "name": "The Tome of Valor",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 42.2,
+        "y": 88.6,
+        "giver": "Daphne Stilwell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1652,
+      "name": "The Tome of Valor",
+      "start": {
+        "uiMapId": 1436,
+        "zone": "Westfall",
+        "x": 42.2,
+        "y": 88.6,
+        "giver": "Daphne Stilwell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1653,
+      "name": "The Test of Righteousness",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 50.6,
+        "y": 47.4,
+        "giver": "Duthorian Rall"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1654,
+      "name": "Quest 1654",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1426,
+        "zone": "Dun Morogh",
+        "x": 52.4,
+        "y": 36.8,
+        "giver": "Jordan Stilwell"
+      },
+      "prerequisiteSteps": [
+        1651,
+        1652,
+        1653
+      ]
+    },
+    {
+      "id": 1806,
+      "name": "The Test of Righteousness",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1426,
+        "zone": "Dun Morogh",
+        "x": 52.4,
+        "y": 36.8,
+        "giver": "Jordan Stilwell"
+      },
+      "prerequisiteSteps": [
+        1651,
+        1652,
+        1653,
+        1654
+      ]
+    },
+    {
+      "id": 1918,
+      "name": "The Befouled Element",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1947,
+      "name": "Journey to the Marsh",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 25.6,
+        "y": 14.6,
+        "giver": "Ursyn Ghull"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1949,
+      "name": "Hidden Secrets",
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 46,
+        "y": 57,
+        "giver": "Tabetha"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1950,
+      "name": "Get the Scoop",
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 78.2,
+        "y": 75.8,
+        "giver": "Magus Tirth"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1951,
+      "name": "Quest 1951",
+      "minLevel": 30,
+      "start": {
+        "uiMapId": 1441,
+        "zone": "Thousand Needles",
+        "x": 78.2,
+        "y": 75.8,
+        "giver": "Magus Tirth"
+      },
+      "prerequisiteSteps": [
+        1947,
+        1949,
+        1950
+      ]
+    },
+    {
+      "id": 1953,
+      "name": "Return to the Marsh",
+      "start": {
+        "uiMapId": 1456,
+        "zone": "Thunder Bluff",
+        "x": 25.6,
+        "y": 14.6,
+        "giver": "Ursyn Ghull"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1954,
+      "name": "The Infernal Orb",
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 46,
+        "y": 57,
+        "giver": "Tabetha"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1955,
+      "name": "The Exorcism",
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 46,
+        "y": 57,
+        "giver": "Tabetha"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 1956,
+      "name": "Quest 1956",
+      "minLevel": 35,
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 46,
+        "y": 57,
+        "giver": "Tabetha"
+      },
+      "prerequisiteSteps": [
+        1953,
+        1954,
+        1955
+      ]
+    },
+    {
+      "id": 2040,
+      "name": "Quest 2040",
+      "minLevel": 15,
+      "prerequisiteSteps": [
+        2041
+      ]
+    },
+    {
+      "id": 2041,
+      "name": "Speak with Shoni",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 69.4,
+        "y": 50.6,
+        "giver": "Gnoarn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2202,
+      "name": "Quest 2202",
+      "minLevel": 36,
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 2.6,
+        "y": 46,
+        "giver": "Jarkal Mossmeld"
+      },
+      "prerequisiteSteps": [
+        2258
+      ]
+    },
+    {
+      "id": 2240,
+      "name": "Quest 2240",
+      "minLevel": 35,
+      "prerequisiteSteps": [
+        2398
+      ]
+    },
+    {
+      "id": 2258,
+      "name": "Badlands Reagent Run",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 2.6,
+        "y": 46,
+        "giver": "Jarkal Mossmeld"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2398,
+      "name": "Quest 2398",
+      "minLevel": 35,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2500,
+      "name": "Badlands Reagent Run",
+      "start": {
+        "uiMapId": 1432,
+        "zone": "Loch Modan",
+        "x": 37,
+        "y": 49.2,
+        "giver": "Ghak Healtouch"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2769,
+      "name": "The Brassbolts Brothers",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 68.2,
+        "y": 46.2,
+        "giver": "Klockmort Spannerspan"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2770,
+      "name": "Quest 2770",
+      "minLevel": 40,
+      "prerequisiteSteps": [
+        2769
+      ]
+    },
+    {
+      "id": 2842,
+      "name": "Quest 2842",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 75.6,
+        "y": 25.2,
+        "giver": "Sovik"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2843,
+      "name": "Quest 2843",
+      "minLevel": 20,
+      "prerequisiteSteps": [
+        2842
+      ]
+    },
+    {
+      "id": 2846,
+      "name": "Quest 2846",
+      "minLevel": 40,
+      "prerequisiteSteps": [
+        2861
+      ]
+    },
+    {
+      "id": 2861,
+      "name": "Tabetha's Task",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 85,
+        "y": 10.2,
+        "giver": "Anastasia Hartwell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2864,
+      "name": "Tran'rek",
+      "start": {
+        "uiMapId": 1434,
+        "zone": "Stranglethorn Vale",
+        "x": 27,
+        "y": 77.2,
+        "giver": "Krazek"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2865,
+      "name": "Quest 2865",
+      "minLevel": 40,
+      "prerequisiteSteps": [
+        2864
+      ]
+    },
+    {
+      "id": 2922,
+      "name": "Quest 2922",
+      "minLevel": 20,
+      "prerequisiteSteps": [
+        2923
+      ]
+    },
+    {
+      "id": 2923,
+      "name": "Tinkmaster Overspark",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 51,
+        "y": 48.2,
+        "giver": "Brother Sarno"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2924,
+      "name": "Quest 2924",
+      "minLevel": 24,
+      "prerequisiteSteps": [
+        2925
+      ]
+    },
+    {
+      "id": 2925,
+      "name": "Klockmort's Essentials",
+      "start": {
+        "uiMapId": 1457,
+        "zone": "Darnassus",
+        "x": 59.2,
+        "y": 45.4,
+        "giver": "Mathiel"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2926,
+      "name": "Quest 2926",
+      "minLevel": 20,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2930,
+      "name": "Quest 2930",
+      "minLevel": 25,
+      "prerequisiteSteps": [
+        2931
+      ]
+    },
+    {
+      "id": 2931,
+      "name": "Castpipe's Task",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 59.4,
+        "y": 67.2,
+        "giver": "Gaxim Rustfizzle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2933,
+      "name": "Venom Bottles",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 23.6,
+        "y": 58.7,
+        "giver": "Venom Bottle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2934,
+      "name": "Undamaged Venom Sac",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 61.4,
+        "y": 19.2,
+        "giver": "Apothecary Lydon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2935,
+      "name": "Consult Master Gadrin",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 61.4,
+        "y": 19.2,
+        "giver": "Apothecary Lydon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2936,
+      "name": "Quest 2936",
+      "minLevel": 40,
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 56,
+        "y": 74.6,
+        "giver": "Master Gadrin"
+      },
+      "prerequisiteSteps": [
+        2933,
+        2934,
+        2935
+      ]
+    },
+    {
+      "id": 2962,
+      "name": "Quest 2962",
+      "minLevel": 20,
+      "prerequisiteSteps": [
+        2926
+      ]
+    },
+    {
+      "id": 2983,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 54.4,
+        "y": 42.6,
+        "giver": "Swart"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2984,
+      "name": "Call of Fire",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2988,
+      "name": "Witherbark Cages",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 9.8,
+        "y": 44.4,
+        "giver": "Gryphon Master Talonaxe"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2989,
+      "name": "The Altar of Zul",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 9.8,
+        "y": 44.4,
+        "giver": "Gryphon Master Talonaxe"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2990,
+      "name": "Thadius Grimshade",
+      "start": {
+        "uiMapId": 1425,
+        "zone": "The Hinterlands",
+        "x": 9.8,
+        "y": 44.4,
+        "giver": "Gryphon Master Talonaxe"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 2991,
+      "name": "Quest 2991",
+      "minLevel": 40,
+      "start": {
+        "uiMapId": 1419,
+        "zone": "Blasted Lands",
+        "x": 67,
+        "y": 19.4,
+        "giver": "Thadius Grimshade"
+      },
+      "prerequisiteSteps": [
+        2988,
+        2989,
+        2990
+      ]
+    },
+    {
+      "id": 3261,
+      "name": "Jorn Skyseer",
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 52.2,
+        "y": 31,
+        "giver": "Sergra Darkthorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3373,
+      "name": "Quest 3373",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        [
+          3380,
+          3445
+        ],
+        3444
+      ]
+    },
+    {
+      "id": 3380,
+      "name": "The Sunken Temple",
+      "start": {
+        "uiMapId": 1444,
+        "zone": "Feralas",
+        "x": 74.4,
+        "y": 43.4,
+        "giver": "Witch Doctor Uzer'i"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3441,
+      "name": "Divine Retribution",
+      "start": {
+        "uiMapId": 1427,
+        "zone": "Searing Gorge",
+        "x": 39,
+        "y": 39,
+        "giver": "Velarok Windblade"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3444,
+      "name": "The Stone Circle",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 52.6,
+        "y": 45.8,
+        "giver": "Marvon Rivetseeker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3445,
+      "name": "The Sunken Temple",
+      "start": {
+        "uiMapId": 1444,
+        "zone": "Feralas",
+        "x": 31.8,
+        "y": 45.6,
+        "giver": "Angelas Moonbreeze"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3447,
+      "name": "Quest 3447",
+      "minLevel": 46,
+      "prerequisiteSteps": [
+        [
+          3380,
+          3445
+        ],
+        3444
+      ]
+    },
+    {
+      "id": 3513,
+      "name": "The Runed Scroll",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3514,
+      "name": "Horde Presence",
+      "minLevel": 15,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 48,
+        "y": 5.4,
+        "giver": "Kadrak"
+      },
+      "prerequisiteSteps": [
+        3513
+      ]
+    },
+    {
+      "id": 3520,
+      "name": "Screecher Spirits",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 67,
+        "y": 22.4,
+        "giver": "Yeh'kinya"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3523,
+      "name": "Quest 3523",
+      "minLevel": 32,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3525,
+      "name": "Quest 3525",
+      "minLevel": 32,
+      "prerequisiteSteps": [
+        3523
+      ]
+    },
+    {
+      "id": 3527,
+      "name": "Quest 3527",
+      "minLevel": 40,
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 67,
+        "y": 22.4,
+        "giver": "Yeh'kinya"
+      },
+      "prerequisiteSteps": [
+        3520
+      ]
+    },
+    {
+      "id": 3528,
+      "name": "Quest 3528",
+      "minLevel": 40,
+      "prerequisiteSteps": [
+        3520,
+        3527,
+        4787
+      ]
+    },
+    {
+      "id": 3701,
+      "name": "The Smoldering Ruins of Thaurissan",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 38.6,
+        "y": 55.4,
+        "giver": "Royal Historian Archesonus"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3702,
+      "name": "The Smoldering Ruins of Thaurissan",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 38.6,
+        "y": 55.4,
+        "giver": "Royal Historian Archesonus"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3765,
+      "name": "The Corruption Abroad",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 36,
+        "y": 67.4,
+        "giver": "Argos Nightwhisper"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3801,
+      "name": "Dark Iron Legacy",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3802,
+      "name": "Quest 3802",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        3801
+      ]
+    },
+    {
+      "id": 3906,
+      "name": "Quest 3906",
+      "minLevel": 48,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 3907,
+      "name": "Quest 3907",
+      "minLevel": 48,
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 3.4,
+        "y": 48.2,
+        "giver": "Thunderheart"
+      },
+      "prerequisiteSteps": [
+        3906
+      ]
+    },
+    {
+      "id": 3981,
+      "name": "Quest 3981",
+      "minLevel": 48,
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 5.8,
+        "y": 47.6,
+        "giver": "Galamav the Marksman"
+      },
+      "prerequisiteSteps": [
+        3906,
+        3907
+      ]
+    },
+    {
+      "id": 3982,
+      "name": "What Is Going On?",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4001,
+      "name": "What Is Going On?",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4002,
+      "name": "The Eastern Kingdoms",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4003,
+      "name": "Quest 4003",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        3906,
+        3907,
+        3981,
+        3982,
+        4001,
+        4002
+      ]
+    },
+    {
+      "id": 4022,
+      "name": "A Taste of Flame",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 94.8,
+        "y": 31.6,
+        "giver": "Cyrus Therepentous"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4023,
+      "name": "A Taste of Flame",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 94.8,
+        "y": 31.6,
+        "giver": "Cyrus Therepentous"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4024,
+      "name": "Quest 4024",
+      "minLevel": 52,
+      "prerequisiteSteps": [
+        3441,
+        [
+          4022,
+          4023
+        ]
+      ]
+    },
+    {
+      "id": 4061,
+      "name": "The Rise of the Machines",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 3,
+        "y": 47.8,
+        "giver": "Hierophant Theodora Mulvadania"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4062,
+      "name": "The Rise of the Machines",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 3,
+        "y": 47.8,
+        "giver": "Hierophant Theodora Mulvadania"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4063,
+      "name": "Quest 4063",
+      "minLevel": 52,
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 25.8,
+        "y": 45,
+        "giver": "Lotwil Veriatus"
+      },
+      "prerequisiteSteps": [
+        4061,
+        4062
+      ]
+    },
+    {
+      "id": 4081,
+      "name": "Quest 4081",
+      "minLevel": 48,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4082,
+      "name": "Quest 4082",
+      "minLevel": 50,
+      "prerequisiteSteps": [
+        4081
+      ]
+    },
+    {
+      "id": 4122,
+      "name": "Grark Lorkrub",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 5.8,
+        "y": 47.6,
+        "giver": "Lexlort"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4126,
+      "name": "Quest 4126",
+      "minLevel": 50,
+      "prerequisiteSteps": [
+        4128
+      ]
+    },
+    {
+      "id": 4128,
+      "name": "Ragnar Thunderbrew",
+      "start": {
+        "uiMapId": 1419,
+        "zone": "Blasted Lands",
+        "x": 63.6,
+        "y": 20.4,
+        "giver": "Enohar Thunderbrew"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4132,
+      "name": "Quest 4132",
+      "minLevel": 52,
+      "prerequisiteSteps": [
+        4081,
+        4122
+      ]
+    },
+    {
+      "id": 4133,
+      "name": "Vivian Lagrave",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 50,
+        "y": 68.4,
+        "giver": "Apothecary Zinge"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4134,
+      "name": "Quest 4134",
+      "minLevel": 50,
+      "prerequisiteSteps": [
+        4133
+      ]
+    },
+    {
+      "id": 4136,
+      "name": "Quest 4136",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        4324
+      ]
+    },
+    {
+      "id": 4141,
+      "name": "Muigin and Larion",
+      "start": {
+        "uiMapId": 1449,
+        "zone": "Un'Goro Crater",
+        "x": 43,
+        "y": 9.6,
+        "giver": "Muigin"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4142,
+      "name": "A Visit to Gregan",
+      "start": {
+        "uiMapId": 1449,
+        "zone": "Un'Goro Crater",
+        "x": 43,
+        "y": 9.6,
+        "giver": "Muigin"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4143,
+      "name": "Quest 4143",
+      "minLevel": 47,
+      "start": {
+        "uiMapId": 1444,
+        "zone": "Feralas",
+        "x": 45,
+        "y": 25.4,
+        "giver": "Gregan Brewspewer"
+      },
+      "prerequisiteSteps": [
+        4141,
+        4142
+      ]
+    },
+    {
+      "id": 4145,
+      "name": "Larion and Muigin",
+      "start": {
+        "uiMapId": 1449,
+        "zone": "Un'Goro Crater",
+        "x": 45.6,
+        "y": 8.6,
+        "giver": "Larion"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4146,
+      "name": "Quest 4146",
+      "minLevel": 47,
+      "start": {
+        "uiMapId": 1413,
+        "zone": "The Barrens",
+        "x": 62.4,
+        "y": 38.6,
+        "giver": "Liv Rizzlefix"
+      },
+      "prerequisiteSteps": [
+        4145,
+        4147
+      ]
+    },
+    {
+      "id": 4147,
+      "name": "Marvon's Workshop",
+      "start": {
+        "uiMapId": 1449,
+        "zone": "Un'Goro Crater",
+        "x": 45.6,
+        "y": 8.6,
+        "giver": "Larion"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4182,
+      "name": "Dragonkin Menace",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 85.6,
+        "y": 69,
+        "giver": "Helendis Riverhorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4183,
+      "name": "The True Masters",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 85.6,
+        "y": 69,
+        "giver": "Helendis Riverhorn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4184,
+      "name": "The True Masters",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4185,
+      "name": "The True Masters",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 80.3,
+        "y": 38.4,
+        "giver": "Highlord Bolvar Fordragon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4186,
+      "name": "The True Masters",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 80.3,
+        "y": 38.4,
+        "giver": "Highlord Bolvar Fordragon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4223,
+      "name": "The True Masters",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4224,
+      "name": "The True Masters",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 84.6,
+        "y": 68.8,
+        "giver": "Marshal Maxwell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4241,
+      "name": "Quest 4241",
+      "minLevel": 48,
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 84.6,
+        "y": 68.8,
+        "giver": "Marshal Maxwell"
+      },
+      "prerequisiteSteps": [
+        4182,
+        4183,
+        4184,
+        4185,
+        4186,
+        4223,
+        4224
+      ]
+    },
+    {
+      "id": 4242,
+      "name": "Abandoned Hope",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4262,
+      "name": "Quest 4262",
+      "minLevel": 48,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4263,
+      "name": "Quest 4263",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        4262
+      ]
+    },
+    {
+      "id": 4282,
+      "name": "A Shred of Hope",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4322,
+      "name": "Quest 4322",
+      "minLevel": 50,
+      "prerequisiteSteps": [
+        4182,
+        4183,
+        4184,
+        4185,
+        4186,
+        4223,
+        4224,
+        4241,
+        4242,
+        4282
+      ]
+    },
+    {
+      "id": 4324,
+      "name": "Yuka Screwspigot",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 67,
+        "y": 24,
+        "giver": "Yorba Screwspigot"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4341,
+      "name": "Quest 4341",
+      "minLevel": 50,
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 39.4,
+        "y": 55.8,
+        "giver": "King Magni Bronzebeard"
+      },
+      "prerequisiteSteps": [
+        3702,
+        3701
+      ]
+    },
+    {
+      "id": 4342,
+      "name": "Kharan's Tale",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4361,
+      "name": "The Bearer of Bad News",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4362,
+      "name": "Quest 4362",
+      "minLevel": 50,
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 39.4,
+        "y": 55.8,
+        "giver": "King Magni Bronzebeard"
+      },
+      "prerequisiteSteps": [
+        3702,
+        3701,
+        4341,
+        4342,
+        4361
+      ]
+    },
+    {
+      "id": 4726,
+      "name": "Broodling Essence",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 65.2,
+        "y": 23.8,
+        "giver": "Tinkee Steamboil"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4734,
+      "name": "Egg Freezing",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 65.2,
+        "y": 23.8,
+        "giver": "Tinkee Steamboil"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4735,
+      "name": "Quest 4735",
+      "minLevel": 57,
+      "prerequisiteSteps": [
+        4734,
+        4726,
+        4808,
+        4809,
+        4810
+      ]
+    },
+    {
+      "id": 4764,
+      "name": "Quest 4764",
+      "minLevel": 57,
+      "prerequisiteSteps": [
+        4766
+      ]
+    },
+    {
+      "id": 4766,
+      "name": "Mayara Brightwing",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 77.2,
+        "y": 47.7,
+        "giver": "Count Remington Ridgewell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4768,
+      "name": "Quest 4768",
+      "minLevel": 57,
+      "prerequisiteSteps": [
+        4769
+      ]
+    },
+    {
+      "id": 4769,
+      "name": "Vivian Lagrave and the Darkstone Tablet",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 50,
+        "y": 68.4,
+        "giver": "Apothecary Zinge"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4771,
+      "name": "Quest 4771",
+      "minLevel": 57,
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.7,
+        "y": 50,
+        "giver": "Betina Bigglezink"
+      },
+      "prerequisiteSteps": [
+        4726,
+        4808,
+        4809,
+        4810,
+        5522,
+        5531
+      ]
+    },
+    {
+      "id": 4787,
+      "name": "The Ancient Egg",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 67,
+        "y": 22.4,
+        "giver": "Yeh'kinya"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4788,
+      "name": "Quest 4788",
+      "minLevel": 40,
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 66.8,
+        "y": 24,
+        "giver": "Prospector Ironboot"
+      },
+      "prerequisiteSteps": [
+        3520,
+        3527,
+        4787,
+        3528,
+        5065
+      ]
+    },
+    {
+      "id": 4808,
+      "name": "Felnok Steelspring",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 65.2,
+        "y": 23.8,
+        "giver": "Tinkee Steamboil"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4809,
+      "name": "Chillwind Horns",
+      "start": {
+        "uiMapId": 1452,
+        "zone": "Winterspring",
+        "x": 61.6,
+        "y": 38.6,
+        "giver": "Felnok Steelspring"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4810,
+      "name": "Return to Tinkee",
+      "start": {
+        "uiMapId": 1452,
+        "zone": "Winterspring",
+        "x": 61.6,
+        "y": 38.6,
+        "giver": "Felnok Steelspring"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4903,
+      "name": "Quest 4903",
+      "minLevel": 55,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4941,
+      "name": "Eitrigg's Wisdom",
+      "start": {
+        "uiMapId": 1418,
+        "zone": "Badlands",
+        "x": 5.8,
+        "y": 47.4,
+        "giver": "Warlord Goretooth"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 4974,
+      "name": "Quest 4974",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": [
+        4903,
+        4941
+      ]
+    },
+    {
+      "id": 5061,
+      "name": "Aquatic Form",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 56.2,
+        "y": 30.4,
+        "giver": "Dendrite Starblaze"
+      },
+      "prerequisiteSteps": [
+        26,
+        29,
+        272
+      ]
+    },
+    {
+      "id": 5065,
+      "name": "The Lost Tablets of Mosh'aru",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 66.8,
+        "y": 24,
+        "giver": "Prospector Ironboot"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5089,
+      "name": "Quest 5089",
+      "minLevel": 55,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5102,
+      "name": "Quest 5102",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 84.6,
+        "y": 68.8,
+        "giver": "Marshal Maxwell"
+      },
+      "prerequisiteSteps": [
+        5089
+      ]
+    },
+    {
+      "id": 5122,
+      "name": "Quest 5122",
+      "minLevel": 55,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5125,
+      "name": "Quest 5125",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5122
+      ]
+    },
+    {
+      "id": 5126,
+      "name": "Lorax's Tale",
+      "start": {
+        "uiMapId": 1452,
+        "zone": "Winterspring",
+        "x": 63.8,
+        "y": 73.8,
+        "giver": "Lorax"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5127,
+      "name": "Quest 5127",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5126
+      ]
+    },
+    {
+      "id": 5212,
+      "name": "Quest 5212",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.7,
+        "y": 50,
+        "giver": "Betina Bigglezink"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5213,
+      "name": "Quest 5213",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5212
+      ]
+    },
+    {
+      "id": 5251,
+      "name": "Quest 5251",
+      "minLevel": 55,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5262,
+      "name": "Quest 5262",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5251
+      ]
+    },
+    {
+      "id": 5263,
+      "name": "Quest 5263",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.6,
+        "y": 50.1,
+        "giver": "Duke Nicholas Zverenhoff"
+      },
+      "prerequisiteSteps": [
+        5251,
+        5262
+      ]
+    },
+    {
+      "id": 5281,
+      "name": "The Restless Souls",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5282,
+      "name": "Quest 5282",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5281
+      ]
+    },
+    {
+      "id": 5382,
+      "name": "Quest 5382",
+      "minLevel": 55,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5384,
+      "name": "Quest 5384",
+      "minLevel": 55,
+      "prerequisiteSteps": [
+        5382,
+        5515
+      ]
+    },
+    {
+      "id": 5461,
+      "name": "The Human, Ras Frostwhisper",
+      "start": {
+        "uiMapId": 1422,
+        "zone": "Western Plaguelands",
+        "x": 70.4,
+        "y": 74,
+        "giver": "Magistrate Marduke"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5462,
+      "name": "The Dying, Ras Frostwhisper",
+      "start": {
+        "uiMapId": 1422,
+        "zone": "Western Plaguelands",
+        "x": 70.4,
+        "y": 74,
+        "giver": "Magistrate Marduke"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5463,
+      "name": "Quest 5463",
+      "minLevel": 57,
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.9,
+        "y": 48.3,
+        "giver": "Leonid Barthalomew the Revered"
+      },
+      "prerequisiteSteps": [
+        5382,
+        5515,
+        5384,
+        5461,
+        5462
+      ]
+    },
+    {
+      "id": 5464,
+      "name": "Menethil's Gift",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5465,
+      "name": "Soulbound Keepsake",
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.9,
+        "y": 48.3,
+        "giver": "Leonid Barthalomew the Revered"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5466,
+      "name": "Quest 5466",
+      "minLevel": 57,
+      "start": {
+        "uiMapId": 1422,
+        "zone": "Western Plaguelands",
+        "x": 70.4,
+        "y": 74,
+        "giver": "Magistrate Marduke"
+      },
+      "prerequisiteSteps": [
+        5382,
+        5515,
+        5384,
+        5461,
+        5462,
+        5463,
+        5464,
+        5465
+      ]
+    },
+    {
+      "id": 5515,
+      "name": "Quest 5515",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1422,
+        "zone": "Western Plaguelands",
+        "x": 70.2,
+        "y": 73.8,
+        "giver": "Eva Sarkhoff"
+      },
+      "prerequisiteSteps": [
+        5382
+      ]
+    },
+    {
+      "id": 5522,
+      "name": "Leonid Barthalomew",
+      "start": {
+        "uiMapId": 1428,
+        "zone": "Burning Steppes",
+        "x": 65.2,
+        "y": 23.8,
+        "giver": "Tinkee Steamboil"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5526,
+      "name": "Quest 5526",
+      "minLevel": 56,
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 51.6,
+        "y": 44.8,
+        "giver": "Rabine Saturna"
+      },
+      "prerequisiteSteps": [
+        5527
+      ]
+    },
+    {
+      "id": 5527,
+      "name": "A Reliquary of Purity",
+      "start": {
+        "uiMapId": 1450,
+        "zone": "Moonglade",
+        "x": 51.6,
+        "y": 44.8,
+        "giver": "Rabine Saturna"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5531,
+      "name": "Betina Bigglezink",
+      "start": {
+        "uiMapId": 1423,
+        "zone": "Eastern Plaguelands",
+        "x": 71.9,
+        "y": 48.3,
+        "giver": "Leonid Barthalomew the Revered"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5542,
+      "name": "Demon Dogs",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5543,
+      "name": "Blood Tinged Skies",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5544,
+      "name": "Carrion Grubbage",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5722,
+      "name": "Quest 5722",
+      "minLevel": 9,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5724,
+      "name": "Returning the Lost Satchel",
+      "minLevel": 9,
+      "prerequisiteSteps": [
+        5722
+      ]
+    },
+    {
+      "id": 5726,
+      "name": "Hidden Enemies",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5727,
+      "name": "Hidden Enemies",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5728,
+      "name": "Quest 5728",
+      "minLevel": 9,
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": [
+        5726,
+        5727
+      ]
+    },
+    {
+      "id": 5729,
+      "name": "Hidden Enemies",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 32,
+        "y": 37.8,
+        "giver": "Thrall"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5730,
+      "name": "Hidden Enemies",
+      "minLevel": 9,
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 49.6,
+        "y": 50.4,
+        "giver": "Neeru Fireblade"
+      },
+      "prerequisiteSteps": [
+        5727,
+        5728,
+        5729
+      ]
+    },
+    {
+      "id": 5742,
+      "name": "Redemption",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5781,
+      "name": "Of Forgotten Memories",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5845,
+      "name": "Of Lost Honor",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5846,
+      "name": "Of Love and Family",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 5848,
+      "name": "Quest 5848",
+      "minLevel": 52,
+      "start": {
+        "uiMapId": 1422,
+        "zone": "Western Plaguelands",
+        "x": 65.6,
+        "y": 75.4,
+        "giver": "Artist Renfray"
+      },
+      "prerequisiteSteps": [
+        5543,
+        5544,
+        5542,
+        5742,
+        5781,
+        5845,
+        5846
+      ]
+    },
+    {
+      "id": 6022,
+      "name": "To Kill With Purpose",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6133,
+      "name": "The Ranger Lord's Behest",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6141,
+      "name": "Brother Anton",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 52.5,
+        "y": 43.2,
+        "giver": "Brother Crowley"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6163,
+      "name": "Quest 6163",
+      "minLevel": 56,
+      "prerequisiteSteps": [
+        6133,
+        6022
+      ]
+    },
+    {
+      "id": 6282,
+      "name": "Harpies Threaten",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 47.2,
+        "y": 61,
+        "giver": "Maggran Earthbinder"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6283,
+      "name": "Bloodfury Bloodline",
+      "minLevel": 18,
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 47.2,
+        "y": 61,
+        "giver": "Maggran Earthbinder"
+      },
+      "prerequisiteSteps": [
+        6282
+      ]
+    },
+    {
+      "id": 6403,
+      "name": "The Great Masquerade",
+      "start": {
+        "uiMapId": 1429,
+        "zone": "Elwynn Forest",
+        "x": 32,
+        "y": 49.2,
+        "giver": "Reginald Windsor"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6501,
+      "name": "The Dragon's Eye",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 80.3,
+        "y": 38.4,
+        "giver": "Highlord Bolvar Fordragon"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6502,
+      "name": "Quest 6502",
+      "minLevel": 50,
+      "start": {
+        "uiMapId": 1452,
+        "zone": "Winterspring",
+        "x": 54.4,
+        "y": 51.2,
+        "giver": "Haleh"
+      },
+      "prerequisiteSteps": [
+        4182,
+        4183,
+        4184,
+        4185,
+        4186,
+        4223,
+        4224,
+        4241,
+        4242,
+        6403,
+        6501
+      ]
+    },
+    {
+      "id": 6521,
+      "name": "Quest 6521",
+      "minLevel": 28,
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 56.2,
+        "y": 92.6,
+        "giver": "Varimathras"
+      },
+      "prerequisiteSteps": [
+        6522
+      ]
+    },
+    {
+      "id": 6522,
+      "name": "Quest 6522",
+      "minLevel": 28,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6562,
+      "name": "Trouble in the Deeps",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 47.2,
+        "y": 64.2,
+        "giver": "Tsunaman"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6563,
+      "name": "Quest 6563",
+      "minLevel": 17,
+      "prerequisiteSteps": [
+        6562
+      ]
+    },
+    {
+      "id": 6564,
+      "name": "Allegiance to the Old Gods",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6565,
+      "name": "Quest 6565",
+      "minLevel": 17,
+      "prerequisiteSteps": [
+        6564
+      ]
+    },
+    {
+      "id": 6585,
+      "name": "The Test of Skulls, Axtroz",
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 56.6,
+        "y": 87.6,
+        "giver": "Emberstrife"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6601,
+      "name": "Ascension...",
+      "start": {
+        "uiMapId": 1445,
+        "zone": "Dustwallow Marsh",
+        "x": 56.6,
+        "y": 87.6,
+        "giver": "Emberstrife"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6602,
+      "name": "Quest 6602",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1444,
+        "zone": "Feralas",
+        "x": 45.2,
+        "y": 2.6,
+        "giver": "Rexxar"
+      },
+      "prerequisiteSteps": [
+        4903,
+        4941,
+        4974,
+        6585,
+        6601
+      ]
+    },
+    {
+      "id": 6627,
+      "name": "Test of Lore",
+      "start": {
+        "uiMapId": 1442,
+        "zone": "Stonetalon Mountains",
+        "x": 78.6,
+        "y": 45.6,
+        "giver": "Braug Dimspirit"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6804,
+      "name": "Poisoned Water",
+      "start": {
+        "uiMapId": 1447,
+        "zone": "Azshara",
+        "x": 79.2,
+        "y": 73.6,
+        "giver": "Duke Hydraxis"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6805,
+      "name": "Stormers and Rumblers",
+      "start": {
+        "uiMapId": 1447,
+        "zone": "Azshara",
+        "x": 79.2,
+        "y": 73.6,
+        "giver": "Duke Hydraxis"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 6821,
+      "name": "Quest 6821",
+      "minLevel": 55,
+      "start": {
+        "uiMapId": 1447,
+        "zone": "Azshara",
+        "x": 79.2,
+        "y": 73.6,
+        "giver": "Duke Hydraxis"
+      },
+      "prerequisiteSteps": [
+        6805,
+        6804
+      ]
+    },
+    {
+      "id": 7044,
+      "name": "Quest 7044",
+      "minLevel": 41,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 7046,
+      "name": "Quest 7046",
+      "minLevel": 41,
+      "prerequisiteSteps": [
+        7044
+      ]
+    },
+    {
+      "id": 7201,
+      "name": "Quest 7201",
+      "minLevel": 48,
+      "prerequisiteSteps": [
+        3906,
+        3907
+      ]
+    },
+    {
+      "id": 7488,
+      "name": "Quest 7488",
+      "minLevel": 54,
+      "prerequisiteSteps": [
+        7494
+      ]
+    },
+    {
+      "id": 7489,
+      "name": "Quest 7489",
+      "minLevel": 54,
+      "prerequisiteSteps": [
+        7492
+      ]
+    },
+    {
+      "id": 7492,
+      "name": "Camp Mojache",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 68.2,
+        "y": 47.6,
+        "giver": "Harbinger Balthazad"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 7494,
+      "name": "Feathermoon Stronghold",
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 62.3,
+        "y": 73.2,
+        "giver": "Crier Goodman"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 7667,
+      "name": "Material Assistance",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 38.6,
+        "y": 36.2,
+        "giver": "Sagorne Creststrider"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 7668,
+      "name": "Quest 7668",
+      "minLevel": 58,
+      "prerequisiteSteps": [
+        7667,
+        8258
+      ]
+    },
+    {
+      "id": 8258,
+      "name": "The Darkreaver Menace",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 38.6,
+        "y": 36.2,
+        "giver": "Sagorne Creststrider"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8921,
+      "name": "The Ectoplasmic Distiller",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 52.4,
+        "y": 27.2,
+        "giver": "Mux Manascrambler"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8922,
+      "name": "A Supernatural Device",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8923,
+      "name": "A Supernatural Device",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8924,
+      "name": "Hunting for Ectoplasm",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 52.4,
+        "y": 27.2,
+        "giver": "Mux Manascrambler"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8925,
+      "name": "A Portable Power Source",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 52.4,
+        "y": 27.2,
+        "giver": "Mux Manascrambler"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8926,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8927,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8928,
+      "name": "A Shifty Merchant",
+      "start": {
+        "uiMapId": 1446,
+        "zone": "Tanaris",
+        "x": 52.4,
+        "y": 27.2,
+        "giver": "Mux Manascrambler"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8929,
+      "name": "In Search of Anthion",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8930,
+      "name": "In Search of Anthion",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8931,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8932,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8933,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8934,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8935,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8936,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8937,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 43.4,
+        "y": 52.2,
+        "giver": "Deliana"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8938,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8939,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8940,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8941,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8942,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8943,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8944,
+      "name": "Just Compensation",
+      "start": {
+        "uiMapId": 1454,
+        "zone": "Orgrimmar",
+        "x": 34.8,
+        "y": 38,
+        "giver": "Mokvar"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 8945,
+      "name": "Quest 8945",
+      "minLevel": 58,
+      "prerequisiteSteps": [
+        [
+          8922,
+          8923
+        ],
+        8921,
+        8924,
+        8925,
+        8928,
+        [
+          8926,
+          8927,
+          8931,
+          8932,
+          8933,
+          8934,
+          8935,
+          8936,
+          8937,
+          8938,
+          8939,
+          8940,
+          8941,
+          8942,
+          8943,
+          8944
+        ],
+        [
+          8929,
+          8930
+        ]
+      ]
+    },
+    {
+      "id": 78261,
+      "name": "The Horn of Xelthos",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 47.1,
+        "y": 71.1,
+        "giver": "Dead Drop"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 78307,
+      "name": "The Horn of Xelthos",
+      "prerequisiteSteps": [
+        78261
+      ]
+    },
+    {
+      "id": 92415,
+      "name": "Quest 92415",
+      "minLevel": 15,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 92432,
+      "name": "An Alarming Request",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 48.3,
+        "y": 60.1,
+        "giver": "Emissary Jacques"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 92434,
+      "name": "Blood in the Streets",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 61.6,
+        "y": 20.8,
+        "giver": "Magus Wordeen Voidglare"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 92458,
+      "name": "Quest 92458",
+      "minLevel": 24,
+      "prerequisiteSteps": [
+        92432
+      ]
+    },
+    {
+      "id": 94449,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1455,
+        "zone": "Ironforge",
+        "x": 47.4,
+        "y": 13.6,
+        "giver": "Eldrun Stormbreaker"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 94465,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1426,
+        "zone": "Dun Morogh",
+        "x": 87.6,
+        "y": 43.6,
+        "giver": "Bruegs Kindleborn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 94466,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1432,
+        "zone": "Loch Modan",
+        "x": 32,
+        "y": 66,
+        "giver": "Braldir Ashmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 94467,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 1432,
+        "zone": "Loch Modan",
+        "x": 32,
+        "y": 66,
+        "giver": "Braldir Ashmantle"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 94468,
+      "name": "Call of Fire",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1411,
+        "zone": "Durotar",
+        "x": 38.9,
+        "y": 58.2,
+        "giver": "Brazier of the Dormant Flame"
+      },
+      "prerequisiteSteps": [
+        94449,
+        94465,
+        94466,
+        94467
+      ]
+    },
+    {
+      "id": 95161,
+      "name": "Remember That I Love You",
+      "minLevel": 15,
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 56.2,
+        "y": 54.1,
+        "giver": "Orphan Matron Nightingale"
+      },
+      "prerequisiteSteps": [
+        92415
+      ]
+    },
+    {
+      "id": 95883,
+      "name": "The Tortured Soul",
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 58.1,
+        "y": 69.8,
+        "giver": "Offering Stone"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 95884,
+      "name": "The Offering Stone",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 95885,
+      "name": "The Offering of Blood",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 58.1,
+        "y": 69.8,
+        "giver": "Offering Stone"
+      },
+      "prerequisiteSteps": [
+        95884,
+        95883
+      ]
+    },
+    {
+      "id": 95981,
+      "name": "Watching the Roads",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1421,
+        "zone": "Silverpine Forest",
+        "x": 44,
+        "y": 41,
+        "giver": "Shadow Priest Allister"
+      },
+      "prerequisiteSteps": [
+        477,
+        478,
+        481,
+        482
+      ]
+    },
+    {
+      "id": 96391,
+      "name": "Underground Map",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 96393,
+      "name": "Quest 96393",
+      "minLevel": 9,
+      "prerequisiteSteps": [
+        96391
+      ]
+    },
+    {
+      "id": 96896,
+      "name": "A Righteous Cause",
+      "start": {
+        "uiMapId": 1420,
+        "zone": "Tirisfal Glades",
+        "x": 22,
+        "y": 44.8,
+        "giver": "Leonid Barthalomew the Revered"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 96899,
+      "name": "Bandarion Keep",
+      "start": {
+        "uiMapId": 1420,
+        "zone": "Tirisfal Glades",
+        "x": 65.8,
+        "y": 61,
+        "giver": "Hadric Harlson"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 96984,
+      "name": "Quest 96984",
+      "minLevel": 24,
+      "prerequisiteSteps": [
+        92434
+      ]
+    },
+    {
+      "id": 97245,
+      "name": "Call of Fire",
+      "start": {
+        "uiMapId": 2521,
+        "zone": "Map 2521",
+        "x": 51.2,
+        "y": 86,
+        "giver": "Olariaan Swiftburn"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 97257,
+      "name": "Call of Fire",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 2521,
+        "zone": "Map 2521",
+        "x": 51.2,
+        "y": 86,
+        "giver": "Olariaan Swiftburn"
+      },
+      "prerequisiteSteps": [
+        97245
+      ]
+    },
+    {
+      "id": 97288,
+      "name": "Quest 97288",
+      "minLevel": 16,
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 97289,
+      "name": "Unending Torment",
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 48.4,
+        "y": 69.4,
+        "giver": "Master Apothecary Faranell"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 97290,
+      "name": "Unending Torment",
+      "minLevel": 16,
+      "start": {
+        "uiMapId": 1458,
+        "zone": "Undercity",
+        "x": 46,
+        "y": 62.2,
+        "giver": "Unfinished Abomination"
+      },
+      "prerequisiteSteps": [
+        97288,
+        97289
+      ]
+    },
+    {
+      "id": 98094,
+      "name": "Scout Support",
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 62.2,
+        "y": 20.2,
+        "giver": "High Executor Darthalia"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 98095,
+      "name": "Valuable Vantages",
+      "minLevel": 19,
+      "start": {
+        "uiMapId": 1424,
+        "zone": "Hillsbrad Foothills",
+        "x": 64,
+        "y": 53.8,
+        "giver": "Deathstalker Masoj"
+      },
+      "prerequisiteSteps": [
+        98094
+      ]
+    },
+    {
+      "id": 98189,
+      "name": "Return the Statuette",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 8.4,
+        "y": 58.6,
+        "giver": "Karl Boran"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 98190,
+      "name": "A Friend of the Family",
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 9.8,
+        "y": 57.4,
+        "giver": "Captain Stoutfist"
+      },
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 98191,
+      "name": "A Friend of the Family",
+      "minLevel": 20,
+      "start": {
+        "uiMapId": 1453,
+        "zone": "Stormwind City",
+        "x": 80.3,
+        "y": 38.4,
+        "giver": "Highlord Bolvar Fordragon"
+      },
+      "prerequisiteSteps": [
+        279,
+        281,
+        284,
+        285,
+        286,
+        98189,
+        98190
+      ]
+    },
+    {
+      "id": 98216,
+      "name": "Understanding Our Present",
+      "minLevel": 23,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38.8,
+        "y": 52.2,
+        "giver": "Prospector Whelgar"
+      },
+      "prerequisiteSteps": [
+        299
+      ]
+    },
+    {
+      "id": 98283,
+      "name": "Carnage",
+      "minLevel": 22,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 56.2,
+        "y": 40.4,
+        "giver": "Rethiel the Greenwarden"
+      },
+      "prerequisiteSteps": [
+        463,
+        276,
+        277,
+        275
+      ]
+    },
+    {
+      "id": 98310,
+      "name": "Gleaning Our Future",
+      "minLevel": 24,
+      "start": {
+        "uiMapId": 1437,
+        "zone": "Wetlands",
+        "x": 38.8,
+        "y": 52.2,
+        "giver": "Prospector Whelgar"
+      },
+      "prerequisiteSteps": [
+        299,
+        98216
+      ]
+    },
+    {
+      "id": 98386,
+      "name": "Alther's Mill",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 98387,
+      "name": "Blackrock Blockade",
+      "prerequisiteSteps": []
+    },
+    {
+      "id": 98545,
+      "name": "Leonid's Letter",
+      "minLevel": 10,
+      "start": {
+        "uiMapId": 1420,
+        "zone": "Tirisfal Glades",
+        "x": 22,
+        "y": 44.8,
+        "giver": "Leonid Barthalomew the Revered"
+      },
+      "prerequisiteSteps": [
+        96899,
+        96896
+      ]
+    }
+  ]
+}

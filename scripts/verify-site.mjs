@@ -75,6 +75,8 @@ try {
   await page.getByRole("button", { name: /Ragefire Chasm/ }).click();
   assert.ok(await page.locator(".detail-panel .inspectable-entry").count() > 0, "dungeon detail exposes quests and loot");
   assert.equal(await page.locator(".dungeon-map-panel img").count(), 1, "Ragefire Chasm exposes a verified instance map");
+  assert.equal(await page.locator('.dungeon-map-panel a[title="Open full-resolution map"]').count(), 1, "map can be opened at source resolution");
+  assert.match(await page.locator(".dungeon-map-panel .map-quality").innerText(), /512|native/i, "map quality is disclosed");
   assert.equal(await page.getByRole("button", { name: "Add to route", exact: true }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Plan next", exact: true }).count(), 1);
   assert.ok(await page.locator(".encounter-order a").count() >= 4, "map panel exposes a sourced encounter index");
@@ -93,7 +95,7 @@ try {
 
   await page.getByRole("button", { name: "Quests", exact: true }).click();
   const expectedHordeQuests = snapshot.dungeons.flatMap((dungeon) => dungeon.quests).filter((quest) => !quest.faction || quest.faction === "both" || quest.faction === "horde").length;
-  assert.equal(await page.locator(".quest-archive-row").count(), expectedHordeQuests, "Horde view hides Alliance-only quests");
+  assert.ok(await page.locator(".quest-archive-row").count() >= expectedHordeQuests, "Horde view includes dungeon quests and their browsable prerequisites");
   assert.equal((await page.locator(".quest-archive-row > div:nth-child(2) small").allTextContents()).some((value) => value === "Alliance"), false);
   await page.getByRole("combobox").last().selectOption("rewards-only");
   assert.equal(await page.locator(".quest-archive-row").count(), 67);
@@ -102,7 +104,21 @@ try {
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
   assert.match(await page.locator(".wow-tooltip").innerText(), /Dungeon/);
   await page.keyboard.press("Escape");
-  await page.getByPlaceholder("Search quest, objective, or dungeon").fill("The Power to Destroy");
+  await page.getByPlaceholder("Search quest, giver, zone, or dungeon").fill("Hidden Enemies");
+  await page.locator(".quest-archive-row").first().click();
+  await page.locator(".quest-tray").waitFor({ state: "visible" });
+  assert.match(await page.locator(".quest-tray").innerText(), /Before you go[\s\S]*Start with:[\s\S]*Prerequisite quests/i, "quest tray makes the prerequisite pickup route explicit");
+  assert.ok(await page.locator(".quest-location-card").count() >= 1, "quest tray includes sourced pickup and turn-in location mapping");
+  assert.match(await page.locator(".quest-location-card").first().innerText(), /Pick up(?: & turn in| from)/i, "same-NPC pickup and turn-in locations collapse without losing meaning");
+  assert.ok(await page.locator(".quest-map-pin").count() >= 1, "a sourced quest coordinate renders as a map pin");
+  assert.equal((await page.locator('.quest-tray a[href*="wowhead.com"]').count()), 0, "quest tray contains no non-Forever quest links");
+  assert.match(await page.locator(".quest-tray footer a").first().getAttribute("href"), /^https:\/\/wowf\.io\//, "external quest link targets the Forever source");
+  await page.getByRole("button", { name: /Start with:/ }).click();
+  assert.match(await page.locator(".quest-tray h2").innerText(), /Hidden Enemies|Quest/, "prerequisite quests browse inside the tool");
+  assert.equal(await page.locator(".tray-back").count(), 1, "internal prerequisite navigation keeps a back path");
+  await page.keyboard.press("Escape");
+
+  await page.getByPlaceholder("Search quest, giver, zone, or dungeon").fill("The Power to Destroy");
   await page.locator(".quest-archive-row").first().click();
   await page.locator(".quest-tray").waitFor({ state: "visible" });
   assert.match(await page.locator(".quest-tray").innerText(), /Rewards\s+3/);
@@ -110,6 +126,8 @@ try {
   await page.locator(".reward-card").first().focus();
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
   assert.match(await page.locator(".wow-tooltip").innerText(), /recommendation/i);
+  const tooltipLayering = await page.evaluate(() => Number(getComputedStyle(document.querySelector(".wow-tooltip")).zIndex) > Number(getComputedStyle(document.querySelector(".tray-layer")).zIndex));
+  assert.equal(tooltipLayering, true, "reward tooltips render above the pinned quest tray");
   await page.keyboard.press("Escape");
   assert.equal(await page.locator(".quest-tray").count(), 1, "first Escape closes only the nested reward tooltip");
   await page.keyboard.press("Escape");
@@ -150,7 +168,8 @@ try {
   await page.keyboard.press("Escape");
   await page.evaluate(() => { window.__openedItem = null; window.open = (url) => { window.__openedItem = url; return null; }; });
   await itemRow.click();
-  assert.match(await page.evaluate(() => window.__openedItem), /^https:\/\/www\.wowhead\.com\/classic\//);
+  assert.match(await page.evaluate(() => window.__openedItem), /^https:\/\/wowf\.io\/en\/dungeons\/.+#item-/);
+  assert.equal(await page.locator('a[href*="wowhead.com"]').count(), 0, "application links do not send items or quests to non-Forever versions");
 
   await page.getByRole("button", { name: /My Gear/ }).click();
   assert.equal(await page.locator(".wishlist-card").count(), 1, "wishlist persists into the profile workspace");
@@ -181,7 +200,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Quests", exact: true }).click();
-  await page.getByPlaceholder("Search quest, objective, or dungeon").fill("");
+  await page.getByPlaceholder("Search quest, giver, zone, or dungeon").fill("");
   await page.locator(".quest-archive-row").first().focus();
   await page.locator(".wow-tooltip").waitFor({ state: "visible" });
   const tooltipBox = await page.locator(".wow-tooltip").boundingBox();

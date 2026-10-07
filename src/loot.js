@@ -114,14 +114,15 @@ export function classIconUrl(characterClass) {
 }
 
 export function itemIconUrl(item) {
-  return item.icon ? `https://wow.zamimg.com/images/wow/icons/large/${String(item.icon).toLowerCase()}.jpg` : null;
+  return item.icon ? `https://wowf-assets.t3.tigrisfiles.io/icons/items/${String(item.icon).toLowerCase()}.jpg` : null;
 }
 
-export function itemSourceUrl(item) {
-  if (Number.isInteger(Number(item.id)) && Number(item.id) > 0 && Number(item.id) < 200000) {
-    return `https://www.wowhead.com/classic/item=${item.id}`;
+export function itemSourceUrl(item, dungeon) {
+  const dungeonId = dungeon?.id || item?.dungeonId;
+  if (dungeonId && Number.isInteger(Number(item?.id)) && Number(item.id) > 0) {
+    return `https://wowf.io/en/dungeons/${dungeonId}#item-${item.id}`;
   }
-  return `https://www.wowhead.com/classic/search?q=${encodeURIComponent(item.name)}`;
+  return "https://wowf.io/en/discoveries/items";
 }
 
 export function itemSourceMeta(item, dungeon) {

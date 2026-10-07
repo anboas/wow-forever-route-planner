@@ -96,15 +96,19 @@ export function lootVisibleForFaction(item, dungeon, faction) {
   return source.kind !== "quest" || !source.faction || source.faction.toLowerCase() === String(faction).toLowerCase();
 }
 
-export function questSourceUrl(quest) {
-  const id = Number(quest?.id);
-  return Number.isInteger(id) && id > 0 && id < 200000
-    ? `https://www.wowhead.com/classic/quest=${id}`
-    : `https://www.wowhead.com/classic/search?q=${encodeURIComponent(quest?.name || "")}`;
+export function questSourceUrl(quest, dungeon) {
+  const published = quest?.sourcePages?.find((source) => String(source.url || "").startsWith("https://wowf.io/"));
+  if (published) return published.url;
+  if (dungeon?.questSourceUrl?.startsWith("https://wowf.io/")) return dungeon.questSourceUrl;
+  return "https://wowf.io/en/dungeons#quests";
 }
 
-export function entitySourceUrl(source) {
-  return `https://www.wowhead.com/classic/search?q=${encodeURIComponent(source?.name || "")}`;
+export function entitySourceUrl(source, dungeon) {
+  if (dungeon?.id) {
+    const anchor = String(source?.name || "").toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return `https://wowf.io/en/dungeons/${dungeon.id}${anchor ? `#fold-${anchor}` : ""}`;
+  }
+  return "https://wowf.io/en/dungeons";
 }
 
 export function reportIssueUrl({ item, quest, dungeon }) {

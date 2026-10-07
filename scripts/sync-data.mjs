@@ -12,7 +12,9 @@ const outputPath = path.resolve(
 );
 const contextPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/data/wowf-context.json");
 const context = JSON.parse(await readFile(contextPath, "utf8"));
+const questChains = JSON.parse(await readFile(new URL("../src/data/forever-quest-chains.json", import.meta.url), "utf8"));
 const contextQuestById = new Map(context.quests.map((quest) => [String(quest.id), quest]));
+const chainQuestById = new Map(questChains.quests.map((quest) => [String(quest.id), quest]));
 
 function profileKey(guide) {
   return `${guide.classId}:${guide.spec}`;
@@ -195,6 +197,7 @@ function slimQuest(quest) {
   ])];
   const startPlaces = contextQuest?.stages?.find((stage) => stage.key === "start")?.places;
   const endPlaces = contextQuest?.stages?.find((stage) => stage.key === "end")?.places;
+  const chainRecord = chainQuestById.get(String(quest.id));
   return clean({
     id: quest.id,
     name: quest.name,
@@ -216,7 +219,8 @@ function slimQuest(quest) {
     site: quest.site,
     series: quest.series,
     stages: contextQuest?.stages,
-    prerequisiteIds: contextQuest?.previousIds,
+    prerequisiteIds: chainRecord?.prerequisiteSteps?.flat(4) || contextQuest?.previousIds,
+    prerequisiteSteps: chainRecord?.prerequisiteSteps?.map((step) => (Array.isArray(step) ? step : [step]).map((id) => chainQuestById.get(String(id))).filter(Boolean)),
     sourcePages: contextQuest?.sourcePages,
     sourceUpdatedAt: contextQuest?.sourceUpdatedAt,
     reviewState: contextQuest?.reviewState,
@@ -228,6 +232,7 @@ function slimQuest(quest) {
 function questFromContext(quest) {
   const start = quest.stages.find((stage) => stage.key === "start");
   const end = quest.stages.find((stage) => stage.key === "end");
+  const chainRecord = chainQuestById.get(String(quest.id));
   return clean({
     id: quest.id,
     name: quest.name,
@@ -239,7 +244,8 @@ function questFromContext(quest) {
     from: start?.places,
     to: end?.places,
     stages: quest.stages,
-    prerequisiteIds: quest.previousIds,
+    prerequisiteIds: chainRecord?.prerequisiteSteps?.flat(4) || quest.previousIds,
+    prerequisiteSteps: chainRecord?.prerequisiteSteps?.map((step) => (Array.isArray(step) ? step : [step]).map((id) => chainQuestById.get(String(id))).filter(Boolean)),
     rewards: quest.rewards,
     rewardChoices: quest.rewardChoices,
     sourcePages: quest.sourcePages,
@@ -368,6 +374,11 @@ const snapshot = {
       name: "WOWF.IO",
       url: SOURCE_INDEX,
       note: "Beta-client and public-announcement dungeon data plus the complete published quest, zone, and leveling-guide corpus.",
+    },
+    {
+      name: "NaowhForever quest chains",
+      url: questChains.source.url,
+      note: "Forever-specific prerequisite IDs, minimum levels, quest-giver coordinates, and pickup order.",
     },
     {
       name: "Warcraft Tavern",

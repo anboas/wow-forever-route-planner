@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useId, useLayoutEffect, useMemo, 
 import { createPortal } from "react-dom";
 import snapshot from "./data/wow-forever.json";
 import dungeonMaps from "./data/dungeon-maps.json";
+import foreverQuestChains from "./data/forever-quest-chains.json";
 import { clampCharacter, formatCharacter, progressPercent, XP_TO_NEXT } from "./xp.js";
 import { buildOptimizerCandidates, matchesFaction, optimizeRouteOrder, questMinimumLevel, simulateRoute } from "./planner.js";
 import { bestClasses, classCanUseItem, classFitScore, classIconUrl, CLASS_OPTIONS, compatibleClasses, itemIconUrl, itemSourceMeta, itemSourceUrl } from "./loot.js";
@@ -128,8 +129,8 @@ function actorList(actors) {
   return actors.map((actor) => `${actor.name}${actor.zone ? ` (${actor.zone})` : ""}`).join(", ");
 }
 
-function openItemSource(item) {
-  window.open(itemSourceUrl(item), "_blank", "noopener,noreferrer");
+function openItemSource(item, dungeon) {
+  window.open(itemSourceUrl(item, dungeon), "_blank", "noopener,noreferrer");
 }
 
 function assetUrl(path) {
@@ -184,9 +185,9 @@ function ItemActions({ item, dungeon, compact = false }) {
   const equipped = item.slot && gear.equipped[item.slot]?.key === itemKey(item, dungeon?.id);
   return (
     <span className={`item-actions ${compact ? "compact" : ""}`} data-no-activate onClick={(event) => event.stopPropagation()} onFocus={(event) => event.stopPropagation()}>
-      <button className={wished ? "active" : ""} onClick={() => gear.toggleWishlist(item, dungeon)} aria-label={`${wished ? "Remove" : "Add"} ${item.name} ${wished ? "from" : "to"} wishlist`}>{wished ? "★" : "☆"}</button>
-      {item.slot && <button className={equipped ? "active" : ""} onClick={() => gear.equipItem(item, dungeon)} aria-label={`${equipped ? "Unequip" : "Equip"} ${item.name}`}>{equipped ? "✓" : "⇄"}</button>}
-      <a href={reportIssueUrl({ item, dungeon })} target="_blank" rel="noreferrer" aria-label={`Report incorrect data for ${item.name}`}>!</a>
+      <button className={wished ? "active" : ""} aria-pressed={wished} onClick={() => gear.toggleWishlist(item, dungeon)} aria-label={`${wished ? "Remove" : "Add"} ${item.name} ${wished ? "from" : "to"} wishlist`} title={wished ? "Remove from wishlist" : "Save to wishlist"}><b aria-hidden="true">{wished ? "★" : "☆"}</b><span>{compact ? wished ? "Saved" : "Save" : wished ? "Wishlisted" : "Wishlist"}</span></button>
+      {item.slot && <button className={equipped ? "active" : ""} aria-pressed={equipped} onClick={() => gear.equipItem(item, dungeon)} aria-label={`${equipped ? "Unequip" : "Equip"} ${item.name}`} title={equipped ? "Remove from My Gear" : "Set as equipped in My Gear"}><b aria-hidden="true">{equipped ? "✓" : "⇄"}</b><span>{compact ? equipped ? "Equipped" : "Equip" : equipped ? "Equipped" : "My Gear"}</span></button>}
+      <a href={reportIssueUrl({ item, dungeon })} target="_blank" rel="noreferrer" aria-label={`Report incorrect data for ${item.name}`} title="Report incorrect data"><b aria-hidden="true">!</b><span>Report</span></a>
     </span>
   );
 }
@@ -318,7 +319,7 @@ function ItemTooltip({ item, dungeon }) {
       {!!partyFit.length && <div className="tooltip-party"><span>Party interest</span><strong>{partyFit.map((member) => member.name).join(", ")}</strong></div>}
       {dungeon && <div className="tooltip-source"><span>{source.label}</span><strong>{dungeon.name}</strong><small>{source.name}</small><small>Snapshot {new Date(snapshot.fetchedAt).toLocaleDateString()}</small></div>}
       {item.uncertain && <div className="tooltip-warning">Partial beta record. Some properties may change.</div>}
-      <div className="tooltip-wowhead">Click to open {Number(item.id) < 200000 ? "the item" : "a name search"} on Wowhead ↗</div>
+      <div className="tooltip-source-link">Click to open this item in the WoW Forever dungeon source ↗</div>
     </div>
   );
 }
@@ -349,7 +350,44 @@ function QuestTooltip({ quest, dungeon, gate }) {
   );
 }
 
-function QuestTray({ selection, onClose, itemLookup }) {
+function chainQuestRecord(record) {
+  if (!record || typeof record !== "object") return null;
+  const start = record.start;
+  return {
+    ...record,
+    from: record.from || (start ? [{ name: start.giver, kind: "npc", zone: start.zone, at: { x: start.x, y: start.y }, uiMapId: start.uiMapId }] : []),
+    to: record.to || [],
+    dataStatus: record.dataStatus || "chain-source",
+  };
+}
+
+function questPlaceLabel(actor) {
+  if (!actor) return "Location pending";
+  const place = [actor.zone, actor.place].filter(Boolean).join(" · ");
+  const coordinates = actor.at ? `${Number(actor.at.x).toFixed(1)}, ${Number(actor.at.y).toFixed(1)}` : null;
+  return [place, coordinates].filter(Boolean).join(" · ") || "Location pending";
+}
+
+function QuestLocationMap({ actors, title }) {
+  const locations = (actors || []).filter((actor) => actor?.at && Number.isFinite(Number(actor.at.x)) && Number.isFinite(Number(actor.at.y)));
+  const primary = locations[0];
+  return (
+    <section className="quest-location-card">
+      <header><div><span>{title}</span><strong>{actors?.[0]?.name || "Location pending"}</strong></div>{primary && <b>{Number(primary.at.x).toFixed(1)}, {Number(primary.at.y).toFixed(1)}</b>}</header>
+      {primary ? <>
+        <div className="quest-mini-map" aria-label={`${primary.name} in ${primary.zone} at ${Number(primary.at.x).toFixed(1)}, ${Number(primary.at.y).toFixed(1)}`}>
+          <div className="quest-map-pin" style={{ left: `${primary.at.x}%`, top: `${primary.at.y}%` }} tabIndex="0"><span aria-hidden="true">◆</span><aside><strong>{primary.name}</strong><small>{questPlaceLabel(primary)}</small></aside></div>
+          <div className="quest-map-grid" aria-hidden="true" />
+          <span className="quest-map-zone">{primary.zone}</span>
+        </div>
+        <footer><span>{primary.place || primary.zone} · zone coordinates</span><a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map ↗</a></footer>
+      </> : <div className="quest-location-pending"><span>◇</span><p>The source does not publish a coordinate for this pickup yet.</p></div>}
+      {locations.length > 1 && <div className="quest-location-alternates">{locations.slice(1).map((actor, index) => <span key={`${actor.name}-${index}`}>{actor.name} · {questPlaceLabel(actor)}</span>)}</div>}
+    </section>
+  );
+}
+
+function QuestTray({ selection, onClose, itemLookup, questLookup, onSelect }) {
   useEffect(() => {
     if (!selection) return undefined;
     const handleKey = (event) => {
@@ -364,34 +402,55 @@ function QuestTray({ selection, onClose, itemLookup }) {
     const catalogItem = itemLookup.get(`id:${item.id}`) || itemLookup.get(`name:${String(item.name || "").toLowerCase()}`);
     return catalogItem ? { ...catalogItem, ...item } : item;
   });
+  const rawSteps = quest.prerequisiteSteps?.length
+    ? quest.prerequisiteSteps
+    : (quest.chain || []).map((entry) => [entry]);
+  const prerequisiteSteps = rawSteps.map((step) => (Array.isArray(step) ? step : [step]).map((entry) => {
+    const key = typeof entry === "object" ? entry.id || entry.name : entry;
+    const found = questLookup.get(`id:${key}`) || questLookup.get(`name:${String(typeof entry === "object" ? entry.name : entry).toLowerCase()}`);
+    return { quest: chainQuestRecord(found?.quest || (typeof entry === "object" ? entry : { id: entry, name: `Quest ${entry}` })), dungeon: found?.dungeon || dungeon };
+  }).filter((entry) => entry.quest));
+  const firstPrerequisite = prerequisiteSteps[0]?.[0];
+  const firstPickup = firstPrerequisite?.quest?.from?.[0];
+  const firstPrerequisiteLabel = firstPickup
+    ? `${firstPickup.name}${firstPickup.zone ? ` in ${firstPickup.zone}` : ""}`
+    : firstPrerequisite?.quest?.name;
+  const pickup = quest.from?.[0];
+  const turnIn = quest.to?.[0];
+  const sameLocation = pickup && turnIn
+    && pickup.name === turnIn.name
+    && pickup.zone === turnIn.zone
+    && Number(pickup.at?.x) === Number(turnIn.at?.x)
+    && Number(pickup.at?.y) === Number(turnIn.at?.y);
   return createPortal(
     <div className="tray-layer">
       <button className="tray-backdrop" onClick={onClose} aria-label="Close quest tray" />
       <aside className="quest-tray" aria-label={`Pinned quest: ${quest.name}`}>
-        <header><div><div className="section-kicker">Pinned quest</div><h2>{quest.name}</h2></div><button className="tray-close" onClick={onClose} aria-label="Close quest tray">×</button></header>
+        <header><div>{selection.previous && <button className="tray-back" onClick={() => onSelect(selection.previous)}>← Back</button>}<div className="section-kicker">Quest inspector</div><h2>{quest.name}</h2></div><button className="tray-close" onClick={onClose} aria-label="Close quest tray">×</button></header>
         <div className="tray-meta"><span>{dungeon.name}</span><span>Level {questMinimumLevel(quest, dungeon)}+</span>{Number.isFinite(quest.xp) && <strong>{number(quest.xp)} XP</strong>}</div>
         {gate && <div className={`tooltip-gate gate-text-${gate.status}`}>{GATE_COPY[gate.status]}</div>}
         {quest.objective && <p className="tray-objective">{quest.objective}</p>}
         {quest.note && <p className="tray-note">{quest.note}</p>}
+        <div className={`quest-location-grid ${sameLocation ? "single" : ""}`}>{sameLocation ? <QuestLocationMap actors={quest.from} title="Pick up & turn in" /> : <><QuestLocationMap actors={quest.from} title="Pick up from" /><QuestLocationMap actors={quest.to} title="Turn in to" /></>}</div>
         <dl className="tray-facts">
           <div><dt>Faction</dt><dd>{humanize(quest.faction || "Both")}</dd></div>
-          <div><dt>Starts</dt><dd>{actorList(quest.from)}</dd></div>
-          <div><dt>Ends</dt><dd>{actorList(quest.to)}</dd></div>
+          <div><dt>Pickup</dt><dd>{questPlaceLabel(quest.from?.[0])}</dd></div>
+          {!sameLocation && <div><dt>Turn in</dt><dd>{questPlaceLabel(quest.to?.[0])}</dd></div>}
           {quest.rep && <div><dt>Reputation</dt><dd>{quest.rep}</dd></div>}
         </dl>
-        <section className="tray-checklist"><h3>Readiness checklist</h3><span className={gate?.status === "level-locked" ? "blocked" : "ready"}>Character level {questMinimumLevel(quest, dungeon)}+</span><span className={gate?.status === "wrong-faction" ? "blocked" : "ready"}>{humanize(quest.faction || "Any faction")}</span><span className={gate?.status === "needs-prerequisites" ? "blocked" : "ready"}>{quest.chain?.length ? `${quest.chain.length} prerequisite quest${quest.chain.length === 1 ? "" : "s"}` : quest.prerequisiteIds?.length ? `${quest.prerequisiteIds.length} sourced prerequisite` : "No pre-quests required"}</span></section>
-        {!!quest.chain?.length && <section className="tray-chain"><h3>Prerequisite quests</h3>{quest.chain.map((entry, index) => <span key={`${entry.id || entry.name}-${index}`}>{entry.name || entry}</span>)}</section>}
+        <section className="tray-checklist"><h3>Before you go</h3><span className={gate?.status === "level-locked" ? "blocked" : "ready"}>Reach level {questMinimumLevel(quest, dungeon)}</span><span className={gate?.status === "wrong-faction" ? "blocked" : "ready"}>{humanize(quest.faction || "Any faction")}</span><span className={gate?.status === "needs-prerequisites" ? "blocked" : "ready"}>{prerequisiteSteps.length ? `Complete ${prerequisiteSteps.length} ordered prerequisite step${prerequisiteSteps.length === 1 ? "" : "s"}` : "No pre-quests required"}</span>{firstPrerequisite && <button onClick={() => onSelect({ quest: firstPrerequisite.quest, dungeon: firstPrerequisite.dungeon, previous: selection })}>Start with: {firstPrerequisiteLabel} →</button>}</section>
+        {!!prerequisiteSteps.length && <section className="tray-chain"><header><div><span>Pickup route</span><h3>Prerequisite quests</h3></div><b>{prerequisiteSteps.length} step{prerequisiteSteps.length === 1 ? "" : "s"}</b></header>{prerequisiteSteps.map((alternatives, index) => <article className="prerequisite-step" key={`prerequisite-${index}`}><em>{index + 1}</em><div>{alternatives.map(({ quest: prerequisite, dungeon: prerequisiteDungeon }, alternativeIndex) => <div className="prerequisite-choice" key={`${prerequisite.id || prerequisite.name}-${alternativeIndex}`}><span><strong>{prerequisite.name}</strong><small>{prerequisite.from?.[0] ? `${prerequisite.from[0].name} · ${questPlaceLabel(prerequisite.from[0])}` : "Pickup location not published"}{alternatives.length > 1 ? " · alternative" : ""}</small></span><button onClick={() => onSelect({ quest: prerequisite, dungeon: prerequisiteDungeon, previous: selection })}>Open</button><a href={questSourceUrl(prerequisite, prerequisiteDungeon)} target="_blank" rel="noreferrer">Forever ↗</a></div>)}</div></article>)}</section>}
         <section className="tray-rewards">
           <h3>Rewards <span>{rewards.length}</span></h3>
           {rewards.length ? rewards.map((item, index) => (
-            <TooltipTrigger key={`${item.id || item.name}-${index}`} className="reward-card" label={`Reward item ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
+            <TooltipTrigger key={`${item.id || item.name}-${index}`} className="reward-card" label={`Reward item ${item.name}`} onActivate={() => openItemSource(item, dungeon)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
               <ItemIcon item={item} />
               <div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Reward item"}</small><ClassChips item={item} bestOnly /></div>
               <ItemActions item={item} dungeon={dungeon} compact />
             </TooltipTrigger>
           )) : <p className="empty-copy">No item rewards are listed in the current source record.</p>}
         </section>
-        <footer><span><a href={questSourceUrl(quest)} target="_blank" rel="noreferrer">Wowhead quest ↗</a> · <a href={quest.sourcePages?.[0]?.url || dungeon.questSourceUrl} target="_blank" rel="noreferrer">Forever source ↗</a> · <a href={reportIssueUrl({ quest, dungeon })} target="_blank" rel="noreferrer">Report data ↗</a></span><span>{quest.dataStatus === "verified" ? "Verified Forever details" : quest.dataStatus === "source-only" ? "Sourced chain details · XP pending" : "Rewards-only coverage"}</span></footer>
+        <footer><span><a href={questSourceUrl(quest, dungeon)} target="_blank" rel="noreferrer">Open Forever quest source ↗</a> · <a href={reportIssueUrl({ quest, dungeon })} target="_blank" rel="noreferrer">Report data ↗</a></span><span>{quest.dataStatus === "verified" ? "Verified Forever details" : quest.dataStatus === "chain-source" ? "Forever prerequisite record" : quest.dataStatus === "source-only" ? "Sourced chain details · XP pending" : "Rewards-only coverage"}</span></footer>
       </aside>
     </div>,
     document.body,
@@ -700,10 +759,11 @@ function Planner({ state, setState, dungeons, dungeonsById, onPin, onNavigate })
 }
 
 function QuestListEntry({ quest, dungeon, onPin }) {
+  const prerequisiteCount = quest.prerequisiteSteps?.length || quest.chain?.length || 0;
   return (
     <li className="inspectable-entry">
       <TooltipTrigger className="simple-list-trigger" label={`Quest details for ${quest.name}`} onActivate={() => onPin({ quest, dungeon })} content={<QuestTooltip quest={quest} dungeon={dungeon} />}>
-        <div><strong className="quest-link">{quest.name}</strong><span>{quest.faction || "Faction unknown"} · {Number.isFinite(quest.minLevel) ? `Lv ${quest.minLevel}+` : "Pickup level pending"}</span></div>
+        <div><strong className="quest-link">{quest.name}</strong><span>{quest.faction || "Faction unknown"} · {Number.isFinite(quest.minLevel) ? `Lv ${quest.minLevel}+` : "Pickup level pending"}{prerequisiteCount ? ` · ${prerequisiteCount} pre-quest${prerequisiteCount === 1 ? "" : "s"}` : ""}</span>{quest.from?.[0] && <small className="quest-pickup-line">Pickup: {quest.from[0].name} · {questPlaceLabel(quest.from[0])}</small>}</div>
         <b>{Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "XP ?"}</b>
       </TooltipTrigger>
     </li>
@@ -712,10 +772,11 @@ function QuestListEntry({ quest, dungeon, onPin }) {
 
 function LootListEntry({ item, dungeon }) {
   const source = itemSourceMeta(item, dungeon);
-  const sourceHref = source.kind === "quest" ? questSourceUrl({ id: source.questId, name: source.name }) : entitySourceUrl(source);
+  const sourceQuest = dungeon.quests.find((quest) => String(quest.id) === String(source.questId) || quest.name === source.name);
+  const sourceHref = source.kind === "quest" ? questSourceUrl(sourceQuest || { id: source.questId, name: source.name }, dungeon) : entitySourceUrl(source, dungeon);
   return (
     <li className="inspectable-entry">
-      <TooltipTrigger className="simple-list-trigger" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
+      <TooltipTrigger className="simple-list-trigger" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item, dungeon)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
         <div className="mini-loot-name"><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><span className="loot-source-line"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a data-no-activate href={sourceHref} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{source.name} ↗</a></span></div></div>
         <ClassChips item={item} bestOnly limit={3} />
         <ItemActions item={item} dungeon={dungeon} compact />
@@ -734,10 +795,10 @@ function DungeonMapPanel({ dungeon, map }) {
   return (
     <div className={`dungeon-map-panel ${isSchematic ? "map-schematic" : ""}`}>
       <div className="dungeon-map-stage">
-        {map ? <img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${isSchematic ? "route schematic" : "instance map"}`} /> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
+        {map ? <a className="map-image-link" href={assetUrl(floor.src)} target="_blank" rel="noreferrer" title="Open full-resolution map"><img src={assetUrl(floor.src)} alt={`${dungeon.name} ${floor.name} ${isSchematic ? "route schematic" : "instance map"}`} /></a> : <div className="map-pending"><span>⌁</span><strong>Forever map pending</strong><small>No verified public interior coordinates are available yet.</small></div>}
         {floors.length > 1 && <div className="map-floor-tabs" aria-label={`${dungeon.name} map floors`}>{floors.map((entry, index) => <button key={entry.name} aria-pressed={index === floorIndex} onClick={() => setFloorIndex(index)}>{entry.name}</button>)}</div>}
       </div>
-      <div><span>{isSchematic ? "Sourced route schematic" : "Instance map"}</span><strong>{dungeon.name}</strong>{map ? <a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a> : <a href={dungeon.lootSourceUrl} target="_blank" rel="noreferrer">Watch source coverage ↗</a>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
+      <div><span>{isSchematic ? "Sourced route schematic" : "Instance map"}</span><strong>{dungeon.name}</strong>{map ? <><a href={assetUrl(floor.src)} target="_blank" rel="noreferrer">Open full map ↗</a><a href={map.sourceUrl} target="_blank" rel="noreferrer">{map.source} {map.license ? `· ${map.license}` : ""} ↗</a></> : <a href={dungeon.questSourceUrl} target="_blank" rel="noreferrer">Watch Forever coverage ↗</a>}{map?.quality && <small className="map-quality">{map.quality}</small>}{map?.attribution && <small className="map-attribution">{map.attribution}</small>}<div className="encounter-order"><b>Encounter index</b>{dungeon.bosses.map((boss, index) => <a key={boss.name} href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><em>{index + 1}</em><span>{boss.name}</span></a>)}<small>{map?.note || "Source order only. Coordinates remain unclaimed unless the map source provides them."}</small></div></div>
     </div>
   );
 }
@@ -781,11 +842,10 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
         <div className="summary-card"><span>{humanize(faction)} quests</span><strong>{quests.length}</strong></div>
         <div className="summary-card"><span>Verified XP</span><strong>{number(quests.reduce((sum, quest) => sum + (quest.xp || 0), 0))}</strong></div>
         <div className="summary-card"><span>Boss / quest loot</span><strong>{sourceCounts.boss || 0} / {sourceCounts.quest || 0}</strong></div>
-        <div className="summary-card"><span>Detailed quests</span><strong>{verified}</strong></div>
-        <div className="summary-card"><span>Snapshot</span><strong>{new Date(snapshot.fetchedAt).toLocaleDateString()}</strong></div>
+        <div className="summary-card"><span>Mapped / detailed</span><strong>{map ? "Map ready" : `${verified} quests`}</strong></div>
       </div>
       <DungeonMapPanel dungeon={dungeon} map={map} />
-      <p className="inspect-hint">Hover or focus for the full in-game-style card. Click quests to pin them; click items to open Wowhead.</p>
+      <p className="inspect-hint">Hover or focus for the full in-game-style card. Pin quests for pickup maps and pre-quest routes; click items for their WoW Forever source.</p>
       <div className="detail-columns">
         <div><h3>{humanize(faction)} quests <span>{quests.length}</span></h3><ul className="simple-list">{quests.map((quest) => <QuestListEntry key={`${quest.id}-${quest.name}`} quest={quest} dungeon={dungeon} onPin={onPin} />)}</ul></div>
         <div className="dungeon-loot-column">
@@ -801,7 +861,7 @@ function DungeonDetail({ dungeon, faction, characterClass, characterSpec, onPin,
           {!loot.length && <p className="loot-empty-state">No items in this dungeon match the selected class.</p>}
         </div>
       </div>
-      <div className="boss-section"><h3>Bosses / sources</h3><ul className="boss-grid">{dungeon.bosses.length ? dungeon.bosses.map((boss) => <li key={boss.name}><div><a href={entitySourceUrl({ name: boss.name })} target="_blank" rel="noreferrer"><strong>{boss.name} ↗</strong></a><span>{boss.level ? `Level ${boss.level}` : "Level pending"}</span></div><b>{boss.lootCount} items</b></li>) : <li><span>No verified boss breakdown yet.</span></li>}</ul></div>
+      <div className="boss-section"><h3>Bosses / sources</h3><ul className="boss-grid">{dungeon.bosses.length ? dungeon.bosses.map((boss) => <li key={boss.name}><div><a href={entitySourceUrl({ name: boss.name }, dungeon)} target="_blank" rel="noreferrer"><strong>{boss.name} ↗</strong></a><span>{boss.level ? `Level ${boss.level}` : "Level pending"}</span></div><b>{boss.lootCount} items</b></li>) : <li><span>No verified boss breakdown yet.</span></li>}</ul></div>
     </section>
   );
 }
@@ -827,25 +887,38 @@ function Quests({ dungeons, faction, onPin }) {
   const [query, setQuery] = useState("");
   const [dungeonId, setDungeonId] = useState("all");
   const [coverage, setCoverage] = useState("all");
-  const allQuests = useMemo(() => dungeons.flatMap((dungeon) => dungeon.quests.map((quest) => ({ quest, dungeon }))), [dungeons]);
-  const filtered = allQuests.filter(({ quest, dungeon }) => {
-    const haystack = `${quest.name} ${quest.objective || ""} ${quest.note || ""} ${dungeon.name}`.toLowerCase();
+  const [questKind, setQuestKind] = useState("all");
+  const allQuests = useMemo(() => {
+    const primary = dungeons.flatMap((dungeon) => dungeon.quests.map((quest) => ({ quest, dungeon, kind: "dungeon" })));
+    const prerequisites = [];
+    const seen = new Set();
+    for (const { quest: parentQuest, dungeon } of primary) for (const step of parentQuest.prerequisiteSteps || []) for (const record of step || []) {
+      const key = `${dungeon.id}:${record.id || record.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      prerequisites.push({ quest: chainQuestRecord(record), dungeon, parentQuest, kind: "prerequisite" });
+    }
+    return [...primary, ...prerequisites];
+  }, [dungeons]);
+  const filtered = allQuests.filter(({ quest, dungeon, parentQuest, kind }) => {
+    const haystack = `${quest.name} ${quest.objective || ""} ${quest.note || ""} ${quest.from?.map((actor) => `${actor.name} ${actor.zone || ""}`).join(" ") || ""} ${parentQuest?.name || ""} ${dungeon.name}`.toLowerCase();
     const factionMatch = matchesFaction(quest.faction, faction);
     return haystack.includes(query.toLowerCase())
       && (dungeonId === "all" || dungeon.id === dungeonId)
       && factionMatch
+      && (questKind === "all" || kind === questKind)
       && (coverage === "all" || quest.dataStatus === coverage);
   });
   return (
     <main className="library-shell">
-      <header className="library-header"><div><div className="section-kicker">Quest ledger</div><h1>{humanize(faction)} dungeon quests</h1><p>Opposing-faction quests are hidden everywhere.</p></div><div className="library-filters quest-filters"><input type="search" placeholder="Search quest, objective, or dungeon" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={dungeonId} onChange={(event) => setDungeonId(event.target.value)}><option value="all">All dungeons</option>{dungeons.map((dungeon) => <option key={dungeon.id} value={dungeon.id}>{dungeon.name}</option>)}</select><select value={coverage} onChange={(event) => setCoverage(event.target.value)}><option value="all">All coverage</option><option value="verified">Verified details</option><option value="rewards-only">Rewards-only records</option></select></div></header>
+      <header className="library-header"><div><div className="section-kicker">Quest ledger</div><h1>{humanize(faction)} dungeon quests</h1><p>Dungeon quests and their prerequisite pickup routes. Opposing-faction quests stay hidden.</p></div><div className="library-filters quest-filters"><input type="search" placeholder="Search quest, giver, zone, or dungeon" value={query} onChange={(event) => setQuery(event.target.value)} /><select value={dungeonId} onChange={(event) => setDungeonId(event.target.value)}><option value="all">All dungeons</option>{dungeons.map((dungeon) => <option key={dungeon.id} value={dungeon.id}>{dungeon.name}</option>)}</select><select value={questKind} onChange={(event) => setQuestKind(event.target.value)}><option value="all">Dungeon + prerequisite quests</option><option value="dungeon">Dungeon quests</option><option value="prerequisite">Prerequisite quests</option></select><select value={coverage} onChange={(event) => setCoverage(event.target.value)}><option value="all">All coverage</option><option value="verified">Verified details</option><option value="chain-source">Forever prerequisite records</option><option value="rewards-only">Rewards-only records</option></select></div></header>
       <div className="result-count">Showing all {number(filtered.length)} matching quests · hover, focus, or tap for full details</div>
       <div className="quest-table" role="table" aria-label="Dungeon quest results">
         <div className="quest-head" role="row"><span>Quest</span><span>Dungeon</span><span>Requirement</span><span>Experience</span></div>
-        {filtered.map(({ quest, dungeon }, index) => (
+        {filtered.map(({ quest, dungeon, parentQuest, kind }, index) => (
           <TooltipTrigger key={`${dungeon.id}-${quest.id || quest.name}-${index}`} role="row" className="quest-archive-row" label={`Quest details for ${quest.name}`} onActivate={() => onPin({ quest, dungeon })} content={<QuestTooltip quest={quest} dungeon={dungeon} />}>
-            <div className="archive-quest-name"><span className="quest-archive-mark" aria-hidden="true">!</span><div><strong>{quest.name}</strong><small>{quest.dataStatus === "verified" ? "Verified Forever record" : "Partial beta record"}</small></div></div>
-            <div><strong>{dungeon.name}</strong><small>{quest.faction ? humanize(quest.faction) : "Faction pending"}</small></div>
+            <div className="archive-quest-name"><span className="quest-archive-mark" aria-hidden="true">!</span><div><strong>{quest.name}</strong><small>{kind === "prerequisite" ? `Prerequisite for ${parentQuest.name}` : quest.dataStatus === "verified" ? "Verified Forever record" : "Partial beta record"}</small></div></div>
+            <div><strong>{kind === "prerequisite" ? quest.from?.[0]?.name || "Pickup pending" : dungeon.name}</strong><small>{kind === "prerequisite" ? questPlaceLabel(quest.from?.[0]) : quest.faction ? humanize(quest.faction) : "Faction pending"}</small></div>
             <div>Level {questMinimumLevel(quest, dungeon)}+</div>
             <div className="archive-xp">{Number.isFinite(quest.xp) ? `${number(quest.xp)} XP` : "XP unverified"}<small>Pin quest ↗</small></div>
           </TooltipTrigger>
@@ -858,7 +931,7 @@ function Quests({ dungeons, faction, onPin }) {
 function LootRow({ item, dungeon }) {
   const source = itemSourceMeta(item, dungeon);
   return (
-    <TooltipTrigger className="loot-row" role="row" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
+    <TooltipTrigger className="loot-row" role="row" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item, dungeon)} content={<ItemTooltip item={item} dungeon={dungeon} />}>
       <div className="loot-name"><ItemIcon item={item} /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.type || "Type pending"}</small></div></div>
       <div><strong>{dungeon.name}</strong><small><em className={`source-badge source-${source.kind}`}>{source.label}</em> {source.name}</small></div>
       <div>{item.slot || "—"}</div>
@@ -894,7 +967,8 @@ function BossGroupedLoot({ entries }) {
                 const items = dungeonEntries.filter(({ item }) => itemSourceMeta(item, dungeon).name === boss);
                 const source = itemSourceMeta(items[0].item, dungeon);
                 const groupKey = `${dungeon.id}:${source.kind}:${boss}`;
-                return <section className="boss-loot-group" key={boss}><h3><span className="source-heading"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a href={source.kind === "quest" ? questSourceUrl({ id: source.questId, name: source.name }) : entitySourceUrl(source)} target="_blank" rel="noreferrer">{boss} ↗</a></span><button className="group-toggle" onClick={() => toggle(groupKey)}>{collapsed[groupKey] ? `Show ${items.length}` : `Hide ${items.length}`}</button></h3>{!collapsed[groupKey] && <div className="boss-item-grid">{items.map(({ item }, index) => <TooltipTrigger key={`${item.id || item.name}-${index}`} className="loot-card" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item)} content={<ItemTooltip item={item} dungeon={dungeon} />}><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Item"}</small><ClassChips item={item} bestOnly limit={3} /></div><ItemActions item={item} dungeon={dungeon} compact /></TooltipTrigger>)}</div>}</section>;
+                const sourceQuest = dungeon.quests.find((quest) => String(quest.id) === String(source.questId) || quest.name === source.name);
+                return <section className="boss-loot-group" key={boss}><h3><span className="source-heading"><em className={`source-badge source-${source.kind}`}>{source.label}</em><a href={source.kind === "quest" ? questSourceUrl(sourceQuest || { id: source.questId, name: source.name }, dungeon) : entitySourceUrl(source, dungeon)} target="_blank" rel="noreferrer">{boss} ↗</a></span><button className="group-toggle" onClick={() => toggle(groupKey)}>{collapsed[groupKey] ? `Show ${items.length}` : `Hide ${items.length}`}</button></h3>{!collapsed[groupKey] && <div className="boss-item-grid">{items.map(({ item }, index) => <TooltipTrigger key={`${item.id || item.name}-${index}`} className="loot-card" label={`Item details for ${item.name}`} onActivate={() => openItemSource(item, dungeon)} content={<ItemTooltip item={item} dungeon={dungeon} />}><ItemIcon item={item} compact /><div><strong className={qualityClass(item)}>{item.name}</strong><small>{item.slot || item.type || "Item"}</small><ClassChips item={item} bestOnly limit={3} /></div><ItemActions item={item} dungeon={dungeon} compact /></TooltipTrigger>)}</div>}</section>;
               })}
             </div>}
           </section>
@@ -932,7 +1006,7 @@ function Loot({ dungeons, characterClass, characterSpec, faction }) {
   });
   return (
     <main className="library-shell">
-      <header className="library-header loot-library-header"><div><div className="section-kicker">Loot workbench</div><h1>Dungeon loot</h1><p>{number(allLoot.length)} source-backed drops and rewards. Click any item for Wowhead.</p></div><div className="view-switch" aria-label="Loot view"><button className={viewMode === "boss" ? "active" : ""} onClick={() => setPreference("viewMode", "boss")}>Dungeon → boss</button><button className={viewMode === "list" ? "active" : ""} onClick={() => setPreference("viewMode", "list")}>All items</button></div></header>
+      <header className="library-header loot-library-header"><div><div className="section-kicker">Loot workbench</div><h1>Dungeon loot</h1><p>{number(allLoot.length)} source-backed drops and rewards. Click any item for its WoW Forever source.</p></div><div className="view-switch" aria-label="Loot view"><button className={viewMode === "boss" ? "active" : ""} onClick={() => setPreference("viewMode", "boss")}>Dungeon → boss</button><button className={viewMode === "list" ? "active" : ""} onClick={() => setPreference("viewMode", "list")}>All items</button></div></header>
       <section className="loot-control-deck panel">
         <ClassFilterStrip value={classFilter} onChange={(value) => setPreference("classFilter", value)} />
         <div className="loot-mode-row"><FitMode value={fitMode} onChange={(value) => setPreference("fitMode", value)} /><SourceFilter value={sourceFilter} onChange={(value) => setPreference("sourceFilter", value)} /><button className={`wishlist-filter ${wishlistOnly ? "active" : ""}`} onClick={() => setPreference("wishlistOnly", !wishlistOnly)}>★ Wishlist only</button></div>
@@ -1007,6 +1081,20 @@ export default function App() {
   const itemRecordLookup = useMemo(() => {
     const lookup = new Map();
     for (const dungeon of dungeons) for (const item of dungeon.loot) if (item.id && !lookup.has(String(item.id))) lookup.set(String(item.id), { item, dungeon });
+    return lookup;
+  }, [dungeons]);
+  const questLookup = useMemo(() => {
+    const lookup = new Map();
+    const add = (quest, dungeon) => {
+      if (!quest) return;
+      if (quest.id !== undefined) lookup.set(`id:${quest.id}`, { quest, dungeon });
+      if (quest.name) lookup.set(`name:${quest.name.toLowerCase()}`, { quest, dungeon });
+    };
+    for (const record of foreverQuestChains.quests || []) add(chainQuestRecord(record), null);
+    for (const dungeon of dungeons) for (const quest of dungeon.quests) {
+      add(quest, dungeon);
+      for (const step of quest.prerequisiteSteps || []) for (const record of step || []) add(chainQuestRecord(record), dungeon);
+    }
     return lookup;
   }, [dungeons]);
 
@@ -1135,11 +1223,11 @@ export default function App() {
       {view === "loot" && <Loot dungeons={dungeons} characterClass={state.characterClass} characterSpec={state.spec} faction={state.faction} />}
       {view === "profile" && <Profile dungeons={dungeons} />}
 
-      <QuestTray selection={pinnedQuest} onClose={() => setPinnedQuest(null)} itemLookup={itemLookup} />
+      <QuestTray selection={pinnedQuest} onClose={() => setPinnedQuest(null)} itemLookup={itemLookup} questLookup={questLookup} onSelect={setPinnedQuest} />
 
       <footer className="site-footer">
         <div><strong>Coverage</strong><span>{dungeons.length} dungeons · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0))} loot entries · {number(dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0))} quest groups</span></div>
-        <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://www.wowhead.com/classic" target="_blank" rel="noreferrer">Wowhead Classic</a><a href="https://github.com/Hoizame/AtlasLootClassic_Maps" target="_blank" rel="noreferrer">Atlas maps</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">XP curve reference</a></div>
+        <div className="source-links">{snapshot.sources.map((source) => <a href={source.url} target="_blank" rel="noreferrer" key={source.url}>{source.name}</a>)}<a href="https://wowf.io/en/zones" target="_blank" rel="noreferrer">Forever world map</a><a href="https://github.com/Hoizame/AtlasLootClassic_Maps" target="_blank" rel="noreferrer">Atlas maps</a><a href="https://warcraft.wiki.gg/wiki/Experience_to_level" target="_blank" rel="noreferrer">XP curve reference</a></div>
         <p>Unofficial fan-made planning tool. Forever beta data changes quickly; partial values are labeled and excluded from projections. Class-fit icons are transparent rules-based suggestions, not source claims.</p>
       </footer>
     </div></GearContext.Provider>

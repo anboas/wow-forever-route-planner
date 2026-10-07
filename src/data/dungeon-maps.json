@@ -4,175 +4,200 @@
     "src": "dungeon-maps/ragefire-chasm.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RagefireChasm.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "wailing-caverns": {
     "kind": "instance-map",
     "src": "dungeon-maps/wailing-caverns.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/WailingCaverns.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "deadmines": {
     "kind": "instance-map",
     "src": "dungeon-maps/deadmines.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheDeadmines.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "shadowfang-keep": {
     "kind": "instance-map",
     "src": "dungeon-maps/shadowfang-keep.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/ShadowfangKeep.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "stockade": {
     "kind": "instance-map",
     "src": "dungeon-maps/stockade.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheStockade.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "blackfathom-deeps": {
     "kind": "instance-map",
     "src": "dungeon-maps/blackfathom-deeps.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackfathomDeeps.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "scarlet-monastery-graveyard": {
     "kind": "instance-map",
     "src": "dungeon-maps/scarlet-monastery-graveyard.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMGraveyard.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "gnomeregan": {
     "kind": "instance-map",
     "src": "dungeon-maps/gnomeregan.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Gnomeregan.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "scarlet-monastery-library": {
     "kind": "instance-map",
     "src": "dungeon-maps/scarlet-monastery-library.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMLibrary.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "razorfen-kraul": {
     "kind": "instance-map",
     "src": "dungeon-maps/razorfen-kraul.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RazorfenKraul.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "scarlet-monastery-armory": {
     "kind": "instance-map",
     "src": "dungeon-maps/scarlet-monastery-armory.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMArmory.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "scarlet-monastery-cathedral": {
     "kind": "instance-map",
     "src": "dungeon-maps/scarlet-monastery-cathedral.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/SMCathedral.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "razorfen-downs": {
     "kind": "instance-map",
     "src": "dungeon-maps/razorfen-downs.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/RazorfenDowns.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "uldaman": {
     "kind": "instance-map",
     "src": "dungeon-maps/uldaman.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Uldaman.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "zul-farrak": {
     "kind": "instance-map",
     "src": "dungeon-maps/zul-farrak.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/ZulFarrak.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "maraudon": {
     "kind": "instance-map",
     "src": "dungeon-maps/maraudon.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Maraudon.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "the-temple-of-atal-hakkar": {
     "kind": "instance-map",
     "src": "dungeon-maps/the-temple-of-atal-hakkar.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/TheSunkenTemple.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "blackrock-depths": {
     "kind": "instance-map",
     "src": "dungeon-maps/blackrock-depths.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockDepths.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "blackrock-spire-lower": {
     "kind": "instance-map",
     "src": "dungeon-maps/blackrock-spire-lower.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockSpireLower.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "dire-maul-east": {
     "kind": "instance-map",
     "src": "dungeon-maps/dire-maul-east.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulEast.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "dire-maul-west": {
     "kind": "instance-map",
     "src": "dungeon-maps/dire-maul-west.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulWest.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "dire-maul-north": {
     "kind": "instance-map",
     "src": "dungeon-maps/dire-maul-north.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/DireMaulNorth.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "stratholme": {
     "kind": "instance-map",
     "src": "dungeon-maps/stratholme.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Stratholme.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "blackrock-spire-upper": {
     "kind": "instance-map",
     "src": "dungeon-maps/blackrock-spire-upper.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/BlackrockSpireUpper.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "scholomance": {
     "kind": "instance-map",
     "src": "dungeon-maps/scholomance.png",
     "source": "AtlasLootClassic Maps",
     "sourceUrl": "https://github.com/Hoizame/AtlasLootClassic_Maps/blob/master/Scholomance.blp",
-    "license": "GPL-2.0"
+    "license": "GPL-2.0",
+    "quality": "Native 512×512 source texture"
   },
   "hall-of-thanes": {
     "kind": "route-schematic",
@@ -186,6 +211,7 @@
     "source": "NaowhForever dungeon map pins",
     "sourceUrl": "https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua",
     "attribution": "Original Route Planner schematic generated from sourced in-game entrance and boss coordinates; no third-party map artwork copied.",
+    "quality": "Resolution-independent SVG",
     "note": "Pins and encounter sequence are source-backed. Connector lines are schematic and do not claim walkable geometry."
   },
   "ruins-of-lordaeron": {
@@ -200,6 +226,7 @@
     "source": "NaowhForever dungeon map pins",
     "sourceUrl": "https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua",
     "attribution": "Original Route Planner schematic generated from sourced in-game entrance and boss coordinates; no third-party map artwork copied.",
+    "quality": "Resolution-independent SVG",
     "note": "Pins and encounter sequence are source-backed. Connector lines are schematic and do not claim walkable geometry."
   },
   "excavation-site": {
@@ -214,6 +241,7 @@
     "source": "NaowhForever dungeon map pins",
     "sourceUrl": "https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua",
     "attribution": "Original Route Planner schematic generated from sourced in-game entrance and boss coordinates; no third-party map artwork copied.",
+    "quality": "Resolution-independent SVG",
     "note": "Pins and encounter sequence are source-backed. Connector lines are schematic and do not claim walkable geometry."
   },
   "dalaran": {
@@ -233,6 +261,7 @@
     "source": "NaowhForever dungeon map pins",
     "sourceUrl": "https://github.com/nwh-gaming-ab/NaowhForever/blob/main/NaowhForever_DungeonJournal/Data/Maps.lua",
     "attribution": "Original Route Planner schematic generated from sourced in-game entrance and boss coordinates; no third-party map artwork copied.",
+    "quality": "Resolution-independent SVG",
     "note": "Pins and encounter sequence are source-backed. Connector lines are schematic and do not claim walkable geometry."
   }
 }

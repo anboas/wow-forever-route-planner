@@ -3,10 +3,15 @@ import { readFile } from "node:fs/promises";
 import { access } from "node:fs/promises";
 
 const snapshot = JSON.parse(await readFile(new URL("../src/data/wow-forever.json", import.meta.url), "utf8"));
+const questChains = JSON.parse(await readFile(new URL("../src/data/forever-quest-chains.json", import.meta.url), "utf8"));
 assert.equal(snapshot.schemaVersion, 3);
 assert.ok(snapshot.context.inventory.totalEnglishPages >= 400, "expected full WOWF.IO corpus metadata");
 assert.ok(snapshot.context.dataHealth.quests >= 100, "expected normalized quest-chain coverage");
 assert.equal(snapshot.dungeons.length, 34, "expected the complete current 34-dungeon catalog");
+assert.ok(questChains.quests.length >= 440, "expected the full Forever quest-chain index");
+assert.ok(questChains.health.prerequisiteQuests >= 130, "expected explicit prerequisite relationships");
+assert.ok(questChains.health.locatedQuests >= 330, "expected located quest givers");
+assert.ok(snapshot.dungeons.flatMap((dungeon) => dungeon.quests).filter((quest) => quest.prerequisiteSteps?.length).length >= 25, "expected prerequisite routes merged into dungeon quests");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.loot.length, 0) >= 1600, "expected comprehensive loot coverage");
 assert.ok(snapshot.dungeons.reduce((sum, dungeon) => sum + dungeon.quests.length, 0) >= 150, "expected quest and reward-group coverage");
 const loot = snapshot.dungeons.flatMap((dungeon) => dungeon.loot);
@@ -20,10 +25,12 @@ for (const [dungeonId, map] of Object.entries(maps)) {
     assert.equal(map.license, "GPL-2.0");
     assert.ok(map.sourceUrl.startsWith("https://github.com/Hoizame/AtlasLootClassic_Maps/"));
     await access(new URL(`../public/${map.src}`, import.meta.url));
+    assert.match(map.quality, /512|native/i, `${dungeonId} should disclose native map quality`);
   } else {
     assert.ok(map.sourceUrl.startsWith("https://github.com/nwh-gaming-ab/NaowhForever/"));
     assert.match(map.attribution, /no third-party map artwork copied/i);
     assert.ok(map.floors.length >= 1);
+    assert.match(map.quality, /svg|resolution/i, `${dungeonId} should disclose scalable map quality`);
     for (const floor of map.floors) {
       assert.ok(floor.name && floor.pinCount >= 1);
       await access(new URL(`../public/${floor.src}`, import.meta.url));
