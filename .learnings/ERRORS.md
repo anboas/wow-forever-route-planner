@@ -33,6 +33,38 @@ Read the bundled WASM bytes with `node:fs/promises` and pass them as `module_or_
 
 ---
 
+## [ERR-20261007-WIREFRAME-PLAYWRIGHT] Project-local Playwright assumption blocked PNG export
+
+**Logged**: 2026-10-07T09:04:00-04:00
+**Priority**: low
+**Status**: resolved
+**Area**: tooling
+
+### Summary
+The first wireframe PNG render attempted to require Playwright from the app repository, but the project does not install Playwright locally.
+
+### Error
+```
+Error: Cannot find module 'playwright'
+```
+
+### Context
+- The source artifact was already a standalone inline-SVG HTML document.
+- The host provides Chromium at `/snap/bin/chromium`, so a browser library was unnecessary.
+
+### Suggested Fix
+For standalone HTML/SVG exports, discover and use the host Chromium CLI before assuming a project-local browser dependency.
+
+### Metadata
+- Reproducible: yes
+- Related Files: design/addon-ui-wireframe.html
+
+### Resolution
+- **Resolved**: 2026-10-07T09:05:00-04:00
+- **Notes**: Switched the export to the host Chromium headless screenshot path.
+
+---
+
 ## [ERR-20261007-STYLE-RESEARCH-FALLBACK] Perplexity styling research lacked a configured protected key
 
 **Logged**: 2026-10-07T08:39:00-04:00
