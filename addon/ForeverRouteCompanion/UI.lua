@@ -2,11 +2,9 @@ local _, WFRP = ...
 WFRP = type(WFRP) == "table" and WFRP or _G.WFRP
 if not WFRP then return end
 
-local COLORS = {
-  canvas = { .018, .026, .04, .98 }, surface = { .035, .05, .075, 1 }, elevated = { .052, .072, .105, 1 },
-  line = { .14, .18, .25, 1 }, gold = { .96, .69, .20, 1 }, blue = { .22, .58, .96, 1 },
-  green = { .24, .78, .46, 1 }, red = { .95, .31, .31, 1 }, text = { .9, .93, .98, 1 }, muted = { .5, .57, .68, 1 },
-}
+local COLORS = WFRP_THEME
+local DIMS = WFRP_DIMENSIONS
+if not COLORS or not DIMS then return end
 
 local function backdrop(frame, color, border)
   if not frame.SetBackdrop then return end
@@ -30,7 +28,7 @@ local function listCount(value)
 end
 
 local frame = CreateFrame("Frame", "ForeverRouteCompanionFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-frame:SetSize(760, 520)
+frame:SetSize(DIMS.frameWidth, DIMS.frameHeight)
 frame:SetPoint("CENTER")
 frame:SetFrameStrata("DIALOG")
 frame:SetClampedToScreen(true)
@@ -39,7 +37,7 @@ frame:SetMovable(true)
 frame:RegisterForDrag("LeftButton")
 frame:SetScript("OnDragStart", frame.StartMoving)
 frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-backdrop(frame, COLORS.canvas, { .36, .28, .12, 1 })
+backdrop(frame, COLORS.frame, COLORS.goldDark)
 frame:Hide()
 table.insert(UISpecialFrames, frame:GetName())
 
@@ -67,7 +65,7 @@ setColor(subtitle, COLORS.muted)
 local statusChip = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
 statusChip:SetPoint("TOPRIGHT", -44, -13)
 statusChip:SetSize(88, 24)
-backdrop(statusChip, { .025, .07, .05, 1 }, { .16, .42, .28, 1 })
+backdrop(statusChip, COLORS.successSurface, COLORS.successLine)
 statusChip.label = statusChip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 statusChip.label:SetPoint("CENTER")
 statusChip.label:SetText("● LOCAL ONLY")
@@ -79,8 +77,8 @@ close:SetPoint("TOPRIGHT", -5, -6)
 local sidebar = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
 sidebar:SetPoint("TOPLEFT", 12, -53)
 sidebar:SetPoint("BOTTOMLEFT", 12, 12)
-sidebar:SetWidth(116)
-backdrop(sidebar, { .025, .036, .055, 1 }, COLORS.line)
+sidebar:SetWidth(DIMS.sidebarWidth)
+backdrop(sidebar, COLORS.frame, COLORS.line)
 
 local content = CreateFrame("Frame", nil, frame)
 content:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 12, 0)
@@ -114,7 +112,7 @@ end
 
 local function button(parent, text, x, y, width, onClick, active)
   local value = track(CreateFrame("Button", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil))
-  value:SetPoint("TOPLEFT", x, y); value:SetSize(width, 30); backdrop(value, active and { .16, .12, .04, 1 } or COLORS.elevated, active and COLORS.gold or COLORS.line)
+  value:SetPoint("TOPLEFT", x, y); value:SetSize(width, DIMS.buttonHeight); backdrop(value, active and COLORS.raised or COLORS.elevated, active and COLORS.gold or COLORS.line)
   value.label = value:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"); value.label:SetPoint("CENTER"); value.label:SetText(text); setColor(value.label, active and COLORS.gold or COLORS.text)
   value:SetScript("OnEnter", function(self) if self.SetBackdropBorderColor then self:SetBackdropBorderColor(unpack(COLORS.gold)) end end)
   value:SetScript("OnLeave", function(self) if self.SetBackdropBorderColor then self:SetBackdropBorderColor(unpack(active and COLORS.gold or COLORS.line)) end end)
@@ -131,7 +129,7 @@ local function tag(parent, text, x, y, width, accent)
 end
 
 local function metric(parent, label, value, detail, x, y, width, accent)
-  local card = panel(parent, x, y, width, 60, COLORS.surface)
+  local card = panel(parent, x, y, width, DIMS.metricHeight, COLORS.surface)
   local stripe = track(card:CreateTexture(nil, "ARTWORK")); stripe:SetColorTexture(unpack(accent or COLORS.blue)); stripe:SetPoint("TOPLEFT", 0, 0); stripe:SetPoint("BOTTOMLEFT", 0, 0); stripe:SetWidth(3)
   font(card, string.upper(label), "GameFontNormalSmall", 12, -8, width - 20, COLORS.muted)
   font(card, tostring(value), "GameFontNormalLarge", 12, -23, width - 20, COLORS.text)
@@ -310,7 +308,7 @@ local function render()
   clearDynamic()
   for id, tab in pairs(tabButtons) do
     local selected = id == activeTab
-    backdrop(tab, selected and COLORS.elevated or { .025, .036, .055, 1 }, selected and COLORS.line or COLORS.line)
+    backdrop(tab, selected and COLORS.elevated or COLORS.frame, COLORS.line)
     tab.accent:SetShown(selected)
     setColor(tab.icon, selected and COLORS.gold or COLORS.muted)
     setColor(tab.label, selected and COLORS.text or COLORS.muted)
@@ -322,7 +320,7 @@ local tabs = { { "now", "NOW", "◆" }, { "character", "CHARACTER", "♟" }, { "
 for index, entry in ipairs(tabs) do
   local id, label, icon = unpack(entry)
   local tab = CreateFrame("Button", nil, sidebar, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  tab:SetPoint("TOPLEFT", 8, -8 - (index - 1) * 44); tab:SetSize(100, 38); backdrop(tab, COLORS.surface, COLORS.line)
+  tab:SetPoint("TOPLEFT", 8, -8 - (index - 1) * 44); tab:SetSize(100, DIMS.tabHeight); backdrop(tab, COLORS.surface, COLORS.line)
   tab.accent = tab:CreateTexture(nil, "ARTWORK"); tab.accent:SetColorTexture(unpack(COLORS.gold)); tab.accent:SetPoint("TOPLEFT", 0, 0); tab.accent:SetPoint("BOTTOMLEFT", 0, 0); tab.accent:SetWidth(3); tab.accent:Hide()
   tab.icon = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal"); tab.icon:SetPoint("LEFT", 10, 0); tab.icon:SetText(icon); setColor(tab.icon, COLORS.gold)
   tab.label = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"); tab.label:SetPoint("LEFT", 30, 0); tab.label:SetText(label); setColor(tab.label, COLORS.muted)
@@ -334,7 +332,7 @@ local version = sidebar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall
 version:SetPoint("BOTTOM", 0, 14); version:SetText("v1.0 · local"); setColor(version, COLORS.muted)
 
 local hud = CreateFrame("Button", "ForeverRouteCompanionHUD", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-hud:SetSize(344, 58); hud:SetPoint("TOPRIGHT", -34, -220); hud:SetClampedToScreen(true); hud:SetMovable(true); hud:RegisterForDrag("LeftButton"); hud:SetScript("OnDragStart", hud.StartMoving); hud:SetScript("OnDragStop", hud.StopMovingOrSizing); backdrop(hud, COLORS.canvas, { .31, .25, .12, 1 })
+hud:SetSize(DIMS.hudWidth, DIMS.hudHeight); hud:SetPoint("TOPRIGHT", -34, -220); hud:SetClampedToScreen(true); hud:SetMovable(true); hud:RegisterForDrag("LeftButton"); hud:SetScript("OnDragStart", hud.StartMoving); hud:SetScript("OnDragStop", hud.StopMovingOrSizing); backdrop(hud, COLORS.frame, COLORS.goldDark)
 hud.accent = hud:CreateTexture(nil, "ARTWORK"); hud.accent:SetColorTexture(unpack(COLORS.gold)); hud.accent:SetPoint("TOPLEFT", 0, 0); hud.accent:SetPoint("BOTTOMLEFT", 0, 0); hud.accent:SetWidth(3)
 hud.title = hud:CreateFontString(nil, "OVERLAY", "GameFontNormal"); hud.title:SetPoint("TOPLEFT", 13, -10); setColor(hud.title, COLORS.text)
 hud.detail = hud:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); hud.detail:SetPoint("TOPLEFT", 13, -32); setColor(hud.detail, COLORS.muted)

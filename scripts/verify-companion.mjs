@@ -58,6 +58,7 @@ assert.throws(() => parseCompanionString("bad payload"), /Expected a WFRP charac
 
 await access(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url));
 await access(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.lua", import.meta.url));
+await access(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url));
 await access(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url));
 await access(new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url));
 const data = await readFile(new URL("../addon/ForeverRouteCompanion/Data.lua", import.meta.url), "utf8");
@@ -69,6 +70,23 @@ assert.doesNotThrow(() => luaparse.parse(addon, { luaVersion: "5.1" }), "addon c
 assert.match(addon, /WFRP2C\|payload=/, "addon exports versioned telemetry");
 assert.match(addon, /CHAT_MSG_COMBAT_XP_GAIN/, "addon records combat XP");
 assert.match(addon, /COMBAT_LOG_EVENT_UNFILTERED/, "addon records boss kills");
+const designTokens = JSON.parse(await readFile(new URL("../design/design-tokens.json", import.meta.url), "utf8"));
+const designCss = await readFile(new URL("../src/design-tokens.css", import.meta.url), "utf8");
+const theme = await readFile(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url), "utf8");
+assert.doesNotThrow(() => luaparse.parse(theme, { luaVersion: "5.1" }), "addon theme is valid Lua 5.1");
+const cssTokenNames = {
+  canvas: "canvas", frame: "frame", surface: "surface", elevated: "surface-2", raised: "surface-3",
+  line: "line", lineSoft: "line-soft", text: "ink", muted: "muted", gold: "gold", goldBright: "gold-2",
+  goldDark: "gold-dark", blue: "arcane", green: "success", successSurface: "success-surface",
+  successLine: "success-line", red: "danger", warning: "warning",
+};
+for (const [name, hex] of Object.entries(designTokens.colors)) {
+  const cssName = cssTokenNames[name];
+  assert.match(designCss, new RegExp(`--${cssName}: ${hex}`, "i"), `website exposes shared ${name} token`);
+}
+assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
+const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
+assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
 const ui = await readFile(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url), "utf8");
 assert.doesNotThrow(() => luaparse.parse(ui, { luaVersion: "5.1" }), "addon UI is valid Lua 5.1");
 for (const tab of ["NOW", "CHARACTER", "RUNS", "GROUP", "SYNC"]) assert.match(ui, new RegExp(`"${tab}"`), `addon UI includes ${tab} view`);

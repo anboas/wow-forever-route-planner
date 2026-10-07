@@ -7,4 +7,5 @@
 
 Data.lua
 ForeverRouteCompanion.lua
+Theme.lua
 UI.lua

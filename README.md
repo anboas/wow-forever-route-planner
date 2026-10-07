@@ -44,7 +44,7 @@ The starter route is Horde level 13: Ragefire Chasm → Ruins of Lordaeron → S
 - [WOWF.IO October 1 beta update](https://wowf.io/en/news/beta-update-oct-1): Forever dungeon-quest XP policy. The update halved only the extra XP above normal quest values, so current WOWF.IO rewards remain Forever values rather than original Classic rewards.
 - [Warcraft Wiki](https://warcraft.wiki.gg/wiki/Experience_to_level): Classic XP curve reference.
 
-Run `npm run sync:all` to rebuild every checked-in integration. `sync:context` atomically normalizes the WOWF.IO sitemap corpus; `sync:data` merges dungeon/loot sources with quest chains, class/spec guide recommendations, world positions, and the explicit Forever XP policy; `sync:maps` resolves and rebuilds official client floor art, official Forever overheads, the one licensed fallback, and original coordinate-derived route schematics; `sync:addon` regenerates the addon quest catalog and downloadable ZIP. Validation fails closed before a generated snapshot replaces the prior version. Beta values can change; unverified quest XP remains excluded from route totals.
+Run `npm run sync:all` to rebuild every checked-in integration. `sync:design` generates the website CSS variables and addon Lua theme from `design/design-tokens.json`; `sync:context` atomically normalizes the WOWF.IO sitemap corpus; `sync:data` merges dungeon/loot sources with quest chains, class/spec guide recommendations, world positions, and the explicit Forever XP policy; `sync:maps` resolves and rebuilds official client floor art, official Forever overheads, the one licensed fallback, and original coordinate-derived route schematics; `sync:addon` regenerates the addon quest catalog and downloadable ZIP. Validation fails closed before a generated snapshot replaces the prior version. Beta values can change; unverified quest XP remains excluded from route totals.
 
 The scheduled `Refresh source-backed data` GitHub Actions workflow runs the same pipeline daily, validates every non-browser data/planner contract plus the Cloudflare production build, publishes a health summary, and opens a review pull request only when checked source artifacts changed. Production is never mutated directly by the refresh job.
 
@@ -56,7 +56,7 @@ The scheduled `Refresh source-backed data` GitHub Actions workflow runs the same
 4. Use **Sync → Export telemetry** or `/wfrp export`, then paste the WFRP2 string into **My Gear → Companion exchange**.
 5. Use **Copy route for addon**, then run `/wfrp import <planner text>` in game. `/wfrp next` reports the next planned dungeon.
 
-The addon retains the latest 50 runs in SavedVariables and uses the in-game addon channel for lightweight party readiness. It uses local game APIs only and never uploads data automatically. Its source is checked in under `addon/ForeverRouteCompanion/`.
+The addon retains the latest 50 runs in SavedVariables and uses the in-game addon channel for lightweight party readiness. It uses local game APIs only and never uploads data automatically. Its source is checked in under `addon/ForeverRouteCompanion/`. The addon and website share one generated visual contract for palette, semantic states, control geometry, metric cards, navigation, and HUD proportions so the in-game and web experiences cannot silently drift apart.
 
 ## Development
 

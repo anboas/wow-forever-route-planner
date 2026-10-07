@@ -1,0 +1,36 @@
+{
+  "colors": {
+    "canvas": "#0a0e15",
+    "frame": "#0c121d",
+    "surface": "#101722",
+    "elevated": "#172233",
+    "raised": "#1d2a3d",
+    "line": "#354257",
+    "lineSoft": "#202c3b",
+    "text": "#e8edf7",
+    "muted": "#9aa8bb",
+    "gold": "#e9ad3b",
+    "goldBright": "#f4c95d",
+    "goldDark": "#80611b",
+    "blue": "#4b9bff",
+    "green": "#4fc97b",
+    "successSurface": "#0c2118",
+    "successLine": "#296a47",
+    "red": "#f16a6a",
+    "warning": "#d79d4f"
+  },
+  "geometry": {
+    "radius": 5,
+    "radiusSmall": 3,
+    "webControlHeight": 38,
+    "webTouchHeight": 44,
+    "addonFrameWidth": 760,
+    "addonFrameHeight": 520,
+    "addonSidebarWidth": 116,
+    "addonTabHeight": 38,
+    "addonButtonHeight": 30,
+    "addonMetricHeight": 60,
+    "addonHudWidth": 344,
+    "addonHudHeight": 58
+  }
+}
