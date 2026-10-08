@@ -992,3 +992,35 @@ Reset `gateMode` to `login` during logout and keep the browser proof strict.
 - **Notes**: Logout now resets the account gate to sign-in before refreshing auth state.
 
 ---
+## [ERR-20261007-ADDON-INTERFACE] Forever companion shipped with the Classic Era interface number
+
+**Logged**: 2026-10-07T21:35:00-04:00
+**Priority**: critical
+**Status**: resolved
+**Area**: config
+
+### Summary
+The downloadable addon was marked incompatible because its TOC declared interface 11508 instead of WoW Forever interface 16001.
+
+### Error
+```
+Forever Route Companion appears as incompatible in the WoW Forever AddOns list.
+```
+
+### Context
+- The manifest reused a current Classic Era interface value without verifying the custom Forever client interface.
+- NaowhForever's current core and module TOCs all declare `## Interface: 16001`.
+
+### Suggested Fix
+Target interface 16001, rebuild the public ZIP, and verify both the source and packaged TOCs against the current Forever-native interface value.
+
+### Metadata
+- Reproducible: yes
+- Related Files: addon/ForeverRouteCompanion/ForeverRouteCompanion.toc, scripts/verify-companion.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T21:40:00-04:00
+- **Commit/PR**: included in the Forever Route Companion 1.1.1 compatibility release
+- **Notes**: Changed the manifest to interface 16001, rebuilt the ZIP, and added source-plus-package manifest assertions.
+
+---

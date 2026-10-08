@@ -1,8 +1,8 @@
-## Interface: 11508
+## Interface: 16001
 ## Title: Forever Route Companion
 ## Notes: Forever character, dungeon, gear, route, and party intelligence.
 ## Author: Adam Boas / Moltbot
-## Version: 1.1.0
+## Version: 1.1.1
 ## SavedVariables: ForeverRouteCompanionDB
 
 Data.lua

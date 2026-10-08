@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
+import { promisify } from "node:util";
 import luaparse from "luaparse";
 import { parseCompanionString, serializePlannerString, summarizeTelemetry } from "../src/companion.js";
+
+const execFileAsync = promisify(execFile);
+const FOREVER_INTERFACE = "16001";
 
 const plan = serializePlannerString({
   route: [{ dungeonId: "ragefire-chasm" }, { dungeonId: "shadowfang-keep" }],
@@ -93,8 +98,12 @@ for (const [name, hex] of Object.entries(designTokens.colors)) {
 }
 assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
 const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
-assert.match(toc, /## Version: 1\.1\.0/, "addon package advertises Run Intelligence v1.1");
+assert.match(toc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "addon targets the current WoW Forever interface");
+assert.match(toc, /## Version: 1\.1\.1/, "addon package advertises the Forever interface compatibility patch");
 assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
+const archivePath = new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url);
+const { stdout: packagedToc } = await execFileAsync("unzip", ["-p", archivePath.pathname, "ForeverRouteCompanion/ForeverRouteCompanion.toc"]);
+assert.match(packagedToc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "downloadable addon package targets the current WoW Forever interface");
 const ui = await readFile(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url), "utf8");
 assert.doesNotThrow(() => luaparse.parse(ui, { luaVersion: "5.1" }), "addon UI is valid Lua 5.1");
 for (const tab of ["NOW", "CHARACTER", "RUNS", "GROUP", "SYNC"]) assert.match(ui, new RegExp(`"${tab}"`), `addon UI includes ${tab} view`);

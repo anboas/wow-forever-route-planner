@@ -1,10 +1,10 @@
-Forever Route Companion 1.1
+Forever Route Companion 1.1.1
 
 The in-game execution and telemetry layer for Forever Route Planner.
 
 Install:
 1. Unzip ForeverRouteCompanion into World of Warcraft/_classic_era_/Interface/AddOns/.
-2. Restart or reload the game. Enable "Load out of date AddOns" if the Forever client reports a newer interface build.
+2. Restart or reload the game. The package targets WoW Forever interface 16001.
 3. Run /wfrp to open the dashboard.
 
 What it tracks:
