@@ -82,6 +82,8 @@ assert.match(addon, /CHAT_MSG_COMBAT_XP_GAIN/, "addon records combat XP");
 assert.match(addon, /COMBAT_LOG_EVENT_UNFILTERED/, "addon records boss kills");
 assert.match(addon, /reviewState = "pending"/, "addon holds completed runs for post-run review");
 assert.match(addon, /wishlistDrops/, "addon records wishlist drops");
+assert.doesNotMatch(addon, /math\.random(?:seed)?\s*\(/, "addon avoids RNG APIs unavailable in the WoW Forever Lua sandbox");
+assert.match(addon, /nextRunSequence/, "addon uses a persisted monotonic run ID sequence");
 const designTokens = JSON.parse(await readFile(new URL("../design/design-tokens.json", import.meta.url), "utf8"));
 const designCss = await readFile(new URL("../src/design-tokens.css", import.meta.url), "utf8");
 const theme = await readFile(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url), "utf8");
@@ -99,7 +101,7 @@ for (const [name, hex] of Object.entries(designTokens.colors)) {
 assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
 const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
 assert.match(toc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "addon targets the current WoW Forever interface");
-assert.match(toc, /## Version: 1\.1\.1/, "addon package advertises the Forever interface compatibility patch");
+assert.match(toc, /## Version: 1\.1\.2/, "addon package advertises the Forever Lua runtime compatibility patch");
 assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
 const archivePath = new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url);
 const { stdout: packagedToc } = await execFileAsync("unzip", ["-p", archivePath.pathname, "ForeverRouteCompanion/ForeverRouteCompanion.toc"]);

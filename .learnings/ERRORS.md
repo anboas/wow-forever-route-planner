@@ -1024,3 +1024,38 @@ Target interface 16001, rebuild the public ZIP, and verify both the source and p
 - **Notes**: Changed the manifest to interface 16001, rebuilt the ZIP, and added source-plus-package manifest assertions.
 
 ---
+## [ERR-20261007-ADDON-RANDOMSEED] WoW Forever Lua sandbox omits math.randomseed
+
+**Logged**: 2026-10-07T21:43:00-04:00
+**Priority**: critical
+**Status**: resolved
+**Area**: backend
+
+### Summary
+The companion loaded under interface 16001 but failed during PLAYER_LOGIN because `math.randomseed` is nil in WoW Forever.
+
+### Error
+```
+ForeverRouteCompanion.lua:490: attempt to call a nil value
+event="PLAYER_LOGIN"
+```
+
+### Context
+- The error occurred immediately after fixing the TOC interface mismatch.
+- The nil callable was `math.randomseed`; the timestamp argument was valid.
+- Run IDs also depended on `math.random`, so the full RNG dependency must be removed.
+
+### Suggested Fix
+Use a persisted monotonic run sequence combined with the current timestamp, remove login-time seeding, and block packaged RNG calls in the companion verifier.
+
+### Metadata
+- Reproducible: yes
+- Related Files: addon/ForeverRouteCompanion/ForeverRouteCompanion.lua, scripts/verify-companion.mjs
+- See Also: ERR-20261007-ADDON-INTERFACE
+
+### Resolution
+- **Resolved**: 2026-10-07T21:47:00-04:00
+- **Commit/PR**: included in the Forever Route Companion 1.1.2 runtime compatibility release
+- **Notes**: Removed unavailable RNG APIs, switched run IDs to a persisted monotonic sequence, and added a packaged-code assertion that forbids RNG calls.
+
+---

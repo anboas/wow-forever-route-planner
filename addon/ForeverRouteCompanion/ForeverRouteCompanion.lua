@@ -82,6 +82,7 @@ local function initializeDB()
   db.runs = db.runs or {}
   db.characters = db.characters or {}
   db.peers = db.peers or {}
+  db.nextRunSequence = tonumber(db.nextRunSequence) or 0
   db.settings = db.settings or { autoRecord = true, showMinimap = true, compactHud = true }
   return db
 end
@@ -300,8 +301,9 @@ local function startRun(dungeonID, instanceName, manual)
   local db = initializeDB()
   if db.currentRun then return db.currentRun end
   local character = characterSnapshot()
+  db.nextRunSequence = db.nextRunSequence + 1
   db.currentRun = {
-    id = tostring(now()) .. "-" .. tostring(math.random(1000, 9999)), dungeonId = dungeonID or "unknown", dungeonName = (WFRP_DUNGEONS or {})[dungeonID] or instanceName or "Unknown dungeon",
+    id = tostring(now()) .. "-" .. tostring(db.nextRunSequence), dungeonId = dungeonID or "unknown", dungeonName = (WFRP_DUNGEONS or {})[dungeonID] or instanceName or "Unknown dungeon",
     startedAt = now(), startLevel = character.level, startXp = character.xp, startXpMax = character.xpMax,
     totalXp = 0, combatXp = 0, questXp = 0, deaths = 0, bosses = {}, bossEngaged = {}, loot = {}, quests = {}, events = {}, wishlistDrops = 0, manual = manual == true,
     expectedBosses = #(WFRP_DUNGEON_BOSSES and WFRP_DUNGEON_BOSSES[dungeonID] or {}), reviewState = "recording",
@@ -487,7 +489,7 @@ for _, event in ipairs({ "PLAYER_LOGIN", "PLAYER_LOGOUT", "PLAYER_ENTERING_WORLD
 events:SetScript("OnEvent", function(_, event, ...)
   local db = initializeDB()
   if event == "PLAYER_LOGIN" then
-    math.randomseed(now()); saveCharacterSnapshot(); WFRP.session.lastLevel, WFRP.session.lastXp, WFRP.session.lastXpMax = UnitLevel("player") or 1, UnitXP("player") or 0, UnitXPMax("player") or 0
+    saveCharacterSnapshot(); WFRP.session.lastLevel, WFRP.session.lastXp, WFRP.session.lastXpMax = UnitLevel("player") or 1, UnitXP("player") or 0, UnitXPMax("player") or 0
     if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then C_ChatInfo.RegisterAddonMessagePrefix(ADDON_PREFIX) end
     C_Timer.After(1, function() updateInstance(); sendPartyState(); if WFRP.RefreshUI then WFRP.RefreshUI() end end)
   elseif event == "PLAYER_LOGOUT" then saveCharacterSnapshot()
