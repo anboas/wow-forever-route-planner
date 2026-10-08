@@ -10,25 +10,30 @@ export function useAuth() {
 
 function AccountGate({ mode, busy, error, onSubmit }) {
   const setup = mode === "setup";
+  const register = mode === "register";
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const mismatch = setup && confirm && password !== confirm;
+  const createsAccount = setup || register;
+  const mismatch = createsAccount && confirm && password !== confirm;
   return <main className="account-gate"><section className="account-card">
     <div className="account-brand"><span>F</span><div><b>Forever Intelligence</b><small>Character · leveling · gear · group telemetry</small></div></div>
     <p className="section-kicker">Private intelligence workspace</p>
-    <h1>{setup ? "Create the owner account" : "Welcome back"}</h1>
-    <p>{setup ? "The first account permanently owns this workspace and manages access for your group." : "Sign in to open your characters, routes, gear, and run history."}</p>
-    <form onSubmit={(event) => { event.preventDefault(); if (!mismatch) onSubmit({ email, displayName, password }); }}>
-      {setup && <label><span>Display name</span><input required minLength="2" autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
+    <h1>{setup ? "Create the owner account" : register ? "Create your player account" : "Welcome back"}</h1>
+    <p>{setup ? "The first account permanently owns this workspace and manages access for your group." : register ? "Create a private character workspace. New registrations receive Player access." : "Sign in to open your characters, routes, gear, and run history."}</p>
+    <form onSubmit={(event) => { event.preventDefault(); if (!mismatch) onSubmit({ email, displayName, password }, mode); }}>
+      {createsAccount && <label><span>Display name</span><input required minLength="2" autoComplete="name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>}
       <label><span>Email</span><input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-      <label><span>Password</span><input required minLength="12" type="password" autoComplete={setup ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-      {setup && <label><span>Confirm password</span><input required minLength="12" type="password" autoComplete="new-password" value={confirm} onChange={(event) => setConfirm(event.target.value)} /></label>}
+      <label><span>Password</span><input required minLength="12" type="password" autoComplete={createsAccount ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+      {createsAccount && <label><span>Confirm password</span><input required minLength="12" type="password" autoComplete="new-password" value={confirm} onChange={(event) => setConfirm(event.target.value)} /></label>}
       {mismatch && <p className="account-error">Passwords do not match.</p>}
       {error && <p className="account-error" role="alert">{error}</p>}
-      <button type="submit" disabled={busy || mismatch}>{busy ? "Working…" : setup ? "Create owner account" : "Sign in"}</button>
+      <button type="submit" disabled={busy || mismatch}>{busy ? "Working…" : setup ? "Create owner account" : register ? "Create player account" : "Sign in"}</button>
     </form>
+    {!setup && <button className="account-mode-switch" type="button" onClick={() => onSubmit(null, register ? "show-login" : "show-register")}>
+      {register ? "Already have an account? Sign in" : "New to Forever Intelligence? Create an account"}
+    </button>}
     <small className="account-privacy">Passwords are derived in this browser. Plaintext passwords are never transmitted or stored.</small>
   </section></main>;
 }
@@ -58,6 +63,7 @@ export function AuthProvider({ children }) {
   const [activeCharacterId, setActiveCharacterId] = useState(() => localStorage.getItem("forever-intelligence:active-character") || "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [gateMode, setGateMode] = useState("login");
   const migrationAttempted = useRef(false);
 
   async function refresh() {
@@ -106,10 +112,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { if (activeCharacterId) localStorage.setItem("forever-intelligence:active-character", activeCharacterId); }, [activeCharacterId]);
 
-  async function submitCredentials(values) {
+  async function submitCredentials(values, mode) {
+    if (mode === "show-register" || mode === "show-login") {
+      setError(""); setGateMode(mode === "show-register" ? "register" : "login"); return;
+    }
     setBusy(true); setError("");
     try {
-      if (status.claimed === false) await authApi.setup(values); else await authApi.login(values);
+      if (status.claimed === false) await authApi.setup(values);
+      else if (mode === "register") await authApi.register(values);
+      else await authApi.login(values);
       await refresh();
     } catch (requestError) { setError(requestError.message); } finally { setBusy(false); }
   }
@@ -133,12 +144,12 @@ export function AuthProvider({ children }) {
     async updateCharacter(id, values) { const result = await authApi.updateCharacter(id, values); setCharacters((current) => current.map((entry) => entry.id === id ? result.character : entry)); return result.character; },
     async deleteCharacter(id) { await authApi.deleteCharacter(id); const next = characters.filter((entry) => entry.id !== id); setCharacters(next); setActiveCharacterId(next[0]?.id || ""); },
     async saveCharacterState(state, revision) { if (status.local || !activeCharacterId || !status.user?.canWrite) return null; const result = await authApi.saveCharacterState(activeCharacterId, state, revision); setCharacters((current) => current.map((entry) => entry.id === activeCharacterId ? result.character : entry)); return result.character; },
-    async logout() { await authApi.logout(); setCharacters([]); setActiveCharacterId(""); await refresh(); },
+    async logout() { await authApi.logout(); setCharacters([]); setActiveCharacterId(""); setGateMode("login"); await refresh(); },
     refresh,
   }), [status, characters, activeCharacterId]);
 
   if (status.loading) return <main className="account-gate"><section className="account-card account-loading"><span className="status-dot" /><h1>Opening Forever Intelligence</h1><p>Loading your secure character workspace…</p></section></main>;
-  if (!status.user) return <AccountGate mode={status.claimed === false ? "setup" : "login"} busy={busy} error={error} onSubmit={submitCredentials} />;
+  if (!status.user) return <AccountGate mode={status.claimed === false ? "setup" : gateMode} busy={busy} error={error} onSubmit={submitCredentials} />;
   if (status.user.mustChangePassword) return <PasswordGate user={status.user} busy={busy} error={error} onSubmit={changePassword} />;
   if (!status.local && !characters.length && (!migrationAttempted.current || provisioningCharacter)) return <main className="account-gate"><section className="account-card account-loading"><span className="status-dot" /><h1>Preparing your first character</h1><p>Migrating this browser's planner state into your private workspace…</p></section></main>;
   return <AuthContext.Provider value={value}>{<div key={activeCharacterId || "none"}>{children}</div>}</AuthContext.Provider>;

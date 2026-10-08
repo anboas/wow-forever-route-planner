@@ -959,3 +959,36 @@ Route character paths to the API root and keep authentication paths under `/api/
 - **Notes**: The client now selects the API root by resource family, and the browser contract covers first-character creation.
 
 ---
+## [ERR-20261007-REG] verify:auth post-registration logout
+
+**Logged**: 2026-10-07T21:15:00-04:00
+**Priority**: medium
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+The auth browser proof expected the login gate after a self-registered user signed out, but the registration mode persisted in the mounted provider.
+
+### Error
+```
+locator.click: Timeout 30000ms exceeded waiting for
+New to Forever Intelligence? Create an account
+```
+
+### Context
+- Open registration successfully created and signed in a Player.
+- Signing out cleared the session but did not reset the local account-gate mode.
+- The user landed back on the registration form instead of the safer default sign-in form.
+
+### Suggested Fix
+Reset `gateMode` to `login` during logout and keep the browser proof strict.
+
+### Metadata
+- Reproducible: yes
+- Related Files: src/AuthContext.jsx, scripts/verify-auth.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T21:15:00-04:00
+- **Notes**: Logout now resets the account gate to sign-in before refreshing auth state.
+
+---

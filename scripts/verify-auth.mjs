@@ -36,6 +36,8 @@ try {
   const suffix = Date.now();
   const ownerEmail = `owner-${suffix}@example.test`;
   const ownerPassword = `Owner-${suffix}-Secure!`;
+  const registeredEmail = `registered-${suffix}@example.test`;
+  const registeredPassword = `Registered-${suffix}-Secure!`;
   const playerEmail = `player-${suffix}@example.test`;
   const temporaryPassword = `Temporary-${suffix}!`;
   const permanentPassword = `Permanent-${suffix}!`;
@@ -48,6 +50,42 @@ try {
   await page.getByRole("button", { name: "Create owner account" }).click();
   try { await page.locator(".character-switcher").waitFor({ timeout: 12_000 }); }
   catch (error) { throw new Error(`Owner setup did not reach the character workspace. Screen: ${await page.locator("body").innerText()}\n${error.message}`); }
+
+  await page.locator(".character-switcher").click();
+  let registerDialog = page.getByRole("dialog", { name: "Account & characters" });
+  await registerDialog.getByRole("button", { name: "Account", exact: true }).click();
+  await registerDialog.getByRole("button", { name: "Sign out" }).click();
+  await page.getByRole("button", { name: "New to Forever Intelligence? Create an account" }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const registrationWidth = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  if (registrationWidth.scroll > registrationWidth.client + 1) throw new Error(`Open registration overflows on mobile: ${JSON.stringify(registrationWidth)}`);
+  await page.getByLabel("Display name").fill("Open Registration Player");
+  await page.getByLabel("Email").fill(registeredEmail);
+  await page.getByLabel("Password", { exact: true }).fill(registeredPassword);
+  await page.getByLabel("Confirm password").fill(registeredPassword);
+  await page.getByRole("button", { name: "Create player account" }).click();
+  await page.locator(".character-switcher").waitFor({ timeout: 12_000 });
+  const registrationStatus = await page.evaluate(() => fetch("/api/auth/status").then((response) => response.json()));
+  if (registrationStatus.user?.roleId !== "analyst" || !registrationStatus.user?.canWrite || registrationStatus.user?.canManageUsers) throw new Error(`Open registration did not create a normal Player: ${JSON.stringify(registrationStatus.user)}`);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.locator(".character-switcher").click();
+  registerDialog = page.getByRole("dialog", { name: "Account & characters" });
+  if (await registerDialog.getByRole("button", { name: "People" }).count()) throw new Error("Self-registered player can see account administration.");
+  await registerDialog.getByRole("button", { name: "Account", exact: true }).click();
+  await registerDialog.getByRole("button", { name: "Sign out" }).click();
+
+  await page.getByRole("button", { name: "New to Forever Intelligence? Create an account" }).click();
+  await page.getByLabel("Display name").fill("Duplicate Registration");
+  await page.getByLabel("Email").fill(registeredEmail);
+  await page.getByLabel("Password", { exact: true }).fill(registeredPassword);
+  await page.getByLabel("Confirm password").fill(registeredPassword);
+  await page.getByRole("button", { name: "Create player account" }).click();
+  await page.getByText("An account with that email already exists.").waitFor();
+  await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
+  await page.getByLabel("Email").fill(ownerEmail);
+  await page.getByLabel("Password").fill(ownerPassword);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.locator(".character-switcher").waitFor();
 
   await page.locator(".character-switcher").click();
   const accountDialog = page.getByRole("dialog", { name: "Account & characters" });
@@ -139,7 +177,7 @@ try {
   const anonymousParty = await page.context().request.get(`${base}/api/party`, { headers: { cookie: "" } });
   if (anonymousParty.status() !== 401) throw new Error(`Anonymous party API returned ${anonymousParty.status()}, expected 401.`);
 
-  process.stdout.write("Auth, managed-user, forced-password, character ownership, shared-party presence, viewer authorization, mobile containment, and anonymous-boundary verification passed.\n");
+  process.stdout.write("Owner setup, open registration, duplicate rejection, managed-user, forced-password, character ownership, shared-party presence, viewer authorization, mobile containment, and anonymous-boundary verification passed.\n");
 } finally {
   if (browser) await browser.close();
   try { process.kill(-child.pid, "SIGTERM"); } catch { child.kill("SIGTERM"); }

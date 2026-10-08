@@ -63,7 +63,7 @@ The addon retains the latest 50 runs in SavedVariables and uses the in-game addo
 
 ## Accounts and characters
 
-Cloudflare production requires authentication. The existing Defense Budget Intelligence owner account is migrated from the shared D1 account store without exposing or resetting its password. The owner can create administrator, player, and viewer accounts; temporary passwords must be replaced on first sign-in, and viewer writes are rejected at the API boundary. Each user can track up to 20 private characters. Only a compact active-character presence record is shared with other authenticated group members.
+Cloudflare production requires authentication. The existing Defense Budget Intelligence owner account is migrated from the shared D1 account store without exposing or resetting its password. Open registration creates normal Player accounts with private character workspaces; registration is same-origin, client-rate-limited, and bounded. The owner can also create administrator, player, and viewer accounts; administrator-issued temporary passwords must be replaced on first sign-in, and viewer writes are rejected at the API boundary. Each user can track up to 20 private characters. Only a compact active-character presence record is shared with other authenticated group members.
 
 The browser derives the password proof with PBKDF2 before sending it, sessions use secure `HttpOnly` and `SameSite=Strict` cookies, writes require same-origin requests, and repeated failed sign-ins are rate-limited. No character or party endpoint is available anonymously.
 

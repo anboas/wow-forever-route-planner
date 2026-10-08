@@ -137,6 +137,25 @@ async function authResponse(request, env, db, parts) {
       .bind(id, normalizedEmail, displayName, values.passwordSalt, passwordHash, id, now, now).run();
     return json({ user: publicUser(await db.prepare("SELECT * FROM wfrp_users WHERE id = ?").bind(id).first()) }, 201, { "set-cookie": await createSession(db, id, request) });
   }
+  if (action === "register" && request.method === "POST") {
+    const owner = await db.prepare("SELECT id FROM wfrp_users WHERE role = 'super_user' LIMIT 1").first();
+    if (!owner) return json({ error: "The owner must finish workspace setup before registration opens." }, 409);
+    const values = await body(request); const normalizedEmail = email(values.email); const displayName = clean(values.displayName, 80);
+    if (!normalizedEmail || displayName.length < 2 || !validHex(values.passwordSalt, 48) || !validHex(values.passwordProof, 64)) return json({ error: "Valid account details and a password are required." }, 400);
+    const key = await clientKey(request, "open-registration"); const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const attempts = await db.prepare("SELECT COUNT(*) AS count FROM wfrp_login_attempts WHERE client_hash = ? AND attempted_at >= ?").bind(key, since).first();
+    if (Number(attempts?.count || 0) >= 10) return json({ error: "Too many registration attempts. Try again in one hour." }, 429);
+    const total = await db.prepare("SELECT COUNT(*) AS count FROM wfrp_users").first();
+    if (Number(total?.count || 0) >= 200) return json({ error: "Registration is temporarily unavailable." }, 503);
+    const now = new Date().toISOString(); const id = crypto.randomUUID(); const attemptId = crypto.randomUUID();
+    await db.prepare("INSERT INTO wfrp_login_attempts (id,client_hash,succeeded,attempted_at) VALUES (?,?,0,?)").bind(attemptId, key, now).run();
+    try {
+      await db.prepare("INSERT INTO wfrp_users (id,email,display_name,role,status,password_salt,password_hash,must_change_password,created_by,created_at,updated_at,last_login_at) VALUES (?,?,?,'analyst','active',?,?,0,?,?,?,?)")
+        .bind(id, normalizedEmail, displayName, values.passwordSalt, `v1$${await hash(values.passwordProof)}`, id, now, now, now).run();
+    } catch { return json({ error: "An account with that email already exists." }, 409); }
+    await db.prepare("UPDATE wfrp_login_attempts SET succeeded = 1 WHERE id = ?").bind(attemptId).run();
+    return json({ user: publicUser(await db.prepare("SELECT * FROM wfrp_users WHERE id = ?").bind(id).first()) }, 201, { "set-cookie": await createSession(db, id, request) });
+  }
   if (action === "login-config" && request.method === "POST") {
     const values = await body(request); const normalizedEmail = email(values.email); const user = normalizedEmail ? await db.prepare("SELECT password_salt,status FROM wfrp_users WHERE LOWER(email) = ?").bind(normalizedEmail).first() : null;
     return json({ passwordSalt: user?.status === "active" ? user.password_salt : (await hash(`wfrp:${normalizedEmail || "unknown"}`)).slice(0, 48), passwordIterations: 310000 });

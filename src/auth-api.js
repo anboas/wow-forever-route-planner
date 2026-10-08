@@ -55,6 +55,11 @@ export const authApi = {
     const passwordProof = await derivePasswordProof(password, passwordSalt);
     return request("/setup", { method: "POST", body: JSON.stringify({ email, displayName, passwordSalt, passwordProof }) });
   },
+  async register({ email, displayName, password }) {
+    const passwordSalt = createSalt();
+    const passwordProof = await derivePasswordProof(password, passwordSalt);
+    return request("/register", { method: "POST", body: JSON.stringify({ email, displayName, passwordSalt, passwordProof }) });
+  },
   async login({ email, password }) {
     const config = await request("/login-config", { method: "POST", body: JSON.stringify({ email }) });
     const passwordProof = await derivePasswordProof(password, config.passwordSalt);

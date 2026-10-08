@@ -70,6 +70,8 @@ a { color: var(--gold-2); }
 .account-card form { display: grid; gap: 13px; margin-top: 22px; }
 .account-card form label > span { margin-bottom: 6px; }
 .account-card form button { min-height: 42px; margin-top: 5px; background: var(--gold-dark); color: #fff3cf; }
+.account-mode-switch { width: 100%; min-height: 38px; margin-top: 10px; border-color: transparent; background: transparent; color: var(--blue); font-size: 11px; }
+.account-mode-switch:hover { border-color: var(--line); background: var(--surface-2); color: var(--ink); }
 .account-card .account-error { margin: 0; padding: 9px 10px; border-left: 3px solid var(--danger); background: var(--danger-surface); color: var(--danger); font-size: 11px; }
 .account-privacy { display: block; margin-top: 18px; color: var(--muted); font-size: 9px; line-height: 1.5; }
 .account-loading { text-align: center; }
