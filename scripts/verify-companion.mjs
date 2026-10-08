@@ -90,6 +90,11 @@ for (const api of ["C_Item.GetItemNameByID", "C_Item.GetItemQualityByID", "C_Ite
 }
 assert.match(addon, /C_Container\.GetItemCooldown/, "addon prefers the Forever container API for hearth cooldowns");
 assert.match(addon, /if CombatLogGetCurrentEventInfo then/, "addon guards combat-log inspection when the runtime omits the helper");
+assert.match(addon, /close:SetScript\("OnClick", hideTextDialog\)/, "export dialog X has an explicit Forever-safe close handler");
+assert.match(addon, /dialog\.dismiss:SetText\("Close"\)/, "export dialog exposes a visible Close button");
+assert.match(addon, /dialog\.edit:SetScript\("OnEscapePressed", hideTextDialog\)/, "export dialog closes from Escape while the text box owns focus");
+assert.match(addon, /dialogShield:SetScript\("OnClick", hideTextDialog\)/, "export dialog closes when clicking outside it");
+assert.match(addon, /table\.insert\(UISpecialFrames, dialog:GetName\(\)\)/, "export dialog participates in the native Escape dismissal stack");
 const designTokens = JSON.parse(await readFile(new URL("../design/design-tokens.json", import.meta.url), "utf8"));
 const designCss = await readFile(new URL("../src/design-tokens.css", import.meta.url), "utf8");
 const theme = await readFile(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url), "utf8");
@@ -107,11 +112,15 @@ for (const [name, hex] of Object.entries(designTokens.colors)) {
 assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
 const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
 assert.match(toc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "addon targets the current WoW Forever interface");
-assert.match(toc, /## Version: 1\.1\.3/, "addon package advertises the Forever item API compatibility patch");
+assert.match(toc, /## Version: 1\.1\.4/, "addon package advertises the export-dialog dismissal patch");
 assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
 const archivePath = new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url);
 const { stdout: packagedToc } = await execFileAsync("unzip", ["-p", archivePath.pathname, "ForeverRouteCompanion/ForeverRouteCompanion.toc"]);
 assert.match(packagedToc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "downloadable addon package targets the current WoW Forever interface");
+const { stdout: packagedAddon } = await execFileAsync("unzip", ["-p", archivePath.pathname, "ForeverRouteCompanion/ForeverRouteCompanion.lua"]);
+assert.match(packagedAddon, /close:SetScript\("OnClick", hideTextDialog\)/, "downloadable package preserves the explicit export-dialog X handler");
+assert.match(packagedAddon, /dialog\.dismiss:SetText\("Close"\)/, "downloadable package preserves the visible export-dialog Close action");
+assert.match(packagedAddon, /dialogShield:SetScript\("OnClick", hideTextDialog\)/, "downloadable package preserves click-outside dismissal");
 const ui = await readFile(new URL("../addon/ForeverRouteCompanion/UI.lua", import.meta.url), "utf8");
 assert.doesNotThrow(() => luaparse.parse(ui, { luaVersion: "5.1" }), "addon UI is valid Lua 5.1");
 for (const tab of ["NOW", "CHARACTER", "RUNS", "GROUP", "SYNC"]) assert.match(ui, new RegExp(`"${tab}"`), `addon UI includes ${tab} view`);

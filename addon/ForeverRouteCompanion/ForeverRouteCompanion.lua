@@ -437,20 +437,35 @@ local function telemetryPayload()
   }
 end
 
-local dialog
+local dialog, dialogShield
+local function hideTextDialog()
+  if dialog and dialog.edit then dialog.edit:ClearFocus() end
+  if dialog then dialog:Hide() end
+  if dialogShield then dialogShield:Hide() end
+end
+
 local function showText(title, value, editable, onAccept)
   if not dialog then
+    dialogShield = CreateFrame("Button", "ForeverRouteCompanionDialogShield", UIParent)
+    dialogShield:SetAllPoints(UIParent); dialogShield:SetFrameStrata("DIALOG"); dialogShield:SetFrameLevel(1); dialogShield:EnableMouse(true); dialogShield:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    dialogShield:SetScript("OnClick", hideTextDialog); dialogShield:Hide()
+
     dialog = CreateFrame("Frame", "ForeverRouteCompanionDialog", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    dialog:SetSize(700, 300); dialog:SetPoint("CENTER"); dialog:SetFrameStrata("DIALOG"); dialog:SetClampedToScreen(true); dialog:EnableMouse(true)
+    dialog:SetSize(700, 330); dialog:SetPoint("CENTER"); dialog:SetFrameStrata("DIALOG"); dialog:SetFrameLevel(10); dialog:SetClampedToScreen(true); dialog:EnableMouse(true)
+    if dialog.SetToplevel then dialog:SetToplevel(true) end
     if dialog.SetBackdrop then dialog:SetBackdrop({ bgFile="Interface/Buttons/WHITE8X8", edgeFile="Interface/Tooltips/UI-Tooltip-Border", tile=false, edgeSize=14, insets={left=3,right=3,top=3,bottom=3} }); dialog:SetBackdropColor(.025,.035,.055,.99); dialog:SetBackdropBorderColor(.62,.46,.16,1) end
     dialog.title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge"); dialog.title:SetPoint("TOPLEFT", 18, -16)
-    local close = CreateFrame("Button", nil, dialog, "UIPanelCloseButton"); close:SetPoint("TOPRIGHT", -4, -4)
+    local close = CreateFrame("Button", nil, dialog, "UIPanelCloseButton"); close:SetPoint("TOPRIGHT", -4, -4); close:SetFrameLevel(dialog:GetFrameLevel() + 5); close:RegisterForClicks("LeftButtonUp"); close:SetScript("OnClick", hideTextDialog)
     local scroll = CreateFrame("ScrollFrame", nil, dialog, "UIPanelScrollFrameTemplate"); scroll:SetPoint("TOPLEFT", 18, -48); scroll:SetPoint("BOTTOMRIGHT", -36, 54)
-    dialog.edit = CreateFrame("EditBox", nil, scroll); dialog.edit:SetMultiLine(true); dialog.edit:SetAutoFocus(false); dialog.edit:SetFontObject(ChatFontNormal); dialog.edit:SetWidth(630); dialog.edit:SetScript("OnEscapePressed", function(self) self:ClearFocus(); dialog:Hide() end); scroll:SetScrollChild(dialog.edit)
-    dialog.accept = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate"); dialog.accept:SetSize(120, 26); dialog.accept:SetPoint("BOTTOMRIGHT", -18, 16); dialog.accept:SetText("Import")
+    dialog.edit = CreateFrame("EditBox", nil, scroll); dialog.edit:SetMultiLine(true); dialog.edit:SetAutoFocus(false); dialog.edit:SetFontObject(ChatFontNormal); dialog.edit:SetWidth(630); dialog.edit:SetScript("OnEscapePressed", hideTextDialog); scroll:SetScrollChild(dialog.edit)
+    dialog.dismiss = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate"); dialog.dismiss:SetSize(120, 26); dialog.dismiss:SetPoint("BOTTOMRIGHT", -18, 16); dialog.dismiss:SetText("Close"); dialog.dismiss:SetScript("OnClick", hideTextDialog)
+    dialog.accept = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate"); dialog.accept:SetSize(120, 26); dialog.accept:SetPoint("RIGHT", dialog.dismiss, "LEFT", -8, 0); dialog.accept:SetText("Import")
+    dialog:SetScript("OnHide", function() if dialog.edit then dialog.edit:ClearFocus() end; if dialogShield then dialogShield:Hide() end end)
+    if UISpecialFrames then table.insert(UISpecialFrames, dialog:GetName()) end
   end
   dialog.title:SetText(title); dialog.edit:SetText(value or ""); dialog.edit:SetFocus(); dialog.edit:HighlightText(); dialog.accept:SetShown(editable == true)
-  dialog.accept:SetScript("OnClick", function() if onAccept then onAccept(dialog.edit:GetText()) end; dialog:Hide() end); dialog:Show()
+  dialog.accept:SetScript("OnClick", function() if onAccept then onAccept(dialog.edit:GetText()) end; hideTextDialog() end)
+  dialogShield:Show(); dialog:Show(); if dialog.Raise then dialog:Raise() end
 end
 
 local function importPlan(value)

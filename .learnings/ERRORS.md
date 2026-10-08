@@ -1094,3 +1094,35 @@ Centralize item metadata behind a `C_Item` adapter, tolerate uncached names, and
 - **Notes**: Added a centralized `C_Item` metadata adapter with safe uncached-item behavior, prohibited the removed legacy `GetItemInfo` global in the verifier, and hardened adjacent hearth-cooldown and combat-log API calls.
 
 ---
+## [ERR-20261007-ADDON-EXPORT-DIALOG-TRAP] Export dialog could not be dismissed reliably
+
+**Logged**: 2026-10-07T22:00:00-04:00
+**Priority**: high
+**Status**: resolved
+**Area**: frontend
+
+### Summary
+The Forever client displayed the export dialog's inherited close icon, but the control did not reliably dismiss the modal while the multiline edit box owned focus.
+
+### Error
+```text
+Export telemetry dialog remains open after clicking its top-right X.
+```
+
+### Context
+- The dialog relied on `UIPanelCloseButton` template behavior instead of assigning an explicit close handler.
+- Only the nested edit box handled Escape.
+- The dialog had no visible footer Close action and no click-outside path.
+
+### Suggested Fix
+Give every modal an explicit dismissal function and wire it to the X, a visible Close button, the focused edit box's Escape handler, `UISpecialFrames`, and a click-outside shield. Clear edit focus on every dismissal.
+
+### Metadata
+- Reproducible: yes
+- Related Files: addon/ForeverRouteCompanion/ForeverRouteCompanion.lua, scripts/verify-companion.mjs
+
+### Resolution
+- **Resolved**: 2026-10-07T22:00:00-04:00
+- **Notes**: Companion 1.1.4 adds five explicit dismissal paths and release-gates their presence in the source and package.
+
+---
