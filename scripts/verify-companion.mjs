@@ -84,6 +84,12 @@ assert.match(addon, /reviewState = "pending"/, "addon holds completed runs for p
 assert.match(addon, /wishlistDrops/, "addon records wishlist drops");
 assert.doesNotMatch(addon, /math\.random(?:seed)?\s*\(/, "addon avoids RNG APIs unavailable in the WoW Forever Lua sandbox");
 assert.match(addon, /nextRunSequence/, "addon uses a persisted monotonic run ID sequence");
+assert.doesNotMatch(addon, /(^|[^.\w])GetItemInfo\s*\(/m, "addon avoids the legacy GetItemInfo global removed from WoW Forever");
+for (const api of ["C_Item.GetItemNameByID", "C_Item.GetItemQualityByID", "C_Item.GetDetailedItemLevelInfo"]) {
+  assert.match(addon, new RegExp(api.replace(".", "\\.")), `addon uses Forever item metadata API ${api}`);
+}
+assert.match(addon, /C_Container\.GetItemCooldown/, "addon prefers the Forever container API for hearth cooldowns");
+assert.match(addon, /if CombatLogGetCurrentEventInfo then/, "addon guards combat-log inspection when the runtime omits the helper");
 const designTokens = JSON.parse(await readFile(new URL("../design/design-tokens.json", import.meta.url), "utf8"));
 const designCss = await readFile(new URL("../src/design-tokens.css", import.meta.url), "utf8");
 const theme = await readFile(new URL("../addon/ForeverRouteCompanion/Theme.lua", import.meta.url), "utf8");
@@ -101,7 +107,7 @@ for (const [name, hex] of Object.entries(designTokens.colors)) {
 assert.match(theme, /WFRP_THEME\s*=\s*{/, "addon consumes the shared theme palette");
 const toc = await readFile(new URL("../addon/ForeverRouteCompanion/ForeverRouteCompanion.toc", import.meta.url), "utf8");
 assert.match(toc, new RegExp(`^## Interface: ${FOREVER_INTERFACE}$`, "m"), "addon targets the current WoW Forever interface");
-assert.match(toc, /## Version: 1\.1\.2/, "addon package advertises the Forever Lua runtime compatibility patch");
+assert.match(toc, /## Version: 1\.1\.3/, "addon package advertises the Forever item API compatibility patch");
 assert.ok(toc.indexOf("Theme.lua") > toc.indexOf("ForeverRouteCompanion.lua") && toc.indexOf("Theme.lua") < toc.indexOf("UI.lua"), "addon loads shared theme before the UI");
 const archivePath = new URL("../public/addons/ForeverRouteCompanion.zip", import.meta.url);
 const { stdout: packagedToc } = await execFileAsync("unzip", ["-p", archivePath.pathname, "ForeverRouteCompanion/ForeverRouteCompanion.toc"]);

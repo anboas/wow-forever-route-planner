@@ -1059,3 +1059,38 @@ Use a persisted monotonic run sequence combined with the current timestamp, remo
 - **Notes**: Removed unavailable RNG APIs, switched run IDs to a persisted monotonic sequence, and added a packaged-code assertion that forbids RNG calls.
 
 ---
+## [ERR-20261007-ADDON-GETITEMINFO] WoW Forever removes the legacy GetItemInfo global
+
+**Logged**: 2026-10-07T21:50:00-04:00
+**Priority**: critical
+**Status**: resolved
+**Area**: backend
+
+### Summary
+Opening the companion dashboard failed while scanning equipped items because the Forever runtime exposes item metadata through `C_Item`, not the legacy global `GetItemInfo`.
+
+### Error
+```
+ForeverRouteCompanion.lua:127: attempt to call a nil value
+itemID=281265
+```
+
+### Context
+- Inventory item links and IDs were available.
+- The nil callable was the unguarded global `GetItemInfo`.
+- Current Forever-native NaowhForever code uses `C_Item.GetItemNameByID`, `C_Item.GetItemQualityByID`, and `C_Item.GetDetailedItemLevelInfo`.
+
+### Suggested Fix
+Centralize item metadata behind a `C_Item` adapter, tolerate uncached names, and prohibit direct legacy `GetItemInfo` calls in the packaged verifier.
+
+### Metadata
+- Reproducible: yes
+- Related Files: addon/ForeverRouteCompanion/ForeverRouteCompanion.lua, scripts/verify-companion.mjs
+- See Also: ERR-20261007-ADDON-RANDOMSEED, ERR-20261007-ADDON-INTERFACE
+
+### Resolution
+- **Resolved**: 2026-10-07T21:57:00-04:00
+- **Commit/PR**: included in the Forever Route Companion 1.1.3 item API compatibility release
+- **Notes**: Added a centralized `C_Item` metadata adapter with safe uncached-item behavior, prohibited the removed legacy `GetItemInfo` global in the verifier, and hardened adjacent hearth-cooldown and combat-log API calls.
+
+---

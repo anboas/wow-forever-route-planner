@@ -67,6 +67,21 @@ end
 
 local function itemIDFromLink(link) return link and tonumber(string.match(link, "item:(%d+)")) or nil end
 
+local function itemMetadata(itemID, link)
+  local name, quality, itemLevel
+  if C_Item then
+    if C_Item.GetItemNameByID then name = C_Item.GetItemNameByID(itemID) end
+    if C_Item.GetItemQualityByID then quality = C_Item.GetItemQualityByID(itemID) end
+    if C_Item.GetDetailedItemLevelInfo then itemLevel = C_Item.GetDetailedItemLevelInfo(link or itemID) end
+    if C_Item.GetItemInfo then
+      local infoName, _, infoQuality, infoLevel = C_Item.GetItemInfo(link or itemID)
+      name, quality, itemLevel = name or infoName, quality or infoQuality, itemLevel or infoLevel
+    end
+    if not name and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(itemID) end
+  end
+  return name or ("Item " .. itemID), quality, itemLevel
+end
+
 local function addUnique(list, value)
   if value == nil or value == "" then return end
   for _, current in ipairs(list or {}) do if tostring(current) == tostring(value) then return end end
@@ -124,8 +139,8 @@ local function equippedItems()
     local link = GetInventoryItemLink and GetInventoryItemLink("player", slot)
     local itemID = GetInventoryItemID and GetInventoryItemID("player", slot) or itemIDFromLink(link)
     if itemID then
-      local name, _, quality, itemLevel = GetItemInfo(itemID)
-      table.insert(result, { slot = label, itemId = itemID, name = name or ("Item " .. itemID), quality = quality, itemLevel = itemLevel })
+      local name, quality, itemLevel = itemMetadata(itemID, link)
+      table.insert(result, { slot = label, itemId = itemID, name = name, quality = quality, itemLevel = itemLevel })
     end
   end
   table.sort(result, function(a, b) return a.slot < b.slot end)
@@ -250,7 +265,12 @@ local function characterSnapshot()
   local _, class = UnitClass("player")
   local talents, spec = talentSummary()
   local cooldownStart, cooldownDuration = 0, 0
-  if GetItemCooldown then cooldownStart, cooldownDuration = GetItemCooldown(6948) end
+  if C_Container and C_Container.GetItemCooldown then
+    cooldownStart, cooldownDuration = C_Container.GetItemCooldown(6948)
+  elseif GetItemCooldown then
+    cooldownStart, cooldownDuration = GetItemCooldown(6948)
+  end
+  cooldownStart, cooldownDuration = cooldownStart or 0, cooldownDuration or 0
   local _, instanceType = IsInInstance()
   return {
     name = name or "Unknown", realm = realm or "", level = UnitLevel("player") or 1,
@@ -500,7 +520,11 @@ events:SetScript("OnEvent", function(_, event, ...)
   elseif event == "CHAT_MSG_LOOT" then recordLoot(...)
   elseif event == "PLAYER_DEAD" then if db.currentRun then db.currentRun.deaths = db.currentRun.deaths + 1; recordEvent(db.currentRun, "death", "Player death", db.currentRun.deaths) end
   elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then for index = 1, 5 do if UnitExists("boss" .. index) then recordBossEngaged(UnitName("boss" .. index)) end end
-  elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then local _, subevent, _, _, _, _, _, _, destName = CombatLogGetCurrentEventInfo(); if subevent == "UNIT_DIED" then recordBoss(destName) end
+  elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+    if CombatLogGetCurrentEventInfo then
+      local _, subevent, _, _, _, _, _, _, destName = CombatLogGetCurrentEventInfo()
+      if subevent == "UNIT_DIED" then recordBoss(destName) end
+    end
   elseif event == "TAXIMAP_OPENED" then
     local known = {}; for _, name in ipairs(db.flightPaths) do known[name] = true end
     for index = 1, NumTaxiNodes() do if TaxiNodeGetType(index) ~= "NONE" then local name = TaxiNodeName(index); if name and not known[name] then known[name] = true; table.insert(db.flightPaths, name) end end end

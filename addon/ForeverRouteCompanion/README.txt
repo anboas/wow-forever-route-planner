@@ -1,4 +1,4 @@
-Forever Route Companion 1.1.2
+Forever Route Companion 1.1.3
 
 The in-game execution and telemetry layer for Forever Route Planner.
 
